@@ -552,6 +552,143 @@ textarea.form-control { resize: vertical; min-height: 84px; }
 .tbl-av-circle { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
 
 /* ============================================================
+   REZERVASYON KARTLARI (v3 — Premium)
+   ============================================================ */
+.tourists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.res-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--ease), box-shadow var(--ease), border-color var(--ease);
+  display: flex;
+  position: relative;
+}
+
+.res-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,.35);
+  border-color: var(--border-light);
+}
+
+/* Sol renkli şerit — ödeme durumu */
+.res-card-stripe {
+  width: 5px;
+  flex-shrink: 0;
+  border-radius: 0;
+  transition: width var(--ease);
+}
+.res-card-stripe.paid    { background: var(--green);  }
+.res-card-stripe.partial { background: var(--yellow); }
+.res-card-stripe.pending { background: var(--red);    }
+
+.res-card:hover .res-card-stripe { width: 7px; }
+
+.res-card-body {
+  flex: 1;
+  padding: 18px 18px 14px;
+  min-width: 0;
+}
+
+/* Üst satır: Avatar + İsim + Tarih */
+.res-card-top {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 12px;
+}
+
+.res-card-avatar {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 800; color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+
+.res-card-name {
+  font-size: 15px; font-weight: 700;
+  color: var(--text); line-height: 1.2;
+}
+
+.res-card-meta {
+  font-size: 12px; color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.res-card-date {
+  margin-left: auto;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.res-card-date-day {
+  font-size: 22px; font-weight: 800;
+  color: var(--orange); line-height: 1;
+}
+
+.res-card-date-mon {
+  font-size: 11px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+
+/* Orta bant: Etkinlik ikonları */
+.res-card-icons {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-bottom: 13px;
+}
+
+.res-card-icon-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+
+/* Alt çizgi: Ödeme + Hızlı Toggle */
+.res-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  gap: 8px;
+}
+
+.res-card-amount {
+  font-size: 16px; font-weight: 800;
+  color: var(--text);
+}
+
+.res-card-amount-sub {
+  font-size: 11px; color: var(--text-muted); margin-top: 1px;
+}
+
+.quick-pay-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 20px;
+  font-size: 11.5px; font-weight: 700;
+  border: none; cursor: pointer; font-family: inherit;
+  transition: all var(--ease); white-space: nowrap;
+}
+
+.quick-pay-btn.paid    { background: var(--green-dim);  color: var(--green);  }
+.quick-pay-btn.partial { background: var(--yellow-dim); color: var(--yellow); }
+.quick-pay-btn.pending { background: var(--red-dim);    color: var(--red);    }
+
+.quick-pay-btn:hover {
+  filter: brightness(1.15);
+  transform: scale(1.04);
+}
+
+/* ============================================================
    TOURS PAGE
    ============================================================ */
 .tours-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px,1fr)); gap: 16px; }

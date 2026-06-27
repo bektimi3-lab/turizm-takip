@@ -39,30 +39,49 @@ function _miniCal(year, month, today) {
   const mPad = String(month + 1).padStart(2, '0');
 
   let cells = '';
-  let monthHasEvents = false;
+  let monthEventCount = 0;
 
   for (let i = 0; i < startDow; i++) cells += `<div class="mcd empty"></div>`;
 
   for (let d = 1; d <= days; d++) {
     const dPad = String(d).padStart(2, '0');
     const ds   = `${year}-${mPad}-${dPad}`;
-    const isToday   = ds === today;
-    const hasEvents = DB.hasEventsOnDate(ds);
-    const dow       = (startDow + d - 1) % 7; // 0=Mon
-    const isWeekend = dow === 5 || dow === 6;
+    const isToday  = ds === today;
+    const evCount  = DB.getEventCountForDate(ds);
+    const dow      = (startDow + d - 1) % 7;
+    const isWeekend= dow === 5 || dow === 6;
+
+    monthEventCount += evCount;
+
+    // Yoğunluk rengi
+    let densityStyle = '';
+    if (!isToday && evCount > 0) {
+      const alpha = evCount === 1 ? 0.22 : evCount <= 3 ? 0.50 : 0.85;
+      const txt   = evCount >= 4 ? '#fff' : 'var(--orange)';
+      densityStyle = `style="background:rgba(249,115,22,${alpha});color:${txt};font-weight:700;"`;
+    }
 
     let cls = 'mcd';
     if (isToday)   cls += ' today';
-    if (hasEvents) { cls += ' has-events'; monthHasEvents = true; }
+    if (evCount>0) cls += ' has-events';
     else if (isWeekend) cls += ' weekend';
 
-    cells += `<div class="${cls}" onclick="Router.navigate('/day/${year}/${mPad}/${dPad}')" title="${ds}">${d}</div>`;
+    cells += `<div class="${cls}" ${densityStyle} onclick="Router.navigate('/day/${year}/${mPad}/${dPad}')" title="${ds}">${d}</div>`;
   }
 
-  const headStyle = monthHasEvents ? 'background:rgba(249,115,22,.15);color:var(--orange);border-bottom:1px solid rgba(249,115,22,.2);' : '';
+  // Ay başlığı yoğunluk rengi
+  const headStyle = monthEventCount === 0 ? ''
+    : monthEventCount <= 5  ? 'background:rgba(249,115,22,.12);color:var(--orange);border-bottom:1px solid rgba(249,115,22,.2);'
+    : monthEventCount <= 15 ? 'background:rgba(249,115,22,.25);color:var(--orange-lt);border-bottom:1px solid rgba(249,115,22,.35);'
+    : 'background:rgba(249,115,22,.45);color:#fff;border-bottom:1px solid rgba(249,115,22,.6);font-weight:800;';
+
+  const borderStyle = monthEventCount === 0 ? ''
+    : monthEventCount <= 5  ? 'border-color:rgba(249,115,22,.25)'
+    : monthEventCount <= 15 ? 'border-color:rgba(249,115,22,.50)'
+    : 'border-color:rgba(249,115,22,.80)';
 
   return `
-  <div class="mini-cal" style="${monthHasEvents ? 'border-color:rgba(249,115,22,.3)' : ''}">
+  <div class="mini-cal" style="${borderStyle}">
     <div class="mini-cal-head" style="${headStyle}" onclick="Router.navigate('/month/${year}/${mPad}')" title="${MONTHS_TR[month]} ${year}">${MONTHS_TR[month]}</div>
     <div class="mini-cal-wdays">${WDAYS_SHORT.map(w => `<div class="mini-cal-wday">${w}</div>`).join('')}</div>
     <div class="mini-cal-days">${cells}</div>

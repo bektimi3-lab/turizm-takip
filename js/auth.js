@@ -26,7 +26,8 @@ const Auth = {
   },
 
   isLoggedIn() { return !!this.currentUser; },
-  canEdit()    { return this.currentUser?.role === 'editor'; },
+  isOwner()    { return this.currentUser?.role === 'owner'; },
+  canEdit()    { return this.currentUser?.role === 'editor' || this.currentUser?.role === 'owner'; },
 
   require() {
     if (!this.isLoggedIn()) { Router.navigate('/login'); return false; }

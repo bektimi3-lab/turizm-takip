@@ -265,4 +265,18 @@ const DB = {
     }
     return false;
   },
+
+  /* Kaç rezervasyon bu günde etkinlik var? (Yoğunluk için) */
+  getEventCountForDate(dateStr) {
+    let count = 0;
+    for (const res of this.reservations) {
+      const hasTour     = (res.tours||[]).some(t=>t.date===dateStr);
+      const hasBalloon  = res.balloon?.active && res.balloon?.date===dateStr;
+      const hasTransfer = (res.transfers||[]).some(tf=>tf.date===dateStr);
+      const hasHotel    = (res.hotels||[]).some(h=>h.checkin===dateStr||h.checkout===dateStr);
+      const hasFlight   = (res.flights||[]).some(fl=>(fl.departureTime||'').split('T')[0]===dateStr||(fl.arrivalTime||'').split('T')[0]===dateStr);
+      if (hasTour||hasBalloon||hasTransfer||hasHotel||hasFlight) count++;
+    }
+    return count;
+  },
 };
