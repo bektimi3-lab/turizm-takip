@@ -3,8 +3,8 @@
 const MONTHS_TR   = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const WDAYS_SHORT = ['Pt','Sa','Ça','Pe','Cu','Ct','Pz'];
 
-const EV_ICON  = { tour:'🏷️', flight:'✈️', transfer:'🚌', checkin:'🏨', checkout:'🏨' };
-const EV_LABEL = { tour:'Tur', flight:'Uçuş', transfer:'Transfer', checkin:'Check-in', checkout:'Check-out' };
+const EV_ICON  = { tour:'🏷️', flight:'✈️', transfer:'🚌', checkin:'🏨', checkout:'🏨', balloon:'🎈' };
+const EV_LABEL = { tour:'Tur', flight:'Uçuş', transfer:'Transfer', checkin:'Check-in', checkout:'Check-out', balloon:'Balon' };
 
 const NAT_FLAG = {
   'İngiliz':'🇬🇧','Alman':'🇩🇪','Fransız':'🇫🇷','İspanyol':'🇪🇸','İtalyan':'🇮🇹',

@@ -21,41 +21,46 @@ function renderDayView(dateStr) {
   const tourCnt     = evList.filter(e => e.events.some(ev => ev.type === 'tour')).length;
   const flightCnt   = evList.filter(e => e.events.some(ev => ev.type === 'flight')).length;
   const transferCnt = evList.filter(e => e.events.some(ev => ev.type === 'transfer')).length;
+  const totalGuests = evList.reduce((sum, e) => sum + (e.reservation.guestCount || 1), 0);
 
   /* stat boxes */
   const stats = `
   <div class="day-stats">
-    <div class="day-stat"><span class="stat-ico">👥</span><div><div class="stat-val">${evList.length}</div><div class="stat-lbl">Turist</div></div></div>
+    <div class="day-stat"><span class="stat-ico">👥</span><div><div class="stat-val">${evList.length} Grup</div><div class="stat-lbl">${totalGuests} Kişi</div></div></div>
     ${tourCnt     ? `<div class="day-stat"><span class="stat-ico">🏷️</span><div><div class="stat-val">${tourCnt}</div><div class="stat-lbl">Tur</div></div></div>` : ''}
     ${flightCnt   ? `<div class="day-stat"><span class="stat-ico">✈️</span><div><div class="stat-val">${flightCnt}</div><div class="stat-lbl">Uçuş</div></div></div>` : ''}
     ${transferCnt ? `<div class="day-stat"><span class="stat-ico">🚌</span><div><div class="stat-val">${transferCnt}</div><div class="stat-lbl">Transfer</div></div></div>` : ''}
   </div>`;
 
-  /* tourist cards */
+  /* reservation cards */
   let cards = '';
   if (evList.length === 0) {
     cards = `
     <div class="empty-state">
       <div class="empty-ico">📅</div>
       <div class="empty-title">Bu gün etkinlik yok</div>
-      <div class="empty-desc">Turist eklemek için "＋ Turist Ekle" butonunu kullanın.</div>
-      ${Auth.canEdit() ? `<button class="btn btn-primary" style="margin-top:16px" onclick="Router.navigate('/tourist/new')">＋ Turist Ekle</button>` : ''}
+      <div class="empty-desc">Rezervasyon eklemek için "＋ Rezervasyon Ekle" butonunu kullanın.</div>
+      ${Auth.canEdit() ? `<button class="btn btn-primary" style="margin-top:16px" onclick="Router.navigate('/reservation/new')">＋ Rezervasyon Ekle</button>` : ''}
     </div>`;
   } else {
-    for (const { tourist, events } of evList) {
-      const fn  = tourist.personal.firstName;
-      const ln  = tourist.personal.lastName;
+    for (const { reservation, events } of evList) {
+      const fn  = reservation.personal.firstName;
+      const ln  = reservation.personal.lastName;
       const nm  = `${fn} ${ln}`;
       const col = avatarColor(nm);
       const ini = getInitials(fn, ln);
-      const flg = getFlag(tourist.personal.nationality);
-      const ps  = payStatusBadge(tourist.payment);
-      const cur = tourist.payment?.currency || DB.settings.currency || 'EUR';
+      const guestText = `${reservation.guestCount || 1} Kişi`;
+      
+      const ps  = payStatusBadge(reservation.payment);
+      const cur = reservation.payment?.currency || DB.settings.currency || 'EUR';
 
       const badgeHtml = events.map(ev => {
         if (ev.type === 'tour') {
-          const tour = DB.tours.find(t => t.id === ev.tourId);
+          const tour = DB.tourOptions.find(t => t.id === ev.tourId);
           return `<span class="badge badge-orange">${EV_ICON.tour} ${tour?.name || 'Tur'}</span>`;
+        }
+        if (ev.type === 'balloon') {
+          return `<span class="badge badge-red">${EV_ICON.balloon} Balon</span>`;
         }
         if (ev.type === 'flight') {
           const ico = ev.direction === 'giriş' ? '🛬' : '🛫';
@@ -67,15 +72,15 @@ function renderDayView(dateStr) {
         return '';
       }).join('');
 
-      const paid  = tourist.payment?.paid  || 0;
-      const total = tourist.payment?.total || 0;
+      const paid  = reservation.payment?.paid  || 0;
+      const total = reservation.payment?.total || 0;
 
       cards += `
-      <div class="day-tourist-card" onclick="Router.navigate('/tourist/${tourist.id}')">
+      <div class="day-tourist-card" onclick="Router.navigate('/reservation/${reservation.id}')">
         <div class="dtc-avatar" style="background:${col}">${ini}</div>
         <div class="dtc-info">
-          <div class="dtc-name">${nm}</div>
-          <div class="dtc-meta">${flg} ${tourist.personal.nationality||'—'} · 🛂 ${tourist.personal.passport||'—'} · 🏨 ${tourist.hotel?.name||'—'}</div>
+          <div class="dtc-name">${nm} <span style="font-size:13px;font-weight:normal;color:var(--text-muted);margin-left:8px">• ${guestText}</span></div>
+          <div class="dtc-meta">${reservation.days} gün · Başlangıç: ${formatDate(reservation.startDate)}</div>
           <div class="dtc-evs">${badgeHtml}</div>
         </div>
         <div class="dtc-right">
@@ -93,11 +98,11 @@ function renderDayView(dateStr) {
     <div class="day-title-wrap">
       <div class="day-title">${parseInt(dy)} ${MONTHS_TR[month]} ${yr}</div>
       <div class="day-sub">${trDayName(dateStr)} &nbsp;·&nbsp;
-        <span onclick="Router.navigate('/month/${yr}/${mPad}')">Aya git ↑</span>
+        <span onclick="Router.navigate('/month/${yr}/${mPad}')" style="cursor:pointer;color:var(--primary);text-decoration:underline">Aya git ↑</span>
       </div>
     </div>
     <div style="display:flex;gap:8px">
-      ${Auth.canEdit() ? `<button class="btn btn-primary btn-sm" onclick="Router.navigate('/tourist/new')">＋ Turist Ekle</button>` : ''}
+      ${Auth.canEdit() ? `<button class="btn btn-primary btn-sm" onclick="Router.navigate('/reservation/new')">＋ Rezervasyon Ekle</button>` : ''}
       <button class="day-nav" onclick="Router.navigate('/day/${fmtPath(nextStr)}')">Sonraki →</button>
     </div>
   </div>

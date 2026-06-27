@@ -1,82 +1,159 @@
 /* ============================================================
-   data.js — Yerel depolama tabanlı veri katmanı
+   data.js — v2  (Rezervasyonlar modeli)
    ============================================================ */
 
-/* ---- Demo Tur Tanımları ---- */
-const DEFAULT_TOURS = [
-  { id: 'tour_1', name: 'Kapadokya Turu',    color: '#f97316', icon: '🏔️', duration: 2, description: '2 günlük balon ve vadi gezisi' },
-  { id: 'tour_2', name: 'Boğaz Turu',        color: '#3b82f6', icon: '⛵', duration: 1, description: 'Boğaz tekne turu' },
-  { id: 'tour_3', name: 'İstanbul Tarihi',   color: '#a855f7', icon: '🕌', duration: 1, description: 'Tarihi yarımada & camiler' },
-  { id: 'tour_4', name: 'Pamukkale Turu',    color: '#06b6d4', icon: '🌊', duration: 2, description: '2 günlük Pamukkale & Hierapolis' },
-  { id: 'tour_5', name: 'Efes Antik Turu',   color: '#eab308', icon: '🏛️', duration: 1, description: 'Efes antik kenti gezisi' },
-  { id: 'tour_6', name: 'Antalya Sahil',     color: '#22c55e', icon: '🏖️', duration: 3, description: '3 günlük sahil tatili' },
+/* ---- Sabit listeler (admin yönetebilir) ---- */
+const DEFAULT_TOUR_OPTIONS = [
+  { id: 'to_1', name: 'Kapadokya Turu',   icon: '🏔️', color: '#f97316' },
+  { id: 'to_2', name: 'Boğaz Turu',       icon: '⛵',  color: '#3b82f6' },
+  { id: 'to_3', name: 'İstanbul Tarihi',  icon: '🕌',  color: '#a855f7' },
+  { id: 'to_4', name: 'Pamukkale Turu',   icon: '🌊',  color: '#06b6d4' },
+  { id: 'to_5', name: 'Efes Antik Turu',  icon: '🏛️', color: '#eab308' },
+  { id: 'to_6', name: 'Antalya Sahil',    icon: '🏖️', color: '#22c55e' },
+];
+
+const DEFAULT_TRANSFER_OPTIONS = [
+  { id: 'tf_1', name: 'IST Havalimanı → Otel'  },
+  { id: 'tf_2', name: 'SAW Havalimanı → Otel'  },
+  { id: 'tf_3', name: 'Otel → IST Havalimanı'  },
+  { id: 'tf_4', name: 'Otel → SAW Havalimanı'  },
+  { id: 'tf_5', name: 'Havalimanı → Tur Bölgesi' },
+];
+
+const DEFAULT_HOTEL_OPTIONS = [
+  { id: 'h_1', name: 'Çırağan Palace Hotel'       },
+  { id: 'h_2', name: 'Four Seasons Bosphorus'      },
+  { id: 'h_3', name: 'Pera Palace Hotel'           },
+  { id: 'h_4', name: 'Swissôtel The Bosphorus'     },
+  { id: 'h_5', name: 'Hilton İstanbul Bosphorus'   },
+];
+
+const DEFAULT_FLIGHT_OPTIONS = [
+  { id: 'fo_1', flightNo: 'TK1983', fromAirport: 'IST', toAirport: 'LHR', direction: 'çıkış' },
+  { id: 'fo_2', flightNo: 'TK1984', fromAirport: 'LHR', toAirport: 'IST', direction: 'giriş' },
+  { id: 'fo_3', flightNo: 'PC282',  fromAirport: 'SAW', toAirport: 'FRA', direction: 'çıkış' },
+  { id: 'fo_4', flightNo: 'PC281',  fromAirport: 'FRA', toAirport: 'SAW', direction: 'giriş' },
 ];
 
 /* ---- Demo Kullanıcılar ---- */
 const DEFAULT_USERS = [
-  { id: 'u_admin', email: 'admin@turizm.com',      password: 'admin123',      name: 'Admin Kullanıcı',  role: 'editor' },
-  { id: 'u_view',  email: 'goruntule@turizm.com',  password: 'goruntule123',  name: 'Görüntüleyici',    role: 'viewer' },
+  { id: 'u_admin', email: 'admin@turizm.com',     password: 'admin123',     name: 'Admin',         role: 'editor' },
+  { id: 'u_view',  email: 'goruntule@turizm.com', password: 'goruntule123', name: 'Görüntüleyici', role: 'viewer' },
 ];
 
-/* ---- Demo Turistler (bugün + yakın günler) ---- */
-function _buildDemoTourists() {
-  const now   = new Date();
-  const fmt   = d => d.toISOString().split('T')[0];
-  const add   = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
-  const ts    = () => new Date().toISOString();
+/* ---- Demo Rezervasyonlar ---- */
+function _buildDemoReservations() {
+  const now = new Date();
+  const fmt = d => d.toISOString().split('T')[0];
+  const add = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+  const ts  = () => new Date().toISOString();
 
   return [
     {
-      id: 'demo_1',
-      personal: { firstName: 'James', lastName: 'Wilson', dob: '1985-03-15', nationality: 'İngiliz', passport: 'GB123456', phone: '+44 7700 900123', email: 'james.wilson@email.com' },
-      hotel:    { name: 'Çırağan Palace Hotel', room: '305', checkin: fmt(now), checkout: fmt(add(now, 5)) },
-      tours:    [{ tourId: 'tour_1', date: fmt(add(now, 1)) }, { tourId: 'tour_2', date: fmt(add(now, 3)) }],
-      flights:  [
-        { id: 'f1', flightNo: 'TK1234', fromAirport: 'London Heathrow (LHR)', toAirport: 'İstanbul (IST)', departureTime: fmt(now) + 'T08:30', arrivalTime: fmt(now) + 'T14:15', direction: 'giriş'  },
-        { id: 'f2', flightNo: 'TK1235', fromAirport: 'İstanbul (IST)',         toAirport: 'London Heathrow (LHR)', departureTime: fmt(add(now,5)) + 'T16:00', arrivalTime: fmt(add(now,5)) + 'T18:30', direction: 'çıkış' },
+      id: 'res_1',
+      personal: { firstName: 'James', lastName: 'Wilson' },
+      guestCount: 2,
+      guests: [
+        { firstName: 'James', lastName: 'Wilson', nationality: 'İngiliz', passport: 'GB123456', dob: '1985-03-15', passportStart: '2020-06-01', passportEnd: '2030-06-01' },
+        { firstName: 'Sarah', lastName: 'Wilson', nationality: 'İngiliz', passport: 'GB654321', dob: '1987-09-20', passportStart: '2021-03-01', passportEnd: '2031-03-01' },
       ],
-      transfers: [{ id: 'tr1', date: fmt(now), time: '15:00', from: 'IST Havalimanı', to: 'Çırağan Palace Hotel', note: 'VIP karşılama' }],
-      payment:  { total: 3500, paid: 2000, currency: 'EUR', method: 'kredi kartı', status: 'kısmi' },
-      notes:    'Balayı çifti. Özel ilgi gösterilsin.',
-      createdAt: ts(), updatedAt: ts(),
-    },
-    {
-      id: 'demo_2',
-      personal: { firstName: 'Sophie', lastName: 'Müller', dob: '1990-07-22', nationality: 'Alman', passport: 'DE789012', phone: '+49 151 23456789', email: 'sophie.mueller@gmail.de' },
-      hotel:    { name: 'Four Seasons Bosphorus', room: '512', checkin: fmt(add(now,1)), checkout: fmt(add(now,4)) },
-      tours:    [{ tourId: 'tour_3', date: fmt(add(now,2)) }, { tourId: 'tour_2', date: fmt(add(now,3)) }],
-      flights:  [{ id: 'f3', flightNo: 'LH3456', fromAirport: 'Frankfurt (FRA)', toAirport: 'İstanbul (SAW)', departureTime: fmt(add(now,1)) + 'T06:45', arrivalTime: fmt(add(now,1)) + 'T11:00', direction: 'giriş' }],
-      transfers: [{ id: 'tr2', date: fmt(add(now,1)), time: '12:00', from: 'SAW Havalimanı', to: 'Four Seasons Bosphorus', note: '' }],
-      payment:  { total: 1800, paid: 1800, currency: 'EUR', method: 'nakit', status: 'ödendi' },
-      notes:    '',
-      createdAt: ts(), updatedAt: ts(),
-    },
-    {
-      id: 'demo_3',
-      personal: { firstName: 'Maria', lastName: 'Rodriguez', dob: '1978-11-08', nationality: 'İspanyol', passport: 'ES345678', phone: '+34 612 345 678', email: 'maria.rodriguez@correo.es' },
-      hotel:    { name: 'Pera Palace Hotel', room: '201', checkin: fmt(add(now,-1)), checkout: fmt(add(now,3)) },
-      tours:    [{ tourId: 'tour_3', date: fmt(now) }, { tourId: 'tour_1', date: fmt(add(now,2)) }],
-      flights:  [{ id: 'f4', flightNo: 'IB9012', fromAirport: 'Madrid (MAD)', toAirport: 'İstanbul (IST)', departureTime: fmt(add(now,-1)) + 'T10:20', arrivalTime: fmt(add(now,-1)) + 'T16:45', direction: 'giriş' }],
+      startDate: fmt(now),
+      days: 5,
+      tours: [
+        { tourId: 'to_1', date: fmt(add(now, 1)) },
+        { tourId: 'to_2', date: fmt(add(now, 3)) },
+      ],
+      balloon: { active: true, count: 2, date: fmt(add(now, 1)) },
       transfers: [
-        { id: 'tr3', date: fmt(add(now,-1)), time: '17:30', from: 'IST Havalimanı',     to: 'Pera Palace Hotel',   note: '' },
-        { id: 'tr4', date: fmt(add(now,3)),  time: '09:00', from: 'Pera Palace Hotel',  to: 'IST Havalimanı',      note: 'Çıkış transferi' },
+        { transferId: 'tf_1', date: fmt(now),       time: '15:00', note: 'VIP karşılama' },
+        { transferId: 'tf_3', date: fmt(add(now,5)), time: '10:00', note: '' },
       ],
-      payment:  { total: 2200, paid: 0, currency: 'EUR', method: 'transfer', status: 'bekliyor' },
-      notes:    'Tek seyahat. Vejetaryen yemek tercihi.',
+      hotels: [{ hotelId: 'h_1', room: '305', checkin: fmt(now), checkout: fmt(add(now,5)) }],
+      flights: [
+        { id:'f1', flightNo:'TK1234', fromAirport:'LHR', toAirport:'IST', departureTime: fmt(now)+'T08:30', arrivalTime: fmt(now)+'T14:15', direction:'giriş' },
+        { id:'f2', flightNo:'TK1235', fromAirport:'IST', toAirport:'LHR', departureTime: fmt(add(now,5))+'T16:00', arrivalTime: fmt(add(now,5))+'T18:30', direction:'çıkış' },
+      ],
+      payment: { total: 7000, paid: 4000, currency: 'EUR', method: 'kredi kartı', status: 'kısmi' },
+      notes: 'Balayı çifti. Özel ilgi gösterilsin.',
       createdAt: ts(), updatedAt: ts(),
     },
     {
-      id: 'demo_4',
-      personal: { firstName: 'Kenji', lastName: 'Tanaka', dob: '1995-04-10', nationality: 'Japon', passport: 'JP567890', phone: '+81 90 1234 5678', email: 'kenji.tanaka@mail.jp' },
-      hotel:    { name: 'Swissôtel The Bosphorus', room: '740', checkin: fmt(add(now,2)), checkout: fmt(add(now,7)) },
-      tours:    [{ tourId: 'tour_4', date: fmt(add(now,3)) }, { tourId: 'tour_5', date: fmt(add(now,5)) }],
-      flights:  [
-        { id: 'f5', flightNo: 'TK198', fromAirport: 'Tokyo Narita (NRT)', toAirport: 'İstanbul (IST)', departureTime: fmt(add(now,2)) + 'T10:00', arrivalTime: fmt(add(now,2)) + 'T17:30', direction: 'giriş' },
-        { id: 'f6', flightNo: 'TK197', fromAirport: 'İstanbul (IST)', toAirport: 'Tokyo Narita (NRT)', departureTime: fmt(add(now,7)) + 'T20:00', arrivalTime: fmt(add(now,8)) + 'T16:00', direction: 'çıkış' },
+      id: 'res_2',
+      personal: { firstName: 'Sophie', lastName: 'Müller' },
+      guestCount: 1,
+      guests: [
+        { firstName: 'Sophie', lastName: 'Müller', nationality: 'Alman', passport: 'DE789012', dob: '1990-07-22', passportStart: '2022-01-01', passportEnd: '2032-01-01' },
       ],
-      transfers: [{ id: 'tr5', date: fmt(add(now,2)), time: '18:30', from: 'IST Havalimanı', to: 'Swissôtel The Bosphorus', note: 'Çevirmen eşliğinde' }],
-      payment:  { total: 4200, paid: 4200, currency: 'EUR', method: 'transfer', status: 'ödendi' },
-      notes:    'Japonya seyahat acentesi grubu koordinatörü.',
+      startDate: fmt(add(now,1)),
+      days: 3,
+      tours: [
+        { tourId: 'to_3', date: fmt(add(now,2)) },
+        { tourId: 'to_2', date: fmt(add(now,3)) },
+      ],
+      balloon: { active: false, count: 0, date: '' },
+      transfers: [
+        { transferId: 'tf_2', date: fmt(add(now,1)), time: '12:00', note: '' },
+      ],
+      hotels: [{ hotelId: 'h_2', room: '512', checkin: fmt(add(now,1)), checkout: fmt(add(now,4)) }],
+      flights: [
+        { id:'f3', flightNo:'LH3456', fromAirport:'FRA', toAirport:'SAW', departureTime: fmt(add(now,1))+'T06:45', arrivalTime: fmt(add(now,1))+'T11:00', direction:'giriş' },
+      ],
+      payment: { total: 1800, paid: 1800, currency: 'EUR', method: 'nakit', status: 'ödendi' },
+      notes: '',
+      createdAt: ts(), updatedAt: ts(),
+    },
+    {
+      id: 'res_3',
+      personal: { firstName: 'Maria', lastName: 'Rodriguez' },
+      guestCount: 3,
+      guests: [
+        { firstName: 'Maria', lastName: 'Rodriguez', nationality: 'İspanyol', passport: 'ES345678', dob: '1978-11-08', passportStart: '2019-05-01', passportEnd: '2029-05-01' },
+        { firstName: 'Carlos', lastName: 'Rodriguez', nationality: 'İspanyol', passport: 'ES345679', dob: '1975-02-14', passportStart: '', passportEnd: '' },
+        { firstName: 'Ana', lastName: 'Rodriguez', nationality: 'İspanyol', passport: '', dob: '2010-08-30', passportStart: '', passportEnd: '' },
+      ],
+      startDate: fmt(add(now,-1)),
+      days: 4,
+      tours: [
+        { tourId: 'to_3', date: fmt(now) },
+        { tourId: 'to_1', date: fmt(add(now,2)) },
+      ],
+      balloon: { active: true, count: 2, date: fmt(add(now,2)) },
+      transfers: [
+        { transferId: 'tf_1', date: fmt(add(now,-1)), time: '17:30', note: '' },
+        { transferId: 'tf_3', date: fmt(add(now,3)), time: '09:00', note: 'Çıkış transferi' },
+      ],
+      hotels: [{ hotelId: 'h_3', room: '201', checkin: fmt(add(now,-1)), checkout: fmt(add(now,3)) }],
+      flights: [
+        { id:'f4', flightNo:'IB9012', fromAirport:'MAD', toAirport:'IST', departureTime: fmt(add(now,-1))+'T10:20', arrivalTime: fmt(add(now,-1))+'T16:45', direction:'giriş' },
+      ],
+      payment: { total: 4500, paid: 0, currency: 'EUR', method: 'transfer', status: 'bekliyor' },
+      notes: 'Vejetaryen yemek tercihi.',
+      createdAt: ts(), updatedAt: ts(),
+    },
+    {
+      id: 'res_4',
+      personal: { firstName: 'Kenji', lastName: 'Tanaka' },
+      guestCount: 4,
+      guests: [
+        { firstName: 'Kenji', lastName: 'Tanaka', nationality: 'Japon', passport: 'JP567890', dob: '1985-04-10', passportStart: '2022-03-01', passportEnd: '2032-03-01' },
+      ],
+      startDate: fmt(add(now,2)),
+      days: 5,
+      tours: [
+        { tourId: 'to_4', date: fmt(add(now,3)) },
+        { tourId: 'to_5', date: fmt(add(now,5)) },
+      ],
+      balloon: { active: false, count: 0, date: '' },
+      transfers: [
+        { transferId: 'tf_1', date: fmt(add(now,2)), time: '18:30', note: 'Çevirmen eşliğinde' },
+      ],
+      hotels: [{ hotelId: 'h_4', room: '740', checkin: fmt(add(now,2)), checkout: fmt(add(now,7)) }],
+      flights: [
+        { id:'f5', flightNo:'TK198', fromAirport:'NRT', toAirport:'IST', departureTime: fmt(add(now,2))+'T10:00', arrivalTime: fmt(add(now,2))+'T17:30', direction:'giriş' },
+        { id:'f6', flightNo:'TK197', fromAirport:'IST', toAirport:'NRT', departureTime: fmt(add(now,7))+'T20:00', arrivalTime: fmt(add(now,8))+'T16:00', direction:'çıkış' },
+      ],
+      payment: { total: 9200, paid: 9200, currency: 'EUR', method: 'transfer', status: 'ödendi' },
+      notes: 'Seyahat acentesi grubu.',
       createdAt: ts(), updatedAt: ts(),
     },
   ];
@@ -90,98 +167,101 @@ function uuid() {
   });
 }
 
-/* ---- DB Nesnesi ---- */
+/* ---- DB ---- */
 const DB = {
-  _r(key, def) {
-    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
-    catch { return def; }
-  },
+  _r(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; } },
   _w(key, val) { localStorage.setItem(key, JSON.stringify(val)); },
 
-  get tourists()  { return this._r('tts_tourists',  _buildDemoTourists()); },
-  set tourists(v) { this._w('tts_tourists', v); },
+  /* Rezervasyonlar */
+  get reservations()   { return this._r('tts_reservations', _buildDemoReservations()); },
+  set reservations(v)  { this._w('tts_reservations', v); },
 
-  get tours()     { return this._r('tts_tours',     DEFAULT_TOURS); },
-  set tours(v)    { this._w('tts_tours', v); },
+  /* Listeler */
+  get tourOptions()    { return this._r('tts_tour_options',     DEFAULT_TOUR_OPTIONS);     },
+  set tourOptions(v)   { this._w('tts_tour_options', v);     },
+  get transferOptions(){ return this._r('tts_transfer_options', DEFAULT_TRANSFER_OPTIONS); },
+  set transferOptions(v){ this._w('tts_transfer_options', v); },
+  get hotelOptions()   { return this._r('tts_hotel_options',    DEFAULT_HOTEL_OPTIONS);    },
+  set hotelOptions(v)  { this._w('tts_hotel_options', v);    },
+  get flightOptions()  { return this._r('tts_flight_options',   DEFAULT_FLIGHT_OPTIONS);   },
+  set flightOptions(v) { this._w('tts_flight_options', v);   },
 
-  get settings()  { return this._r('tts_settings',  { currency: 'EUR' }); },
-  set settings(v) { this._w('tts_settings', v); },
+  /* Ayarlar & Kullanıcılar */
+  get settings()   { return this._r('tts_settings', { currency: 'EUR' }); },
+  set settings(v)  { this._w('tts_settings', v); },
+  get users()      { return this._r('tts_users', DEFAULT_USERS); },
+  set users(v)     { this._w('tts_users', v); },
 
-  get users()     { return this._r('tts_users',     DEFAULT_USERS); },
-  set users(v)    { this._w('tts_users', v); },
-
-  /* ---- Tourist CRUD ---- */
-  addTourist(data) {
-    const list = this.tourists;
-    const t = { ...data, id: uuid(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-    list.push(t);
-    this.tourists = list;
-    return t;
+  /* ---- Rezervasyon CRUD ---- */
+  addReservation(data) {
+    const list = this.reservations;
+    const r = { ...data, id: uuid(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    list.push(r); this.reservations = list; return r;
   },
-  updateTourist(id, data) {
-    const list = this.tourists;
-    const i = list.findIndex(t => t.id === id);
-    if (i !== -1) { list[i] = { ...list[i], ...data, updatedAt: new Date().toISOString() }; this.tourists = list; return list[i]; }
+  updateReservation(id, data) {
+    const list = this.reservations;
+    const i = list.findIndex(r => r.id === id);
+    if (i !== -1) { list[i] = { ...list[i], ...data, updatedAt: new Date().toISOString() }; this.reservations = list; return list[i]; }
     return null;
   },
-  deleteTourist(id) { this.tourists = this.tourists.filter(t => t.id !== id); },
-  getTourist(id)    { return this.tourists.find(t => t.id === id) || null; },
+  deleteReservation(id) { this.reservations = this.reservations.filter(r => r.id !== id); },
+  getReservation(id)    { return this.reservations.find(r => r.id === id) || null; },
 
-  /* ---- Tour CRUD ---- */
-  addTour(data)   { const l = this.tours; const t = { ...data, id: uuid() }; l.push(t); this.tours = l; return t; },
-  updateTour(id, data) {
-    const l = this.tours; const i = l.findIndex(t => t.id === id);
-    if (i !== -1) { l[i] = { ...l[i], ...data }; this.tours = l; return l[i]; }
+  /* ---- Liste yönetimi (turlar/transferler/oteller) ---- */
+  addToList(listKey, item) {
+    const l = this[listKey]; l.push({ ...item, id: uuid() }); this[listKey] = l; return l[l.length-1];
   },
-  deleteTour(id)  { this.tours = this.tours.filter(t => t.id !== id); },
-
-  /* ---- Takvim yardımcıları ---- */
-  _touristEventDates(tourist) {
-    const dates = {};
-    const push = (ds, type) => { if (!ds) return; (dates[ds] = dates[ds] || new Set()).add(type); };
-    for (const tr of (tourist.tours     || [])) push(tr.date, 'tour');
-    for (const fl of (tourist.flights   || [])) {
-      push((fl.departureTime || '').split('T')[0], 'flight');
-      push((fl.arrivalTime   || '').split('T')[0], 'flight');
-    }
-    for (const tf of (tourist.transfers || [])) push(tf.date, 'transfer');
-    if (tourist.hotel) { push(tourist.hotel.checkin, 'checkin'); push(tourist.hotel.checkout, 'checkout'); }
-    return dates;
+  removeFromList(listKey, id) { this[listKey] = this[listKey].filter(x => x.id !== id); },
+  updateInList(listKey, id, data) {
+    const l = this[listKey]; const i = l.findIndex(x => x.id === id);
+    if (i !== -1) { l[i] = { ...l[i], ...data }; this[listKey] = l; }
   },
 
+  /* ---- Takvim: o günkü etkinlikler ---- */
   getEventsForDate(dateStr) {
     const result = [];
-    for (const tourist of this.tourists) {
+    for (const res of this.reservations) {
       const evs = [];
-      for (const tr of (tourist.tours     || [])) if (tr.date === dateStr) evs.push({ type: 'tour',     tourId: tr.tourId });
-      for (const fl of (tourist.flights   || [])) {
-        const dep = (fl.departureTime || '').split('T')[0];
-        const arr = (fl.arrivalTime   || '').split('T')[0];
-        if (dep === dateStr || arr === dateStr) evs.push({ type: 'flight', flight: fl, direction: fl.direction });
+      for (const t of (res.tours||[]))
+        if (t.date === dateStr) evs.push({ type:'tour', tourId: t.tourId });
+      if (res.balloon?.active && res.balloon?.date === dateStr)
+        evs.push({ type:'balloon' });
+      for (const tf of (res.transfers||[]))
+        if (tf.date === dateStr) evs.push({ type:'transfer', transfer: tf });
+      for (const h of (res.hotels||[])) {
+        if (h.checkin  === dateStr) evs.push({ type:'checkin',  hotel: h });
+        if (h.checkout === dateStr) evs.push({ type:'checkout', hotel: h });
       }
-      for (const tf of (tourist.transfers || [])) if (tf.date === dateStr) evs.push({ type: 'transfer', transfer: tf });
-      if (tourist.hotel) {
-        if (tourist.hotel.checkin  === dateStr) evs.push({ type: 'checkin'  });
-        if (tourist.hotel.checkout === dateStr) evs.push({ type: 'checkout' });
+      for (const fl of (res.flights||[])) {
+        const dep = (fl.departureTime||'').split('T')[0];
+        const arr = (fl.arrivalTime  ||'').split('T')[0];
+        if (dep === dateStr || arr === dateStr)
+          evs.push({ type:'flight', flight: fl, direction: fl.direction });
       }
-      if (evs.length) result.push({ tourist, events: evs });
+      if (evs.length) result.push({ reservation: res, events: evs });
     }
     return result;
   },
 
   getEventTypesForDate(dateStr) {
     const types = new Set();
-    for (const tourist of this.tourists) {
-      const d = this._touristEventDates(tourist);
-      if (d[dateStr]) d[dateStr].forEach(t => types.add(t));
+    for (const res of this.reservations) {
+      for (const t  of (res.tours||[]))     if (t.date === dateStr) types.add('tour');
+      if (res.balloon?.active && res.balloon?.date === dateStr) types.add('balloon');
+      for (const tf of (res.transfers||[])) if (tf.date === dateStr) types.add('transfer');
+      for (const h  of (res.hotels||[]))   { if (h.checkin===dateStr) types.add('checkin'); if (h.checkout===dateStr) types.add('checkout'); }
+      for (const fl of (res.flights||[]))  { const dep=(fl.departureTime||'').split('T')[0]; const arr=(fl.arrivalTime||'').split('T')[0]; if (dep===dateStr||arr===dateStr) types.add('flight'); }
     }
     return Array.from(types);
   },
 
   hasEventsOnDate(dateStr) {
-    for (const tourist of this.tourists) {
-      const d = this._touristEventDates(tourist);
-      if (d[dateStr] && d[dateStr].size > 0) return true;
+    for (const res of this.reservations) {
+      if ((res.tours||[]).some(t=>t.date===dateStr)) return true;
+      if (res.balloon?.active && res.balloon?.date===dateStr) return true;
+      if ((res.transfers||[]).some(tf=>tf.date===dateStr)) return true;
+      if ((res.hotels||[]).some(h=>h.checkin===dateStr||h.checkout===dateStr)) return true;
+      if ((res.flights||[]).some(fl=>(fl.departureTime||'').split('T')[0]===dateStr||(fl.arrivalTime||'').split('T')[0]===dateStr)) return true;
     }
     return false;
   },

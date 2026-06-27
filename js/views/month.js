@@ -23,11 +23,11 @@ function renderMonthView(year, month) {
     const evList  = DB.getEventsForDate(ds);
     const hasEv   = evList.length > 0;
 
-    /* collect types & tourist names */
+    /* collect types & reservation names */
     const types   = new Set();
     const names   = [];
-    for (const { tourist, events } of evList) {
-      names.push(`${tourist.personal.firstName} ${tourist.personal.lastName}`);
+    for (const { reservation, events } of evList) {
+      names.push(`${reservation.personal.firstName} ${reservation.personal.lastName}`);
       events.forEach(e => types.add(e.type));
     }
 
@@ -40,7 +40,7 @@ function renderMonthView(year, month) {
     const firstType = (evList[0]?.events[0]?.type) || 'tour';
     const chips = shown.map((nm, i) => {
       const tp = evList[i]?.events[0]?.type || 'tour';
-      return `<div class="ev-chip ${tp}">${EV_ICON[tp]||''} ${nm.split(' ')[0]}</div>`;
+      return `<div class="ev-chip ${tp}">${EV_ICON[tp]||''} ${nm.split(' ').pop()}</div>`;
     }).join('');
     const moreChip = rest > 0 ? `<div class="ev-chip more">+${rest}</div>` : '';
 

@@ -9,12 +9,12 @@ function renderYearView(year) {
   <div class="year-header">
     <div>
       <div class="year-title">${year}</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-top:2px">Yıllık Turist Takvimi</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:2px">Yıllık Rezervasyon Takvimi</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button class="btn btn-secondary btn-sm" onclick="Router.navigate('/year/${year-1}')">← ${year-1}</button>
       <button class="btn btn-secondary btn-sm" onclick="Router.navigate('/year/${year+1}')">${year+1} →</button>
-      ${Auth.canEdit() ? `<button class="btn btn-primary btn-sm" onclick="Router.navigate('/tourist/new')">＋ Turist Ekle</button>` : ''}
+      ${Auth.canEdit() ? `<button class="btn btn-primary btn-sm" onclick="Router.navigate('/reservation/new')">＋ Rezervasyon Ekle</button>` : ''}
     </div>
   </div>
 
@@ -24,6 +24,7 @@ function renderYearView(year) {
     <div class="legend-item"><span>🏷️ Tur</span></div>
     <div class="legend-item"><span>🚌 Transfer</span></div>
     <div class="legend-item"><span>🏨 Otel</span></div>
+    <div class="legend-item"><span>🎈 Balon</span></div>
   </div>
 
   <div class="year-grid">${months}</div>`;
@@ -38,6 +39,8 @@ function _miniCal(year, month, today) {
   const mPad = String(month + 1).padStart(2, '0');
 
   let cells = '';
+  let monthHasEvents = false;
+
   for (let i = 0; i < startDow; i++) cells += `<div class="mcd empty"></div>`;
 
   for (let d = 1; d <= days; d++) {
@@ -50,15 +53,17 @@ function _miniCal(year, month, today) {
 
     let cls = 'mcd';
     if (isToday)   cls += ' today';
-    if (hasEvents) cls += ' has-events';
+    if (hasEvents) { cls += ' has-events'; monthHasEvents = true; }
     else if (isWeekend) cls += ' weekend';
 
     cells += `<div class="${cls}" onclick="Router.navigate('/day/${year}/${mPad}/${dPad}')" title="${ds}">${d}</div>`;
   }
 
+  const headStyle = monthHasEvents ? 'background:rgba(249,115,22,.15);color:var(--orange);border-bottom:1px solid rgba(249,115,22,.2);' : '';
+
   return `
-  <div class="mini-cal">
-    <div class="mini-cal-head" onclick="Router.navigate('/month/${year}/${mPad}')" title="${MONTHS_TR[month]} ${year}">${MONTHS_TR[month]}</div>
+  <div class="mini-cal" style="${monthHasEvents ? 'border-color:rgba(249,115,22,.3)' : ''}">
+    <div class="mini-cal-head" style="${headStyle}" onclick="Router.navigate('/month/${year}/${mPad}')" title="${MONTHS_TR[month]} ${year}">${MONTHS_TR[month]}</div>
     <div class="mini-cal-wdays">${WDAYS_SHORT.map(w => `<div class="mini-cal-wday">${w}</div>`).join('')}</div>
     <div class="mini-cal-days">${cells}</div>
   </div>`;

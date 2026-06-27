@@ -1,122 +1,218 @@
-/* views/settings.js — Ayarlar */
+/* views/settings.js — Ayarlar ve Listelerin Yönetimi */
 
 function renderSettingsView() {
-  const s     = DB.settings;
-  const users = DB.users;
+  const s = DB.settings || { currency: 'EUR' };
+  const can = Auth.canEdit();
 
   return `
-  <div style="max-width:680px">
-
-    <!-- Para Birimi -->
-    <div class="settings-section">
-      <div class="settings-head">💰 Para Birimi</div>
-      <div class="card">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Varsayılan Para Birimi</label>
-          <select id="currSel" class="form-control" style="max-width:200px" onchange="saveCurrency()">
-            <option value="EUR" ${s.currency==='EUR'?'selected':''}>€ EUR — Euro</option>
-            <option value="USD" ${s.currency==='USD'?'selected':''}>$ USD — Dolar</option>
-            <option value="TRY" ${s.currency==='TRY'?'selected':''}>₺ TRY — Türk Lirası</option>
+  <div style="max-width:800px;margin:0 auto;padding-bottom:50px">
+    
+    <div class="card" style="margin-bottom:20px">
+      <div class="sec-title">🌍 Genel Ayarlar</div>
+      <div class="form-row form-row-3">
+        <div class="form-group">
+          <label class="form-label">Sistem Para Birimi</label>
+          <select id="sysCurrency" class="form-control" ${!can?'disabled':''} onchange="saveSysSettings()">
+            <option value="EUR" ${s.currency==='EUR'?'selected':''}>€ EUR</option>
+            <option value="USD" ${s.currency==='USD'?'selected':''}>$ USD</option>
+            <option value="TRY" ${s.currency==='TRY'?'selected':''}>₺ TRY</option>
           </select>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:6px">Yeni turist eklerken varsayılan olarak kullanılır. Her turistin para birimi ayrı seçilebilir.</div>
         </div>
       </div>
-    </div>
-
-    <!-- Kullanıcılar -->
-    <div class="settings-section">
-      <div class="settings-head">👥 Kullanıcılar (Demo)</div>
-      <div class="tbl-wrap">
-        <table class="tbl">
-          <thead><tr><th>Ad</th><th>E-posta</th><th>Rol</th><th>Şifre</th></tr></thead>
-          <tbody>
-            ${users.map(u => `<tr>
-              <td><strong>${u.name}</strong></td>
-              <td style="font-size:12px">${u.email}</td>
-              <td><span class="badge ${u.role==='editor'?'badge-orange':'badge-blue'}">${u.role==='editor'?'✏️ Editör':'👁️ Görüntüleyici'}</span></td>
-              <td><code style="font-size:11px;background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--orange)">${u.password}</code></td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:8px">ℹ️ Firebase entegrasyonu ile gerçek kullanıcı yönetimi eklenebilir.</div>
-    </div>
-
-    <!-- Veri Yönetimi -->
-    <div class="settings-section">
-      <div class="settings-head">🗄️ Veri Yönetimi</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-        <button class="btn btn-secondary" onclick="exportJSON()">📤 JSON Olarak Dışa Aktar</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📥 JSON İçe Aktar</button>
-        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
-        <button class="btn btn-danger" onclick="resetAll()">🗑️ Tüm Verileri Sıfırla</button>
-      </div>
-      <div style="font-size:12px;color:var(--text-muted)">Veriler tarayıcının yerel depolamasında saklanır. Dışa aktararak yedek alabilirsiniz.</div>
-    </div>
-
-    <!-- GitHub Pages Bilgisi -->
-    <div class="settings-section">
-      <div class="settings-head">🌐 Ücretsiz Hosting (GitHub Pages)</div>
-      <div class="card" style="line-height:1.9;font-size:13.5px;color:var(--text-sec)">
-        Bu siteyi tamamen ücretsiz olarak GitHub Pages'te yayınlayabilirsiniz:<br><br>
-        <strong style="color:var(--text)">1.</strong> <a href="https://github.com" target="_blank" style="color:var(--orange)">github.com</a>'da ücretsiz hesap açın.<br>
-        <strong style="color:var(--text)">2.</strong> Yeni bir "repository" (repo) oluşturun → adını <code style="color:var(--orange);background:var(--surface);padding:1px 5px;border-radius:3px">turizm-takip</code> yapın.<br>
-        <strong style="color:var(--text)">3.</strong> Tüm proje dosyalarını bu repoya yükleyin (Upload files).<br>
-        <strong style="color:var(--text)">4.</strong> Settings → Pages → "Deploy from branch" → <code style="color:var(--orange);background:var(--surface);padding:1px 5px;border-radius:3px">main</code> seçin → Kaydet.<br>
-        <strong style="color:var(--text)">5.</strong> Birkaç dakika sonra <code style="color:var(--orange);background:var(--surface);padding:1px 5px;border-radius:3px">kullaniciadiniz.github.io/turizm-takip</code> adresinde yayında olur!<br><br>
-        <span style="color:var(--yellow)">⚠️ Not:</span> Prototip sürümünde veriler her kullanıcının kendi tarayıcısında saklanır. Ekip paylaşımı için Firebase entegrasyonu gereklidir.
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+        <div style="color:var(--text-sec);font-size:13px">Tüm verileri silip sistemi sıfırlayabilirsiniz.</div>
+        ${can ? `<button class="btn btn-danger btn-sm" onclick="resetAll()">⚠️ Sistemi Sıfırla</button>` : ''}
       </div>
     </div>
 
-    <!-- Hakkında -->
-    <div class="settings-section">
-      <div class="settings-head">ℹ️ Hakkında</div>
-      <div class="card" style="font-size:13px;color:var(--text-sec);line-height:1.8">
-        <strong style="color:var(--text)">TurTakip</strong> v1.0 — Turizm Yönetim Sistemi<br>
-        Prototip sürümü. Veriler tarayıcı LocalStorage'da saklanır.<br>
-        Tasarım: Dark mode, premium UI, tamamen Türkçe.
-      </div>
+    <!-- Akıllı Listeler -->
+    <div class="tabs" id="listTabs">
+      <button class="tab-btn active" data-tab="list-turlar" onclick="switchListTab(this,'list-turlar')">🏷️ Turlar</button>
+      <button class="tab-btn" data-tab="list-ucuslar" onclick="switchListTab(this,'list-ucuslar')">✈️ Uçuşlar</button>
+      <button class="tab-btn" data-tab="list-transferler" onclick="switchListTab(this,'list-transferler')">🚌 Transferler</button>
+      <button class="tab-btn" data-tab="list-oteller" onclick="switchListTab(this,'list-oteller')">🏨 Oteller</button>
     </div>
+
+    <!-- Turlar -->
+    <div class="tab-content active card" id="tc-list-turlar">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+        <div class="sec-title" style="margin:0;border:none;padding:0">Tur Listesi</div>
+        ${can ? `<button class="btn btn-primary btn-sm" onclick="addListRow('tourRows', 'tour')">＋ Ekle</button>` : ''}
+      </div>
+      <div id="tourRows">${renderTourList()}</div>
+      ${can ? `<button class="btn btn-secondary" style="margin-top:15px;width:100%" onclick="saveList('tour')">Turları Kaydet</button>` : ''}
+    </div>
+
+    <!-- Uçuşlar -->
+    <div class="tab-content card" id="tc-list-ucuslar">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+        <div class="sec-title" style="margin:0;border:none;padding:0">Uçuş Listesi (Şablonlar)</div>
+        ${can ? `<button class="btn btn-primary btn-sm" onclick="addListRow('flightRows', 'flight')">＋ Ekle</button>` : ''}
+      </div>
+      <div id="flightRows">${renderFlightList()}</div>
+      ${can ? `<button class="btn btn-secondary" style="margin-top:15px;width:100%" onclick="saveList('flight')">Uçuşları Kaydet</button>` : ''}
+    </div>
+
+    <!-- Transferler -->
+    <div class="tab-content card" id="tc-list-transferler">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+        <div class="sec-title" style="margin:0;border:none;padding:0">Transfer Listesi</div>
+        ${can ? `<button class="btn btn-primary btn-sm" onclick="addListRow('transferRows', 'transfer')">＋ Ekle</button>` : ''}
+      </div>
+      <div id="transferRows">${renderTransferList()}</div>
+      ${can ? `<button class="btn btn-secondary" style="margin-top:15px;width:100%" onclick="saveList('transfer')">Transferleri Kaydet</button>` : ''}
+    </div>
+
+    <!-- Oteller -->
+    <div class="tab-content card" id="tc-list-oteller">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+        <div class="sec-title" style="margin:0;border:none;padding:0">Otel Listesi</div>
+        ${can ? `<button class="btn btn-primary btn-sm" onclick="addListRow('hotelRows', 'hotel')">＋ Ekle</button>` : ''}
+      </div>
+      <div id="hotelRows">${renderHotelList()}</div>
+      ${can ? `<button class="btn btn-secondary" style="margin-top:15px;width:100%" onclick="saveList('hotel')">Otelleri Kaydet</button>` : ''}
+    </div>
+
   </div>`;
 }
 
-function saveCurrency() {
-  const s = DB.settings;
-  s.currency = document.getElementById('currSel').value;
-  DB.settings = s;
-  showNotif('Para birimi güncellendi: ' + s.currency, 'success');
+function switchListTab(btn, tabId) {
+  document.querySelectorAll('#listTabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tc-' + tabId));
 }
 
-function exportJSON() {
-  const data = { tourists: DB.tourists, tours: DB.tours, settings: DB.settings, exportedAt: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a'); a.href = url;
-  a.download = `turtakip-yedek-${new Date().toISOString().split('T')[0]}.json`;
-  a.click(); URL.revokeObjectURL(url);
-  showNotif('Veri dışa aktarıldı!', 'success');
-}
-
-function importJSON(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const d = JSON.parse(ev.target.result);
-      if (d.tourists) DB.tourists = d.tourists;
-      if (d.tours)    DB.tours    = d.tours;
-      if (d.settings) DB.settings = d.settings;
-      showNotif('Veri içe aktarıldı!', 'success');
-      Router.navigate('/year/' + new Date().getFullYear());
-    } catch { showNotif('Geçersiz JSON dosyası.', 'error'); }
-  };
-  reader.readAsText(file);
+function saveSysSettings() {
+  const v = document.getElementById('sysCurrency').value;
+  DB.settings = { ...DB.settings, currency: v };
+  showNotif('Para birimi güncellendi', 'success');
 }
 
 function resetAll() {
-  if (!confirm('TÜM verileri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) return;
-  if (!confirm('Son onay: Tüm turistler ve ayarlar silinecek.')) return;
-  ['tts_tourists','tts_tours','tts_settings'].forEach(k => localStorage.removeItem(k));
-  showNotif('Veriler sıfırlandı.', 'success');
-  Router.navigate('/year/' + new Date().getFullYear());
+  if (!confirm('DİKKAT! Sistemdeki tüm veriler silinecektir. Emin misiniz?')) return;
+  localStorage.clear();
+  location.reload();
+}
+
+/* --- Render List Functions --- */
+function renderTourList() {
+  return DB.tourOptions.map(t => `
+    <div class="list-row list-row-tour" style="display:flex;gap:10px;margin-bottom:10px">
+      <input type="hidden" class="l-id" value="${t.id}">
+      <input type="text" class="form-control l-icon" value="${t.icon}" style="width:60px" placeholder="İkon">
+      <input type="text" class="form-control l-name" value="${t.name}" style="flex:1" placeholder="Tur Adı">
+      <input type="color" class="form-control l-color" value="${t.color}" style="width:60px;padding:2px">
+      <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function renderFlightList() {
+  return DB.flightOptions.map(f => `
+    <div class="list-row list-row-flight" style="display:flex;gap:10px;margin-bottom:10px">
+      <input type="hidden" class="l-id" value="${f.id}">
+      <input type="text" class="form-control l-no" value="${f.flightNo}" style="width:100px" placeholder="Uçuş No">
+      <select class="form-control l-dir" style="width:100px">
+        <option value="giriş" ${f.direction==='giriş'?'selected':''}>Giriş</option>
+        <option value="çıkış" ${f.direction==='çıkış'?'selected':''}>Çıkış</option>
+      </select>
+      <input type="text" class="form-control l-from" value="${f.fromAirport}" style="flex:1" placeholder="Nereden (Örn: LHR)">
+      <input type="text" class="form-control l-to" value="${f.toAirport}" style="flex:1" placeholder="Nereye (Örn: IST)">
+      <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function renderTransferList() {
+  return DB.transferOptions.map(tf => `
+    <div class="list-row list-row-transfer" style="display:flex;gap:10px;margin-bottom:10px">
+      <input type="hidden" class="l-id" value="${tf.id}">
+      <input type="text" class="form-control l-name" value="${tf.name}" style="flex:1" placeholder="Transfer Adı (Örn: IST Havalimanı → Otel)">
+      <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function renderHotelList() {
+  return DB.hotelOptions.map(h => `
+    <div class="list-row list-row-hotel" style="display:flex;gap:10px;margin-bottom:10px">
+      <input type="hidden" class="l-id" value="${h.id}">
+      <input type="text" class="form-control l-name" value="${h.name}" style="flex:1" placeholder="Otel Adı">
+      <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function addListRow(containerId, type) {
+  let html = '';
+  if (type === 'tour') {
+    html = `<div class="list-row list-row-tour" style="display:flex;gap:10px;margin-bottom:10px">
+      <input type="hidden" class="l-id" value="${uuid()}">
+      <input type="text" class="form-control l-icon" value="🏷️" style="width:60px" placeholder="İkon">
+      <input type="text" class="form-control l-name" value="" style="flex:1" placeholder="Tur Adı">
+      <input type="color" class="form-control l-color" value="#f97316" style="width:60px;padding:2px">
+      <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">🗑️</button>
+    </div>`;
+  } else if (type === 'flight') {
+    html = `<div class="list-row list-row-flight" style="display:flex;gap:10px;margin-bottom:10px">
+      <input type="hidden" class="l-id" value="${uuid()}">
+      <input type="text" class="form-control l-no" value="" style="width:100px" placeholder="Uçuş No">
+      <select class="form-control l-dir" style="width:100px"><option value="giriş">Giriş</option><option value="çıkış">Çıkış</option></select>
+      <input type="text" class="form-control l-from" value="" style="flex:1" placeholder="Nereden (Örn: LHR)">
+      <input type="text" class="form-control l-to" value="" style="flex:1" placeholder="Nereye (Örn: IST)">
+      <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">🗑️</button>
+    </div>`;
+  } else if (type === 'transfer') {
+    html = `<div class="list-row list-row-transfer" style="display:flex;gap:10px;margin-bottom:10px">
+      <input type="hidden" class="l-id" value="${uuid()}">
+      <input type="text" class="form-control l-name" value="" style="flex:1" placeholder="Transfer Adı">
+      <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">🗑️</button>
+    </div>`;
+  } else if (type === 'hotel') {
+    html = `<div class="list-row list-row-hotel" style="display:flex;gap:10px;margin-bottom:10px">
+      <input type="hidden" class="l-id" value="${uuid()}">
+      <input type="text" class="form-control l-name" value="" style="flex:1" placeholder="Otel Adı">
+      <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">🗑️</button>
+    </div>`;
+  }
+  document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
+}
+
+function saveList(type) {
+  if (type === 'tour') {
+    const list = Array.from(document.querySelectorAll('.list-row-tour')).map(row => ({
+      id: row.querySelector('.l-id').value,
+      icon: row.querySelector('.l-icon').value,
+      name: row.querySelector('.l-name').value,
+      color: row.querySelector('.l-color').value,
+    })).filter(x => x.name.trim());
+    DB.tourOptions = list;
+    showNotif('Turlar kaydedildi', 'success');
+  } 
+  else if (type === 'flight') {
+    const list = Array.from(document.querySelectorAll('.list-row-flight')).map(row => ({
+      id: row.querySelector('.l-id').value,
+      flightNo: row.querySelector('.l-no').value,
+      direction: row.querySelector('.l-dir').value,
+      fromAirport: row.querySelector('.l-from').value,
+      toAirport: row.querySelector('.l-to').value,
+    })).filter(x => x.flightNo.trim());
+    DB.flightOptions = list;
+    showNotif('Uçuşlar kaydedildi', 'success');
+  }
+  else if (type === 'transfer') {
+    const list = Array.from(document.querySelectorAll('.list-row-transfer')).map(row => ({
+      id: row.querySelector('.l-id').value,
+      name: row.querySelector('.l-name').value,
+    })).filter(x => x.name.trim());
+    DB.transferOptions = list;
+    showNotif('Transferler kaydedildi', 'success');
+  }
+  else if (type === 'hotel') {
+    const list = Array.from(document.querySelectorAll('.list-row-hotel')).map(row => ({
+      id: row.querySelector('.l-id').value,
+      name: row.querySelector('.l-name').value,
+    })).filter(x => x.name.trim());
+    DB.hotelOptions = list;
+    showNotif('Oteller kaydedildi', 'success');
+  }
 }

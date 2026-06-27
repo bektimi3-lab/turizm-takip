@@ -35,8 +35,7 @@ function renderLayout(title, content, activeNav) {
           ${navItem('📅','Yıllık Takvim','year','/year/'+year)}
 
           <div class="nav-section">Yönetim</div>
-          ${navItem('👥','Turistler','tourists','/tourists')}
-          ${navItem('🗺️','Tur Tanımları','tours','/tours')}
+          ${navItem('👥','Rezervasyonlar','reservations','/reservations')}
 
           <div class="nav-section">Sistem</div>
           ${navItem('⚙️','Ayarlar','settings','/settings')}
@@ -116,36 +115,32 @@ function initApp() {
       );
     })
 
-    .on('/tourists', () => {
-      document.getElementById('app').innerHTML = renderLayout('Turistler', renderTouristsList(), 'tourists');
+    .on('/reservations', () => {
+      document.getElementById('app').innerHTML = renderLayout('Rezervasyonlar', renderReservationsList(), 'reservations');
     })
 
-    .on('/tourist/new', () => {
+    .on('/reservation/new', () => {
       if (!Auth.canEdit()) { showNotif('Bu işlem için yetkiniz yok.','error'); return; }
-      document.getElementById('app').innerHTML = renderLayout('Yeni Turist Ekle', renderTouristForm(null), 'tourists');
+      document.getElementById('app').innerHTML = renderLayout('Yeni Rezervasyon', renderReservationForm(null), 'reservations');
       initFormCounters(null);
     })
 
-    .on('/tourist/:id', ({ id }) => {
-      const t = DB.getTourist(id);
-      if (!t) { showNotif('Turist bulunamadı','error'); Router.navigate('/tourists'); return; }
+    .on('/reservation/:id', ({ id }) => {
+      const r = DB.getReservation(id);
+      if (!r) { showNotif('Rezervasyon bulunamadı','error'); Router.navigate('/reservations'); return; }
       document.getElementById('app').innerHTML = renderLayout(
-        `${t.personal.firstName} ${t.personal.lastName}`,
-        renderTouristProfile(t),
-        'tourists'
+        `${r.personal.firstName} ${r.personal.lastName}`,
+        renderReservationProfile(r),
+        'reservations'
       );
     })
 
-    .on('/tourist/:id/edit', ({ id }) => {
+    .on('/reservation/:id/edit', ({ id }) => {
       if (!Auth.canEdit()) { showNotif('Bu işlem için yetkiniz yok.','error'); return; }
-      const t = DB.getTourist(id);
-      if (!t) { showNotif('Turist bulunamadı','error'); Router.navigate('/tourists'); return; }
-      document.getElementById('app').innerHTML = renderLayout('Turist Düzenle', renderTouristForm(t), 'tourists');
-      initFormCounters(t);
-    })
-
-    .on('/tours', () => {
-      document.getElementById('app').innerHTML = renderLayout('Tur Tanımları', renderToursView(), 'tours');
+      const r = DB.getReservation(id);
+      if (!r) { showNotif('Rezervasyon bulunamadı','error'); Router.navigate('/reservations'); return; }
+      document.getElementById('app').innerHTML = renderLayout('Rezervasyon Düzenle', renderReservationForm(r), 'reservations');
+      initFormCounters(r);
     })
 
     .on('/settings', () => {
