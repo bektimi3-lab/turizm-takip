@@ -37,8 +37,9 @@ const DEFAULT_FLIGHT_OPTIONS = [
 
 /* ---- Demo Kullanıcılar ---- */
 const DEFAULT_USERS = [
-  { id: 'u_admin', email: 'admin@turizm.com',     password: 'admin123',     name: 'Admin',         role: 'editor' },
-  { id: 'u_view',  email: 'goruntule@turizm.com', password: 'goruntule123', name: 'Görüntüleyici', role: 'viewer' },
+  { id: 'u_owner', email: 'patron@turizm.com',     password: 'patron123',     name: 'Patron',        role: 'owner' },
+  { id: 'u_edit',  email: 'editor@turizm.com',     password: 'editor123',     name: 'Düzenleyici',   role: 'editor' },
+  { id: 'u_view',  email: 'goruntule@turizm.com',  password: 'goruntule123',  name: 'Görüntüleyici', role: 'viewer' },
 ];
 
 /* ---- Demo Rezervasyonlar ---- */
@@ -186,26 +187,65 @@ const DB = {
   get flightOptions()  { return this._r('tts_flight_options',   DEFAULT_FLIGHT_OPTIONS);   },
   set flightOptions(v) { this._w('tts_flight_options', v);   },
 
-  /* Ayarlar & Kullanıcılar */
+  /* Ayarlar & Kullanıcılar & Denetim */
   get settings()   { return this._r('tts_settings', { currency: 'EUR' }); },
   set settings(v)  { this._w('tts_settings', v); },
   get users()      { return this._r('tts_users', DEFAULT_USERS); },
   set users(v)     { this._w('tts_users', v); },
+  get auditLogs()  { return this._r('tts_audit_logs', []); },
+  set auditLogs(v) { this._w('tts_audit_logs', v); },
+
+  _logAction(action, resId, details='') {
+    const user = Auth.currentUser;
+    if (!user) return;
+    const logs = this.auditLogs;
+    logs.unshift({
+      id: uuid(),
+      time: new Date().toISOString(),
+      userId: user.id,
+      userName: user.name,
+      userRole: user.role,
+      action,
+      resId,
+      details
+    });
+    // Sadece son 500 kaydı tut
+    if (logs.length > 500) logs.length = 500;
+    this.auditLogs = logs;
+  },
 
   /* ---- Rezervasyon CRUD ---- */
   addReservation(data) {
     const list = this.reservations;
     const r = { ...data, id: uuid(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-    list.push(r); this.reservations = list; return r;
+    list.push(r); this.reservations = list; 
+    this._logAction('oluşturdu', r.id, `${r.personal.firstName} ${r.personal.lastName}`);
+    return r;
   },
   updateReservation(id, data) {
     const list = this.reservations;
     const i = list.findIndex(r => r.id === id);
-    if (i !== -1) { list[i] = { ...list[i], ...data, updatedAt: new Date().toISOString() }; this.reservations = list; return list[i]; }
+    if (i !== -1) { 
+      list[i] = { ...list[i], ...data, updatedAt: new Date().toISOString() }; 
+      this.reservations = list; 
+      this._logAction('güncelledi', id, `${list[i].personal.firstName} ${list[i].personal.lastName}`);
+      return list[i]; 
+    }
     return null;
   },
-  deleteReservation(id) { this.reservations = this.reservations.filter(r => r.id !== id); },
+  deleteReservation(id) { 
+    const r = this.getReservation(id);
+    const name = r ? `${r.personal.firstName} ${r.personal.lastName}` : '';
+    this.reservations = this.reservations.filter(x => x.id !== id); 
+    this._logAction('sildi', id, name);
+  },
   getReservation(id)    { return this.reservations.find(r => r.id === id) || null; },
+  
+  logView(id) {
+    const r = this.getReservation(id);
+    const name = r ? `${r.personal.firstName} ${r.personal.lastName}` : '';
+    this._logAction('görüntüledi', id, name);
+  },
 
   /* ---- Liste yönetimi (turlar/transferler/oteller) ---- */
   addToList(listKey, item) {

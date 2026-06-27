@@ -1,6 +1,9 @@
 /* views/reservation.js — Rezervasyon profil görünümü */
 
 function renderReservationProfile(res) {
+  // Görüntüleme kaydı
+  DB.logView(res.id);
+
   const { personal, guests, guestCount, hotels, tours, balloon, flights, transfers, payment, notes } = res;
   const fn   = personal.firstName || '';
   const ln   = personal.lastName  || '';

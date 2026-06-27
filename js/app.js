@@ -17,6 +17,20 @@ function renderLayout(title, content, activeNav) {
     </button>`;
   }
 
+  // Bugün Özeti (Sidebar için)
+  const today = todayStr();
+  const todayEvs = DB.getEventsForDate(today);
+  const tGroup = todayEvs.length;
+  const tPax   = todayEvs.reduce((sum, e) => sum + (e.reservation.guestCount||1), 0);
+  const todaySumHtml = tGroup > 0 
+    ? `<div style="padding:10px;margin:0 8px 10px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center;font-size:11px">
+         <div style="font-weight:700;color:var(--orange);margin-bottom:2px">Bugün</div>
+         <div style="color:var(--text-sec)">${tGroup} Grup · ${tPax} Kişi</div>
+       </div>`
+    : '';
+
+  const roleText = user.role === 'owner' ? '👑 Patron' : user.role === 'editor' ? '✏️ Düzenleyici' : '👁️ Görüntüleyici';
+
   return `
     <div class="mob-overlay" id="mobOverlay" onclick="closeMobMenu()"></div>
     <div class="layout">
@@ -31,6 +45,11 @@ function renderLayout(title, content, activeNav) {
         </div>
 
         <div class="sidebar-nav">
+          ${todaySumHtml}
+          
+          <div class="nav-section">Genel</div>
+          ${navItem('📊','Ana Sayfa','dashboard','/dashboard')}
+
           <div class="nav-section">Takvim</div>
           ${navItem('📅','Yıllık Takvim','year','/year/'+year)}
 
@@ -38,6 +57,7 @@ function renderLayout(title, content, activeNav) {
           ${navItem('👥','Rezervasyonlar','reservations','/reservations')}
 
           <div class="nav-section">Sistem</div>
+          ${Auth.isOwner() ? navItem('📈','İstatistikler','stats','/stats') : ''}
           ${navItem('⚙️','Ayarlar','settings','/settings')}
         </div>
 
@@ -46,7 +66,7 @@ function renderLayout(title, content, activeNav) {
             <div class="s-avatar" style="background:${color}">${inits}</div>
             <div class="s-info">
               <div class="s-name">${name}</div>
-              <div class="s-role">${user.role === 'editor' ? '✏️ Editör' : '👁️ Görüntüleyici'}</div>
+              <div class="s-role">${roleText}</div>
             </div>
             <button class="s-logout" onclick="Auth.logout()" title="Çıkış Yap">🚪</button>
           </div>
@@ -143,11 +163,24 @@ function initApp() {
       initFormCounters(r);
     })
 
+    .on('/dashboard', () => {
+      document.getElementById('app').innerHTML = renderLayout('Ana Sayfa', renderDashboardView(), 'dashboard');
+    })
+
+    .on('/stats', () => {
+      document.getElementById('app').innerHTML = renderLayout('İstatistikler & Denetim', renderStatsView(), 'stats');
+    })
+
     .on('/settings', () => {
       document.getElementById('app').innerHTML = renderLayout('Ayarlar', renderSettingsView(), 'settings');
     });
 
-  Router.init();
+  // Default redirect
+  if (window.location.hash === '' || window.location.hash === '#/') {
+    Router.navigate(Auth.isLoggedIn() ? '/dashboard' : '/login');
+  } else {
+    Router.init();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
