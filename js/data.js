@@ -190,7 +190,15 @@ const DB = {
   /* Ayarlar & Kullanıcılar & Denetim */
   get settings()   { return this._r('tts_settings', { currency: 'EUR' }); },
   set settings(v)  { this._w('tts_settings', v); },
-  get users()      { return this._r('tts_users', DEFAULT_USERS); },
+  get users()      { 
+    const u = this._r('tts_users', DEFAULT_USERS); 
+    // Cache'de eski Admin kaldıysa zorla sıfırla
+    if (u.length && u[0].id === 'u_admin') {
+      this.users = DEFAULT_USERS;
+      return DEFAULT_USERS;
+    }
+    return u;
+  },
   set users(v)     { this._w('tts_users', v); },
   get auditLogs()  { return this._r('tts_audit_logs', []); },
   set auditLogs(v) { this._w('tts_audit_logs', v); },

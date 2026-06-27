@@ -24,7 +24,14 @@ function renderStatsView() {
   const donutSVG = `
     <svg viewBox="0 0 36 36" style="width:140px;height:140px">
       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--border)" stroke-width="3" />
-      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="${strokeDash}" />
+      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="url(#donut-grad)" stroke-width="3" stroke-dasharray="0 100" style="animation: dash ${pct > 0 ? '1.5s' : '0s'} ease-out forwards;" />
+      <defs>
+        <linearGradient id="donut-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="var(--orange)" />
+          <stop offset="100%" stop-color="var(--yellow)" />
+        </linearGradient>
+      </defs>
+      <style>@keyframes dash { to { stroke-dasharray: ${pct} 100; } }</style>
       <text x="18" y="20.5" text-anchor="middle" fill="var(--text)" font-size="7" font-weight="800">%${pct.toFixed(0)}</text>
     </svg>
   `;
@@ -45,11 +52,54 @@ function renderStatsView() {
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
         <span>${name}</span> <span style="color:var(--text-muted)">${count} Rez.</span>
       </div>
-      <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden">
-        <div style="height:100%;background:var(--orange);width:${(count/maxTour)*100}%;border-radius:3px"></div>
+      <div class="stat-bar-container">
+        <div class="stat-bar-fill" style="--target-width:${(count/maxTour)*100}%"></div>
       </div>
     </div>
   `).join('') || '<div style="font-size:13px;color:var(--text-muted)">Henüz veri yok.</div>';
+
+  // Demografi (Memleket, Yaş, Cinsiyet)
+  const natCounts = {};
+  const genderCounts = { 'Erkek': 0, 'Kadın': 0, 'Belirtilmemiş': 0 };
+  const ageGroups = { '0-12 Çocuk': 0, '13-25 Genç': 0, '26-40 Yetişkin': 0, '41-60 Orta Yaş': 0, '60+ Yaşlı': 0, 'Bilinmiyor': 0 };
+  const currentYear = new Date().getFullYear();
+
+  rs.forEach(r => {
+    (r.guests||[]).forEach(g => {
+      const nat = g.nationality || 'Bilinmiyor';
+      natCounts[nat] = (natCounts[nat] || 0) + 1;
+      
+      const gen = g.gender || 'Belirtilmemiş';
+      genderCounts[gen] = (genderCounts[gen] || 0) + 1;
+      
+      if (g.dob) {
+        const y = parseInt(g.dob.substring(0,4));
+        const age = currentYear - y;
+        if (age <= 12) ageGroups['0-12 Çocuk']++;
+        else if (age <= 25) ageGroups['13-25 Genç']++;
+        else if (age <= 40) ageGroups['26-40 Yetişkin']++;
+        else if (age <= 60) ageGroups['41-60 Orta Yaş']++;
+        else ageGroups['60+ Yaşlı']++;
+      } else {
+        ageGroups['Bilinmiyor']++;
+      }
+    });
+  });
+
+  const renderBars = (obj) => {
+    const arr = Object.entries(obj).sort((a,b)=>b[1]-a[1]).filter(x => x[1] > 0);
+    const maxVal = arr.length ? arr[0][1] : 1;
+    return arr.map(([name, count]) => `
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span>${name}</span> <span style="color:var(--text-muted)">${count} Kişi</span>
+        </div>
+        <div class="stat-bar-container">
+          <div class="stat-bar-fill" style="--target-width:${(count/maxVal)*100}%; background:linear-gradient(90deg, var(--blue), var(--cyan))"></div>
+        </div>
+      </div>
+    `).join('') || '<div style="font-size:13px;color:var(--text-muted)">Veri yok.</div>';
+  };
 
   // Audit Logs
   const logs = DB.auditLogs;
@@ -71,8 +121,9 @@ function renderStatsView() {
   <div style="max-width:960px;margin:0 auto;padding-bottom:50px">
 
     <div class="tabs" id="statsTabs">
-      <button class="tab-btn active" data-tab="st-genel" onclick="switchStatsTab(this,'st-genel')">📊 Genel İstatistikler</button>
-      <button class="tab-btn" data-tab="st-denetim" onclick="switchStatsTab(this,'st-denetim')">🔍 Denetim (Audit Log)</button>
+      <button class="tab-btn active" data-tab="st-genel" onclick="switchStatsTab(this,'st-genel')">📊 Genel</button>
+      <button class="tab-btn" data-tab="st-demografi" onclick="switchStatsTab(this,'st-demografi')">👥 Demografi</button>
+      <button class="tab-btn" data-tab="st-denetim" onclick="switchStatsTab(this,'st-denetim')">🔍 Denetim</button>
     </div>
 
     <!-- Sekme: Genel -->
@@ -97,6 +148,24 @@ function renderStatsView() {
       </div>
     </div>
 
+    <!-- Sekme: Demografi -->
+    <div class="tab-content" id="tc-st-demografi">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px,1fr));gap:20px">
+        <div class="card">
+          <div class="sec-title">Cinsiyet Dağılımı</div>
+          ${renderBars(genderCounts)}
+        </div>
+        <div class="card">
+          <div class="sec-title">Yaş Grupları</div>
+          ${renderBars(ageGroups)}
+        </div>
+        <div class="card">
+          <div class="sec-title">Uyruk (Memleket) Dağılımı</div>
+          ${renderBars(natCounts)}
+        </div>
+      </div>
+    </div>
+
     <!-- Sekme: Denetim Kayıtları -->
     <div class="tab-content" id="tc-st-denetim">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -116,5 +185,5 @@ function renderStatsView() {
 
 function switchStatsTab(btn, tabId) {
   document.querySelectorAll('#statsTabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
-  document.querySelectorAll('#tc-st-genel, #tc-st-denetim').forEach(c => c.classList.toggle('active', c.id === 'tc-' + tabId));
+  document.querySelectorAll('#tc-st-genel, #tc-st-denetim, #tc-st-demografi').forEach(c => c.classList.toggle('active', c.id === 'tc-' + tabId));
 }

@@ -25,9 +25,13 @@ function renderReservationProfile(res) {
   const guestsHTML = guests?.length 
     ? guests.map((g, i) => `
       <div class="info-grid" style="padding-bottom:12px; border-bottom:1px solid var(--border); margin-bottom:12px">
-        <div style="grid-column:1/-1;font-weight:600;color:var(--text-main);margin-bottom:8px">Yolcu ${i+1}: ${g.firstName} ${g.lastName}</div>
-        <div><div class="info-lbl">Uyruk</div><div class="info-val">${getFlag(g.nationality)} ${g.nationality||'—'}</div></div>
-        <div><div class="info-lbl">Pasaport No</div><div class="info-val">${g.passport||'—'}</div></div>
+        <div style="grid-column:1/-1;font-weight:600;font-size:13.5px">${g.firstName} ${g.lastName}</div>
+        <div style="font-size:12px;color:var(--text-muted);display:flex;gap:12px;flex-wrap:wrap;margin-top:2px">
+          ${g.nationality ? `<span>🌍 ${g.nationality}</span>` : ''}
+          ${g.gender ? `<span>🚻 ${g.gender}</span>` : ''}
+          ${g.passport ? `<span>🛂 ${g.passport}</span>` : ''}
+          ${g.dob ? `<span>🎂 ${formatDate(g.dob)}</span>` : ''}
+        </div>
         <div><div class="info-lbl">Doğum Tarihi</div><div class="info-val">${formatDate(g.dob)}</div></div>
         <div><div class="info-lbl">Pasaport Başlangıç</div><div class="info-val">${formatDate(g.passportStart)}</div></div>
         <div><div class="info-lbl">Pasaport Bitiş</div><div class="info-val">${formatDate(g.passportEnd)}</div></div>

@@ -24,7 +24,7 @@ function renderReservationsList() {
 
   let html = `<div class="tourists-grid">`;
 
-  sorted.forEach(r => {
+  sorted.forEach((r, i) => {
     const fn  = r.personal.firstName;
     const ln  = r.personal.lastName;
     const nm  = `${fn} ${ln}`;
@@ -71,9 +71,10 @@ function renderReservationsList() {
     // Kişi sayısı göstergesi
     const guestText = `${r.guestCount || 1} Kişi`;
     const dayText   = `${r.days || 1} Gün`;
+    const staggerCls = i < 10 ? `stagger-${(i%5)+1}` : '';
 
     html += `
-    <div class="res-card" onclick="Router.navigate('/reservation/${r.id}')">
+    <div class="res-card ${staggerCls}" onclick="Router.navigate('/reservation/${r.id}')">
       <div class="res-card-stripe ${stripeClass}"></div>
       <div class="res-card-body">
 

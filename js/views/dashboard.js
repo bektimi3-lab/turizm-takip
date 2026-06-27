@@ -75,14 +75,14 @@ function renderDashboardView() {
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px,1fr));gap:20px;margin-bottom:30px">
       
       <!-- Bugün -->
-      <div class="dash-stat-card" style="background:linear-gradient(135deg, var(--card) 0%, rgba(249,115,22,.08) 100%)">
+      <div class="dash-stat-card stagger-1" style="background:linear-gradient(135deg, var(--card) 0%, rgba(249,115,22,.08) 100%)">
         <div class="dsc-title">📅 Bugün</div>
         <div class="dsc-main">${evList.length} <span class="dsc-sub">Grup</span> · ${totalGuests} <span class="dsc-sub">Kişi</span></div>
         <div class="dsc-icons">✈️ ${flightCnt} &nbsp;&nbsp; 🚌 ${transferCnt} &nbsp;&nbsp; 🏷️ ${tourCnt}</div>
       </div>
 
       <!-- Finans -->
-      <div class="dash-stat-card" style="background:linear-gradient(135deg, var(--card) 0%, rgba(34,197,94,.08) 100%)">
+      <div class="dash-stat-card stagger-2" style="background:linear-gradient(135deg, var(--card) 0%, rgba(34,197,94,.08) 100%)">
         <div class="dsc-title">💰 Bu Hafta (Öngörülen Ciro)</div>
         <div class="dsc-main" style="color:var(--green)">${formatCurrency(weekIncome, cur)}</div>
         <div class="dsc-icons">${pendingPayments} Bekleyen Ödeme</div>
@@ -93,7 +93,7 @@ function renderDashboardView() {
     <!-- Lists -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px,1fr));gap:20px">
       
-      <div class="card">
+      <div class="card stagger-3">
         <div class="sec-title" style="display:flex;justify-content:space-between">
           <span>Bugünün Etkinlikleri</span>
           <a href="#" onclick="Router.navigate('/day/${today.replace(/-/g,'/')}')" style="color:var(--orange);font-size:11px">Tümünü Gör</a>
@@ -101,7 +101,7 @@ function renderDashboardView() {
         <div class="dash-event-list">${todayEventsHTML}</div>
       </div>
 
-      <div class="card">
+      <div class="card stagger-4">
         <div class="sec-title">Son Eklenen Rezervasyonlar</div>
         <div class="dash-event-list">${recentHTML}</div>
       </div>

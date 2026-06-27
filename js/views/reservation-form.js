@@ -33,7 +33,9 @@ function renderReservationForm(res) {
 
       <!-- Temel Bilgiler -->
       <div class="card" style="margin-bottom:14px">
-        <div class="sec-title">Rezervasyon Bilgileri</div>
+        <div class="form-section-highlight">
+          <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">📋 Rezervasyon Bilgileri</div>
+        </div>
         <div class="form-row form-row-2">
           <div class="form-group"><label class="form-label">Grup Adı (Baş Kişi Adı) *</label><input name="firstName" type="text" class="form-control" value="${g('firstName')}" required placeholder="Ad"></div>
           <div class="form-group"><label class="form-label">Grup Soyadı *</label><input name="lastName" type="text" class="form-control" value="${g('lastName')}" required placeholder="Soyad"></div>
@@ -47,7 +49,9 @@ function renderReservationForm(res) {
 
       <!-- Yolcular -->
       <div class="card" style="margin-bottom:14px">
-        <div class="sec-title">👥 Yolcular (İsteğe Bağlı Detaylar)</div>
+        <div class="form-section-highlight">
+          <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">👥 Yolcular (İsteğe Bağlı Detaylar)</div>
+        </div>
         <div id="guestsContainer">
           ${renderGuestRows(t)}
         </div>
@@ -55,7 +59,9 @@ function renderReservationForm(res) {
 
       <!-- Balon -->
       <div class="card" style="margin-bottom:14px">
-        <div class="sec-title">🎈 Balon Seçeneği</div>
+        <div class="form-section-highlight">
+          <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">🎈 Balon Seçeneği</div>
+        </div>
         <div class="form-row form-row-3">
           <div class="form-group"><label class="form-label">Balon Var Mı?</label>
             <select name="balActive" class="form-control">
@@ -106,7 +112,9 @@ function renderReservationForm(res) {
 
       <!-- Ödeme -->
       <div class="card" style="margin-bottom:14px">
-        <div class="sec-title">💳 Ödeme</div>
+        <div class="form-section-highlight">
+          <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">💳 Ödeme</div>
+        </div>
         <div class="form-row form-row-3">
           <div class="form-group"><label class="form-label">Toplam Tutar</label><input name="total" type="number" class="form-control" value="${t.payment?.total||''}" placeholder="0" min="0" step="0.01"></div>
           <div class="form-group"><label class="form-label">Ödenen</label><input name="paid" type="number" class="form-control" value="${t.payment?.paid||''}" placeholder="0" min="0" step="0.01"></div>
@@ -137,8 +145,10 @@ function renderReservationForm(res) {
       </div>
 
       <!-- Notlar -->
-      <div class="card" style="margin-bottom:20px">
-        <div class="sec-title">📝 Notlar</div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="form-section-highlight">
+          <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">📝 Notlar</div>
+        </div>
         <div class="form-group" style="margin:0">
           <textarea name="notes" class="form-control" rows="4" placeholder="Özel istekler, dikkat edilecek hususlar...">${t.notes||''}</textarea>
         </div>
@@ -190,9 +200,16 @@ function _guestRow(i, g) {
     <div class="form-row form-row-3" style="margin-bottom:10px">
       <div class="form-group" style="margin:0"><input type="text" name="g_nat_${i}" class="form-control" value="${g.nationality||''}" placeholder="Uyruk (örn: İngiliz)"></div>
       <div class="form-group" style="margin:0"><input type="text" name="g_pass_${i}" class="form-control" value="${g.passport||''}" placeholder="Pasaport No"></div>
-      <div class="form-group" style="margin:0"><input type="date" name="g_dob_${i}" class="form-control" value="${g.dob||''}" title="Doğum Tarihi"></div>
+      <div class="form-group" style="margin:0">
+        <select name="g_gender_${i}" class="form-control">
+          <option value="">— Cinsiyet —</option>
+          <option value="Erkek" ${g.gender==='Erkek'?'selected':''}>Erkek</option>
+          <option value="Kadın" ${g.gender==='Kadın'?'selected':''}>Kadın</option>
+        </select>
+      </div>
     </div>
-    <div class="form-row form-row-2">
+    <div class="form-row form-row-3">
+      <div class="form-group" style="margin:0"><label class="form-label" style="font-size:11px">Doğum Tarihi</label><input type="date" name="g_dob_${i}" class="form-control" value="${g.dob||''}"></div>
       <div class="form-group" style="margin:0"><label class="form-label" style="font-size:11px">Pasaport Başlangıç</label><input type="date" name="g_pstart_${i}" class="form-control" value="${g.passportStart||''}"></div>
       <div class="form-group" style="margin:0"><label class="form-label" style="font-size:11px">Pasaport Bitiş</label><input type="date" name="g_pend_${i}" class="form-control" value="${g.passportEnd||''}"></div>
     </div>
@@ -319,7 +336,8 @@ function saveReservationForm(e, existingId) {
     guests.push({
       firstName: g(`g_fn_${i}`), lastName: g(`g_ln_${i}`),
       nationality: g(`g_nat_${i}`), passport: g(`g_pass_${i}`), dob: g(`g_dob_${i}`),
-      passportStart: g(`g_pstart_${i}`), passportEnd: g(`g_pend_${i}`)
+      passportStart: g(`g_pstart_${i}`), passportEnd: g(`g_pend_${i}`),
+      gender: g(`g_gender_${i}`)
     });
   }
 
