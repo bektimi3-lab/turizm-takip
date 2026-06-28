@@ -263,10 +263,14 @@ a { text-decoration: none; color: inherit; }
   width: 100%; background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-sm); color: var(--text);
   padding: 9px 12px; font-size: 13.5px; font-family: inherit;
-  transition: border-color var(--ease); outline: none;
+  transition: border-color var(--ease), background var(--ease); outline: none;
 }
 .form-control:focus { border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-dim); }
 .form-control::placeholder { color: var(--text-muted); }
+.form-control.is-empty:not(:focus) { 
+  border-color: rgba(249, 115, 22, 0.3); 
+  background-color: rgba(249, 115, 22, 0.04); 
+}
 select.form-control { cursor: pointer; appearance: auto; }
 textarea.form-control { resize: vertical; min-height: 84px; }
 

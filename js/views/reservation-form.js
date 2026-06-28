@@ -37,13 +37,17 @@ function renderReservationForm(res) {
           <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">📋 Rezervasyon Bilgileri</div>
         </div>
         <div class="form-row form-row-2">
-          <div class="form-group"><label class="form-label">Grup Adı (Baş Kişi Adı) *</label><input name="firstName" type="text" class="form-control" value="${g('firstName')}" required placeholder="Ad"></div>
-          <div class="form-group"><label class="form-label">Grup Soyadı *</label><input name="lastName" type="text" class="form-control" value="${g('lastName')}" required placeholder="Soyad"></div>
+          <div class="form-group"><label class="form-label">Grup Adı (Baş Kişi Adı)</label><input name="firstName" type="text" class="form-control" value="${g('firstName')}" placeholder="Ad"></div>
+          <div class="form-group"><label class="form-label">Grup Soyadı</label><input name="lastName" type="text" class="form-control" value="${g('lastName')}" placeholder="Soyad"></div>
+        </div>
+        <div class="form-row form-row-2">
+          <div class="form-group"><label class="form-label">Telefon</label><input name="phone" type="tel" class="form-control" value="${g('phone')}" placeholder="+90 555..." oninput="this.value = this.value.replace(/[^0-9+\\s()-]/g, '')"></div>
+          <div class="form-group"><label class="form-label">E-posta</label><input name="email" type="email" class="form-control" value="${g('email')}" placeholder="ornek@mail.com"></div>
         </div>
         <div class="form-row form-row-3">
-          <div class="form-group"><label class="form-label">Kişi Sayısı *</label><input id="guestCountInput" name="guestCount" type="number" min="1" class="form-control" value="${t.guestCount}" required onchange="updateGuestRows()"></div>
-          <div class="form-group"><label class="form-label">Başlangıç Tarihi *</label><input name="startDate" type="date" class="form-control" value="${t.startDate}" required></div>
-          <div class="form-group"><label class="form-label">Gün Sayısı *</label><input name="days" type="number" min="1" class="form-control" value="${t.days}" required></div>
+          <div class="form-group"><label class="form-label">Kişi Sayısı</label><input id="guestCountInput" name="guestCount" type="number" min="1" class="form-control" value="${t.guestCount}" onchange="updateGuestRows()"></div>
+          <div class="form-group"><label class="form-label">Başlangıç Tarihi</label><input name="startDate" type="date" class="form-control" value="${t.startDate}"></div>
+          <div class="form-group"><label class="form-label">Gün Sayısı</label><input name="days" type="number" min="1" class="form-control" value="${t.days}"></div>
         </div>
       </div>
 
@@ -160,7 +164,18 @@ function renderReservationForm(res) {
         <button type="submit" class="btn btn-primary">${isNew ? '✅ Rezervasyon Ekle' : '💾 Kaydet'}</button>
       </div>
     </form>
-  </div>`;
+  </div>
+  <script>
+    setTimeout(() => {
+      const form = document.getElementById('resForm');
+      if(form) {
+        const updateEmpty = (el) => { if(!el.value) el.classList.add('is-empty'); else el.classList.remove('is-empty'); };
+        form.querySelectorAll('.form-control').forEach(updateEmpty);
+        form.addEventListener('input', e => { if(e.target.classList.contains('form-control')) updateEmpty(e.target); });
+        form.addEventListener('change', e => { if(e.target.classList.contains('form-control')) updateEmpty(e.target); });
+      }
+    }, 100);
+  </script>`;
 }
 
 function updateGuestRows() {
@@ -341,20 +356,43 @@ function saveReservationForm(e, existingId) {
     });
   }
 
+  // --- DOĞRULAMALAR (VALIDATIONS) --- //
+  
+  // Otel Tarih Kontrolü (Özellikle Check-in)
   const hotels = Array.from(form.querySelectorAll('.h-row')).map(row => {
     const i = row.id.split('-')[1];
     return { hotelId: g('hotelId_'+i), room: g('hRoom_'+i), checkin: g('hIn_'+i), checkout: g('hOut_'+i) };
   }).filter(x => x.hotelId);
 
-  const tours = Array.from(form.querySelectorAll('.t-row')).map(row => {
-    const i = row.id.split('-')[1];
-    return { tourId: g('tourId_'+i), date: g('tourDate_'+i) };
-  }).filter(x => x.tourId);
+  for (let h of hotels) {
+    if (h.checkin && h.checkout) {
+      if (new Date(h.checkout) < new Date(h.checkin)) {
+        showNotif('Hata: Otel çıkış tarihi (Check-out), giriş tarihinden (Check-in) önce olamaz!', 'error');
+        return;
+      }
+    }
+    // "Otel seçildiyse Check-in zorunludur" kuralını esnettik, kişi yazmadan geçebilir.
+  }
 
+  // Uçuş Zaman Kontrolü
   const flights = Array.from(form.querySelectorAll('.f-row')).map(row => {
     const i = row.id.split('-')[1];
     return { id: uuid(), flightNo: g('flNo_'+i), direction: g('flDir_'+i), fromAirport: g('flFrom_'+i), toAirport: g('flTo_'+i), departureTime: g('flDep_'+i), arrivalTime: g('flArr_'+i) };
   }).filter(x => x.flightNo);
+
+  for (let f of flights) {
+    if (f.departureTime && f.arrivalTime) {
+      if (new Date(f.arrivalTime) < new Date(f.departureTime)) {
+        showNotif('Hata: Uçuş varış zamanı, kalkış zamanından önce olamaz!', 'error');
+        return;
+      }
+    }
+  }
+
+  const tours = Array.from(form.querySelectorAll('.t-row')).map(row => {
+    const i = row.id.split('-')[1];
+    return { tourId: g('tourId_'+i), date: g('tourDate_'+i) };
+  }).filter(x => x.tourId);
 
   const transfers = Array.from(form.querySelectorAll('.tf-row')).map(row => {
     const i = row.id.split('-')[1];
@@ -362,7 +400,7 @@ function saveReservationForm(e, existingId) {
   }).filter(x => x.from || x.to || x.transferId);
 
   const data = {
-    personal: { firstName: g('firstName'), lastName: g('lastName') },
+    personal: { firstName: g('firstName'), lastName: g('lastName'), phone: g('phone'), email: g('email') },
     guestCount, guests,
     startDate: g('startDate'), days: parseInt(g('days'))||1,
     balloon: { active: g('balActive')==='true', count: parseInt(g('balCount'))||0, date: g('balDate') },

@@ -1,11 +1,11 @@
 /* views/stats.js — İstatistikler ve Denetim Kayıtları (Sadece Patron) */
 
 function renderStatsView() {
-  if (!Auth.isOwner()) {
+  if (!Auth.canEdit()) {
     return `<div class="empty-state">
       <div class="empty-ico">🔒</div>
       <div class="empty-title">Erişim Engellendi</div>
-      <div class="empty-desc">Bu sayfayı yalnızca Patron rolündeki kullanıcılar görüntüleyebilir.</div>
+      <div class="empty-desc">Bu sayfayı yalnızca Patron ve Editör rolündeki kullanıcılar görüntüleyebilir.</div>
     </div>`;
   }
 
@@ -59,32 +59,49 @@ function renderStatsView() {
   `).join('') || '<div style="font-size:13px;color:var(--text-muted)">Henüz veri yok.</div>';
 
   // Demografi (Memleket, Yaş, Cinsiyet)
-  const natCounts = {};
-  const genderCounts = { 'Erkek': 0, 'Kadın': 0, 'Belirtilmemiş': 0 };
-  const ageGroups = { '0-12 Çocuk': 0, '13-25 Genç': 0, '26-40 Yetişkin': 0, '41-60 Orta Yaş': 0, '60+ Yaşlı': 0, 'Bilinmiyor': 0 };
-  const currentYear = new Date().getFullYear();
+  const allGuests = [];
+  const buyerGuests = [];
+  const memberGuests = [];
 
   rs.forEach(r => {
-    (r.guests||[]).forEach(g => {
+    if (r.guests && r.guests.length > 0) {
+      buyerGuests.push(r.guests[0]);
+      allGuests.push(r.guests[0]);
+      for (let i = 1; i < r.guests.length; i++) {
+        memberGuests.push(r.guests[i]);
+        allGuests.push(r.guests[i]);
+      }
+    }
+  });
+
+  const currentYear = new Date().getFullYear();
+  const calcDemo = (gList) => {
+    const nats = {};
+    const gens = { 'Erkek': 0, 'Kadın': 0, 'Belirtilmemiş': 0 };
+    const ages = { '0-12 Çocuk': 0, '13-25 Genç': 0, '26-40 Yetişkin': 0, '41-60 Orta Yaş': 0, '60+ Yaşlı': 0, 'Bilinmiyor': 0 };
+    gList.forEach(g => {
       const nat = g.nationality || 'Bilinmiyor';
-      natCounts[nat] = (natCounts[nat] || 0) + 1;
-      
+      nats[nat] = (nats[nat] || 0) + 1;
       const gen = g.gender || 'Belirtilmemiş';
-      genderCounts[gen] = (genderCounts[gen] || 0) + 1;
-      
+      gens[gen] = (gens[gen] || 0) + 1;
       if (g.dob) {
         const y = parseInt(g.dob.substring(0,4));
         const age = currentYear - y;
-        if (age <= 12) ageGroups['0-12 Çocuk']++;
-        else if (age <= 25) ageGroups['13-25 Genç']++;
-        else if (age <= 40) ageGroups['26-40 Yetişkin']++;
-        else if (age <= 60) ageGroups['41-60 Orta Yaş']++;
-        else ageGroups['60+ Yaşlı']++;
+        if (age <= 12) ages['0-12 Çocuk']++;
+        else if (age <= 25) ages['13-25 Genç']++;
+        else if (age <= 40) ages['26-40 Yetişkin']++;
+        else if (age <= 60) ages['41-60 Orta Yaş']++;
+        else ages['60+ Yaşlı']++;
       } else {
-        ageGroups['Bilinmiyor']++;
+        ages['Bilinmiyor']++;
       }
     });
-  });
+    return { nats, gens, ages };
+  };
+
+  const demoAll = calcDemo(allGuests);
+  const demoBuyer = calcDemo(buyerGuests);
+  const demoMember = calcDemo(memberGuests);
 
   const renderBars = (obj) => {
     const arr = Object.entries(obj).sort((a,b)=>b[1]-a[1]).filter(x => x[1] > 0);
@@ -121,11 +138,12 @@ function renderStatsView() {
   <div style="max-width:960px;margin:0 auto;padding-bottom:50px">
 
     <div class="tabs" id="statsTabs">
-      <button class="tab-btn active" data-tab="st-genel" onclick="switchStatsTab(this,'st-genel')">📊 Genel</button>
-      <button class="tab-btn" data-tab="st-demografi" onclick="switchStatsTab(this,'st-demografi')">👥 Demografi</button>
+      ${Auth.isOwner() ? `<button class="tab-btn active" data-tab="st-genel" onclick="switchStatsTab(this,'st-genel')">📊 Genel</button>` : ''}
+      <button class="tab-btn ${!Auth.isOwner() ? 'active' : ''}" data-tab="st-demografi" onclick="switchStatsTab(this,'st-demografi')">👥 Demografi</button>
       <button class="tab-btn" data-tab="st-denetim" onclick="switchStatsTab(this,'st-denetim')">🔍 Denetim</button>
     </div>
 
+    ${Auth.isOwner() ? `
     <!-- Sekme: Genel -->
     <div class="tab-content active" id="tc-st-genel">
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px,1fr));gap:20px">
@@ -140,29 +158,39 @@ function renderStatsView() {
           </div>
         </div>
 
-        <div class="card">
-          <div class="sec-title">En Popüler Turlar</div>
-          ${toursHTML}
         </div>
 
       </div>
     </div>
+    ` : ''}
 
     <!-- Sekme: Demografi -->
-    <div class="tab-content" id="tc-st-demografi">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px,1fr));gap:20px">
-        <div class="card">
-          <div class="sec-title">Cinsiyet Dağılımı</div>
-          ${renderBars(genderCounts)}
-        </div>
-        <div class="card">
-          <div class="sec-title">Yaş Grupları</div>
-          ${renderBars(ageGroups)}
-        </div>
-        <div class="card">
-          <div class="sec-title">Uyruk (Memleket) Dağılımı</div>
-          ${renderBars(natCounts)}
-        </div>
+    <div class="tab-content ${!Auth.isOwner() ? 'active' : ''}" id="tc-st-demografi">
+      <div style="margin-bottom:20px;display:flex;align-items:center;gap:12px;background:var(--card);padding:14px;border-radius:var(--radius);border:1px solid var(--border)">
+        <label style="font-size:13px;font-weight:600;color:var(--text-sec)">Kategori:</label>
+        <select class="form-control" style="width:auto;min-width:240px" onchange="document.querySelectorAll('.demo-view').forEach(e=>e.style.display='none'); document.getElementById('demo-'+this.value).style.display='grid';">
+          <option value="all">Tüm Yolcular</option>
+          <option value="buyer">Satın Alanlar (Ana Misafirler)</option>
+          <option value="member">Gruba Dahil Olanlar (Diğerleri)</option>
+        </select>
+      </div>
+
+      <div id="demo-all" class="demo-view" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px,1fr));gap:20px">
+        <div class="card"><div class="sec-title">Cinsiyet Dağılımı</div>${renderBars(demoAll.gens)}</div>
+        <div class="card"><div class="sec-title">Yaş Grupları</div>${renderBars(demoAll.ages)}</div>
+        <div class="card"><div class="sec-title">Uyruk (Memleket) Dağılımı</div>${renderBars(demoAll.nats)}</div>
+      </div>
+
+      <div id="demo-buyer" class="demo-view" style="display:none;grid-template-columns:repeat(auto-fit, minmax(280px,1fr));gap:20px">
+        <div class="card"><div class="sec-title">Cinsiyet Dağılımı (Satın Alanlar)</div>${renderBars(demoBuyer.gens)}</div>
+        <div class="card"><div class="sec-title">Yaş Grupları (Satın Alanlar)</div>${renderBars(demoBuyer.ages)}</div>
+        <div class="card"><div class="sec-title">Uyruk Dağılımı (Satın Alanlar)</div>${renderBars(demoBuyer.nats)}</div>
+      </div>
+
+      <div id="demo-member" class="demo-view" style="display:none;grid-template-columns:repeat(auto-fit, minmax(280px,1fr));gap:20px">
+        <div class="card"><div class="sec-title">Cinsiyet Dağılımı (Grup)</div>${renderBars(demoMember.gens)}</div>
+        <div class="card"><div class="sec-title">Yaş Grupları (Grup)</div>${renderBars(demoMember.ages)}</div>
+        <div class="card"><div class="sec-title">Uyruk Dağılımı (Grup)</div>${renderBars(demoMember.nats)}</div>
       </div>
     </div>
 

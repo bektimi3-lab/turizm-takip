@@ -81,13 +81,14 @@ function renderDashboardView() {
         <div class="dsc-icons">✈️ ${flightCnt} &nbsp;&nbsp; 🚌 ${transferCnt} &nbsp;&nbsp; 🏷️ ${tourCnt}</div>
       </div>
 
-      <!-- Finans -->
+      <!-- Finans (Sadece Patron Görür) -->
+      ${Auth.isOwner() ? `
       <div class="dash-stat-card stagger-2" style="background:linear-gradient(135deg, var(--card) 0%, rgba(34,197,94,.08) 100%)">
         <div class="dsc-title">💰 Bu Hafta (Öngörülen Ciro)</div>
         <div class="dsc-main" style="color:var(--green)">${formatCurrency(weekIncome, cur)}</div>
         <div class="dsc-icons">${pendingPayments} Bekleyen Ödeme</div>
       </div>
-
+      ` : ''}
     </div>
 
     <!-- Lists -->

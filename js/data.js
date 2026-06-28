@@ -200,7 +200,13 @@ const DB = {
     return u;
   },
   set users(v)     { this._w('tts_users', v); },
-  get auditLogs()  { return this._r('tts_audit_logs', []); },
+  get auditLogs()  { 
+    const logs = this._r('tts_audit_logs', []); 
+    const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+    const validLogs = logs.filter(l => new Date(l.time).getTime() > ninetyDaysAgo);
+    if (validLogs.length !== logs.length) this._w('tts_audit_logs', validLogs);
+    return validLogs;
+  },
   set auditLogs(v) { this._w('tts_audit_logs', v); },
 
   _logAction(action, resId, details='') {
