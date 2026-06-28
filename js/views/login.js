@@ -29,13 +29,6 @@ function renderLoginView() {
           Giriş Yap →
         </button>
       </form>
-
-      <div class="login-demo">
-        <strong>Demo Hesaplar:</strong><br>
-        Patron: <code>patron@turizm.com</code> / <code>patron123</code><br>
-        Editör: <code>editor@turizm.com</code> / <code>editor123</code><br>
-        Görüntüleyici: <code>goruntule@turizm.com</code> / <code>goruntule123</code>
-      </div>
     </div>
   </div>`;
 }
