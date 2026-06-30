@@ -10,32 +10,8 @@ function renderDashboardView() {
   const transferCnt = evList.filter(e => e.events.some(ev => ev.type === 'transfer')).length;
   const totalGuests = evList.reduce((sum, e) => sum + (e.reservation.guestCount || 1), 0);
 
-  // Bu hafta finans tahmini (Bugünden itibaren 7 gün)
-  const d = new Date();
-  let weekIncome = 0;
-  let pendingPayments = 0;
-  for(let i=0; i<7; i++) {
-    const ds = d.toISOString().split('T')[0];
-    const dayEvs = DB.getEventsForDate(ds);
-    
-    // Her rezervasyon haftada 1 kez sayılmalı finans için.
-    // Kolaylık olsun diye: başlangıç tarihi bu hafta içinde olanların gelirleri.
-    // Daha doğru bir analiz için tüm rezervasyonlar taranabilir.
-  }
-  
-  // Sadece tüm rezervasyonları tarayalım
-  const rs = DB.reservations;
-  rs.forEach(r => {
-    if (r.status === 'kapandi') return;
-    const sd = new Date(r.startDate + 'T00:00:00');
-    const diff = (sd - new Date(today + 'T00:00:00')) / 86400000;
-    if (diff >= 0 && diff <= 7) {
-      weekIncome += (r.payment?.total || 0);
-      if (r.payment?.status !== 'ödendi') pendingPayments++;
-    }
-  });
-
   const cur = DB.settings.currency || 'EUR';
+  const rs = DB.reservations;
 
   let todayEventsHTML = '';
   if (evList.length === 0) {
@@ -60,55 +36,158 @@ function renderDashboardView() {
     }).join('');
   }
 
-  // Son Eklenen 5 Rezervasyon
-  const recent = [...rs].filter(r => r.status !== 'kapandi').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0,5);
-  let recentHTML = recent.map(r => `
-    <div class="dash-event-item" onclick="Router.navigate('/reservation/${r.id}')">
-      <div class="dei-name">${r.personal.firstName} ${r.personal.lastName}</div>
-      <div class="dei-badges">${formatDate(r.startDate)} — ${r.days} Gün</div>
+  // Ortak (Bugün kartı)
+  const todayCard = `
+    <div class="card stagger-3" style="margin-bottom:20px">
+      <div class="sec-title" style="display:flex;justify-content:space-between">
+        <span>Bugünün Etkinlikleri</span>
+        <a href="#" onclick="Router.navigate('/day/${today.replace(/-/g,'/')}')" style="color:var(--orange);font-size:11px">Tümünü Gör</a>
+      </div>
+      <div class="dash-event-list">${todayEventsHTML}</div>
     </div>
-  `).join('');
+  `;
 
-  return `
-  <div style="max-width:960px;margin:0 auto;padding-bottom:50px">
+  if (Auth.isOwner()) {
+    // PATRON GÖRÜNÜMÜ
+    const now = new Date();
+    const d = new Date();
+    let weekIncome = 0;
+    let pendingCount = 0;
     
-    <!-- Top Stats -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px,1fr));gap:20px;margin-bottom:30px">
-      
-      <!-- Bugün -->
-      <div class="dash-stat-card stagger-1" style="background:linear-gradient(135deg, var(--card) 0%, rgba(249,115,22,.08) 100%)">
-        <div class="dsc-title">📅 Bugün</div>
-        <div class="dsc-main">${evList.length} <span class="dsc-sub">Grup</span> · ${totalGuests} <span class="dsc-sub">Kişi</span></div>
-        <div class="dsc-icons">✈️ ${flightCnt} &nbsp;&nbsp; 🚌 ${transferCnt} &nbsp;&nbsp; 🏷️ ${tourCnt}</div>
-      </div>
+    // Bu ay tahsil edilen
+    let monthPaid = 0;
+    // Toplam alacak
+    let totalPending = 0;
 
-      <!-- Finans (Sadece Patron Görür) -->
-      ${Auth.isOwner() ? `
-      <div class="dash-stat-card stagger-2" style="background:linear-gradient(135deg, var(--card) 0%, rgba(34,197,94,.08) 100%)">
-        <div class="dsc-title">💰 Bu Hafta (Öngörülen Ciro)</div>
-        <div class="dsc-main" style="color:var(--green)">${formatCurrency(weekIncome, cur)}</div>
-        <div class="dsc-icons">${pendingPayments} Bekleyen Ödeme</div>
-      </div>
-      ` : ''}
-    </div>
-
-    <!-- Lists -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px,1fr));gap:20px">
+    rs.forEach(r => {
+      if (r.status === 'kapandi') return;
+      const sd = new Date(r.startDate + 'T00:00:00');
+      const diff = (sd - new Date(today + 'T00:00:00')) / 86400000;
+      if (diff >= 0 && diff <= 7) {
+        weekIncome += (r.payment?.total || 0);
+        if (r.payment?.status !== 'odendi') pendingCount++;
+      }
       
-      <div class="card stagger-3">
-        <div class="sec-title" style="display:flex;justify-content:space-between">
-          <span>Bugünün Etkinlikleri</span>
-          <a href="#" onclick="Router.navigate('/day/${today.replace(/-/g,'/')}')" style="color:var(--orange);font-size:11px">Tümünü Gör</a>
+      const rTot = r.payment?.total || 0;
+      const rPaid = r.payment?.paid || 0;
+      if (rTot - rPaid > 0) {
+        totalPending += (rTot - rPaid);
+      }
+
+      // Bu ay ödenenleri geçmişten bul
+      if (r.payment?.history) {
+        r.payment.history.forEach(h => {
+          if (!h.date) return;
+          const hDate = new Date(h.date + 'T00:00:00');
+          if (hDate.getMonth() === now.getMonth() && hDate.getFullYear() === now.getFullYear()) {
+            monthPaid += h.amount;
+          }
+        });
+      }
+    });
+
+    const recent = [...rs].filter(r => r.status !== 'kapandi').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0,5);
+    const recentHTML = recent.map(r => `
+      <div class="dash-event-item" onclick="Router.navigate('/reservation/${r.id}')">
+        <div class="dei-name">${r.personal.firstName} ${r.personal.lastName}</div>
+        <div class="dei-badges">${formatDate(r.startDate)} — ${r.days} Gün</div>
+      </div>
+    `).join('');
+
+    return `
+    <div style="max-width:960px;margin:0 auto;padding-bottom:50px">
+      <!-- Finansal Kartlar -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px,1fr));gap:20px;margin-bottom:30px">
+        <div class="dash-stat-card stagger-1" style="background:linear-gradient(135deg, var(--card) 0%, rgba(34,197,94,.08) 100%)">
+          <div class="dsc-title">💰 Bu Hafta (Öngörülen Ciro)</div>
+          <div class="dsc-main" style="color:var(--green)">${formatCurrency(weekIncome, cur)}</div>
+          <div class="dsc-icons">${pendingCount} Bekleyen</div>
         </div>
-        <div class="dash-event-list">${todayEventsHTML}</div>
+        <div class="dash-stat-card stagger-1" style="background:linear-gradient(135deg, var(--card) 0%, rgba(34,197,94,.08) 100%)">
+          <div class="dsc-title">💼 Bu Ay Tahsil Edilen</div>
+          <div class="dsc-main" style="color:var(--green)">${formatCurrency(monthPaid, cur)}</div>
+          <div class="dsc-icons">Nakit Akışı</div>
+        </div>
+        <div class="dash-stat-card stagger-2" style="background:linear-gradient(135deg, var(--card) 0%, rgba(239,68,68,.08) 100%)">
+          <div class="dsc-title">⚠️ Toplam Alacak (Bekleyen)</div>
+          <div class="dsc-main" style="color:var(--red)">${formatCurrency(totalPending, cur)}</div>
+          <div class="dsc-icons">Açık Hesaplar</div>
+        </div>
       </div>
 
-      <div class="card stagger-4">
-        <div class="sec-title">Son Eklenen Rezervasyonlar</div>
-        <div class="dash-event-list">${recentHTML}</div>
+      <!-- Ortak Listeler -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px,1fr));gap:20px">
+        <div>${todayCard}</div>
+        <div class="card stagger-4">
+          <div class="sec-title">Son Eklenen Rezervasyonlar</div>
+          <div class="dash-event-list">${recentHTML}</div>
+        </div>
       </div>
+    </div>`;
 
-    </div>
+  } else if (Auth.canEdit()) {
+    // EDİTÖR GÖRÜNÜMÜ
+    const now = new Date();
+    const weekStart = new Date(now); 
+    weekStart.setDate(now.getDate() - now.getDay() + 1); // Monday
+    const weekEnd = new Date(weekStart); 
+    weekEnd.setDate(weekStart.getDate() + 6); // Sunday
+    
+    // Bu Hafta Gelenler
+    const thisWeekReservations = rs.filter(r => {
+      if (r.status === 'kapandi') return false;
+      const sd = r.startDate ? new Date(r.startDate + 'T00:00:00') : null;
+      return sd && sd >= weekStart && sd <= weekEnd;
+    }).sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
 
-  </div>`;
+    const thisWeekHTML = thisWeekReservations.length === 0 ? `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">Bu hafta gelen yeni rezervasyon yok.</div>` : thisWeekReservations.map(r => `
+      <div class="dash-event-item" onclick="Router.navigate('/reservation/${r.id}')">
+        <div class="dei-name">${r.personal.firstName} ${r.personal.lastName}</div>
+        <div class="dei-badges">${formatDate(r.startDate)} (${r.guestCount} Kişi)</div>
+      </div>
+    `).join('');
+
+    // Yaklaşan Transferler
+    const upcomingTransfers = rs.filter(r => r.status !== 'kapandi')
+      .flatMap(r => (r.transfers||[]).map(tf => ({ ...tf, resId: r.id, resName: r.personal.firstName + ' ' + r.personal.lastName })))
+      .filter(tf => {
+        if (!tf.date) return false;
+        const d = new Date(tf.date + 'T00:00:00');
+        return d >= weekStart && d <= weekEnd;
+      })
+      .sort((a,b) => new Date(a.date) - new Date(b.date))
+      .slice(0, 7);
+
+    const transfersHTML = upcomingTransfers.length === 0 ? `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">Bu hafta transfer yok.</div>` : upcomingTransfers.map(tf => {
+      const tOption = DB.transferOptions.find(x => x.id === tf.transferId);
+      const tfName = tOption ? tOption.name : (tf.from + ' -> ' + tf.to);
+      return `
+      <div class="dash-event-item" onclick="Router.navigate('/reservation/${tf.resId}')">
+        <div class="dei-name">${tf.resName}</div>
+        <div class="dei-badges">🚌 ${tfName} — ${formatDate(tf.date)} ${tf.time||''}</div>
+      </div>`;
+    }).join('');
+
+    return `
+    <div style="max-width:960px;margin:0 auto;padding-bottom:50px">
+      ${todayCard}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px,1fr));gap:20px">
+        <div class="card stagger-4">
+          <div class="sec-title">Bu Hafta Gelenler</div>
+          <div class="dash-event-list">${thisWeekHTML}</div>
+        </div>
+        <div class="card stagger-5">
+          <div class="sec-title">Yaklaşan Transferler (Bu Hafta)</div>
+          <div class="dash-event-list">${transfersHTML}</div>
+        </div>
+      </div>
+    </div>`;
+
+  } else {
+    // VİEWER GÖRÜNÜMÜ
+    return `
+    <div style="max-width:700px;margin:0 auto;padding-bottom:50px">
+      ${todayCard}
+    </div>`;
+  }
 }

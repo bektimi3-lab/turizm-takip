@@ -472,6 +472,21 @@ function saveReservationForm(e, existingId) {
     notes: g('notes')
   };
 
+  // Prevent negative inputs
+  if (data.payment.total < 0) {
+    showNotif('Toplam tutar negatif olamaz!', 'error'); return;
+  }
+  if (balTotalCost < 0 || balTotalPrice < 0) {
+    showNotif('Balon maliyet veya satış fiyatı negatif olamaz!', 'error'); return;
+  }
+  for (let cat of [hotels, tours, flights, transfers]) {
+    for (let item of cat) {
+      if ((item.totalCost && item.totalCost < 0) || (item.totalPrice && item.totalPrice < 0)) {
+        showNotif('Aktivite fiyatları negatif olamaz!', 'error'); return;
+      }
+    }
+  }
+
   if (existingId) {
     DB.updateReservation(existingId, data);
     showNotif('Rezervasyon guncellendi!', 'success');

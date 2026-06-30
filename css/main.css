@@ -51,6 +51,26 @@
   --ease-slow:   0.32s ease;
 }
 
+[data-theme="light"] {
+  --bg:          #f0f4f8;
+  --surface:     #ffffff;
+  --card:        #ffffff;
+  --card-hover:  #f8fafc;
+  --border:      #e2e8f0;
+  --border-light:#cbd5e1;
+  --text:        #1e293b;
+  --text-sec:    #475569;
+  --text-muted:  #94a3b8;
+  --orange-dim:  rgba(249,115,22,.10);
+  --orange-brd:  rgba(249,115,22,.30);
+  --blue-dim:    rgba(59,130,246,.10);
+  --green-dim:   rgba(34,197,94,.10);
+  --yellow-dim:  rgba(245,158,11,.10);
+  --red-dim:     rgba(239,68,68,.10);
+  --purple-dim:  rgba(168,85,247,.10);
+  --cyan-dim:    rgba(6,182,212,.10);
+}
+
 html { font-size: 16px; scroll-behavior: smooth; }
 
 body {

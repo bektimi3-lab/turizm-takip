@@ -95,6 +95,111 @@ function renderReservationProfile(res) {
         </div>`;
     }).join('');
 
+  /* Unified Timeline */
+  const tlEvents = [];
+  
+  if (tours?.length) {
+    tours.forEach(tr => {
+      const t = DB.tourOptions.find(x => x.id === tr.tourId);
+      tlEvents.push({
+        date: tr.date ? new Date(tr.date + 'T00:00:00') : null,
+        dateStr: formatDate(tr.date),
+        ico: t?.icon || '🏷️',
+        cls: 'tour',
+        title: t?.name || 'Bilinmeyen Tur',
+        meta: formatDate(tr.date)
+      });
+    });
+  }
+
+  if (flights?.length) {
+    flights.forEach(f => {
+      const d = f.departureTime || f.arrivalTime;
+      tlEvents.push({
+        date: d ? new Date(d) : null,
+        dateStr: d ? formatDateTime(d) : '—',
+        ico: f.direction==='giriş'?'🛬':'🛫',
+        cls: 'flight',
+        title: `${f.flightNo||'—'} — ${f.direction==='giriş'?'Giriş':'Çıkış'}`,
+        meta: `${f.fromAirport||'—'} → ${f.toAirport||'—'}<br>Kalkış: ${formatDateTime(f.departureTime)} &nbsp;·&nbsp; Varış: ${formatDateTime(f.arrivalTime)}`
+      });
+    });
+  }
+
+  if (transfers?.length) {
+    transfers.forEach(tf => {
+      const t = DB.transferOptions.find(x => x.id === tf.transferId);
+      let dt = null;
+      if (tf.date) {
+        dt = new Date(tf.date + 'T' + (tf.time || '00:00') + ':00');
+      }
+      tlEvents.push({
+        date: dt,
+        dateStr: formatDate(tf.date) + (tf.time ? ' ' + tf.time : ''),
+        ico: '🚌',
+        cls: 'transfer',
+        title: t?.name || 'Transfer',
+        meta: `${formatDate(tf.date)} ${tf.time||''} ${tf.note ? '· '+tf.note : ''}`
+      });
+    });
+  }
+
+  if (hotels?.length) {
+    hotels.forEach(h => {
+      const ht = DB.hotelOptions.find(x => x.id === h.hotelId);
+      const n = (h.checkin && h.checkout) ? Math.round((new Date(h.checkout) - new Date(h.checkin)) / 86400000) : 0;
+      tlEvents.push({
+        date: h.checkin ? new Date(h.checkin + 'T00:00:00') : null,
+        dateStr: formatDate(h.checkin),
+        ico: '🏨',
+        cls: 'checkin',
+        title: `${ht?.name || 'Otel'} — Oda: ${h.room||'—'} (Giriş)`,
+        meta: `Check-in: ${formatDate(h.checkin)} · Check-out: ${formatDate(h.checkout)} (${n} gece)`
+      });
+      if (h.checkout) {
+        tlEvents.push({
+          date: new Date(h.checkout + 'T00:00:00'),
+          dateStr: formatDate(h.checkout),
+          ico: '🏨',
+          cls: 'checkout',
+          title: `${ht?.name || 'Otel'} — Oda: ${h.room||'—'} (Çıkış)`,
+          meta: `Check-in: ${formatDate(h.checkin)} · Check-out: ${formatDate(h.checkout)} (${n} gece)`
+        });
+      }
+    });
+  }
+
+  if (balloon?.active) {
+    tlEvents.push({
+      date: balloon.date ? new Date(balloon.date + 'T00:00:00') : null,
+      dateStr: formatDate(balloon.date),
+      ico: '🎈',
+      cls: 'balloon',
+      title: `Balon Turu (${balloon.count} Kişi)`,
+      meta: formatDate(balloon.date)
+    });
+  }
+
+  // Sort by date (nulls last)
+  tlEvents.sort((a, b) => {
+    if (!a.date && !b.date) return 0;
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return a.date - b.date;
+  });
+
+  const timelineHTML = tlEvents.length === 0
+    ? '<div style="color:var(--text-muted);font-size:13px;padding:20px 0;text-align:center">Zaman çizelgesine eklenecek etkinlik bulunamadı.</div>'
+    : tlEvents.map(e => `
+      <div class="tl-item">
+        <div class="tl-ico ${e.cls}">${e.ico}</div>
+        <div class="tl-content">
+          <div class="tl-title">${e.title}</div>
+          <div class="tl-meta">${!e.date ? '<span style="color:var(--text-muted);font-size:11px">(tarih girilmedi)</span>' : e.meta}</div>
+        </div>
+      </div>
+    `).join('');
+
   return `
   <div style="max-width:920px;margin:0 auto">
     <div style="margin-bottom:14px">
@@ -126,7 +231,8 @@ function renderReservationProfile(res) {
 
     <!-- Tabs -->
     <div class="tabs" id="pTabs">
-      <button class="tab-btn active" data-tab="yolcular"   onclick="switchProfileTab(this,'yolcular')">👥 Yolcular</button>
+      <button class="tab-btn active" data-tab="timeline"    onclick="switchProfileTab(this,'timeline')">📅 Zaman Cetveli</button>
+      <button class="tab-btn"        data-tab="yolcular"   onclick="switchProfileTab(this,'yolcular')">👥 Yolcular</button>
       <button class="tab-btn"        data-tab="konaklama"  onclick="switchProfileTab(this,'konaklama')">🏨 Konaklama</button>
       <button class="tab-btn"        data-tab="turlar"     onclick="switchProfileTab(this,'turlar')">🏷️ Turlar</button>
       <button class="tab-btn"        data-tab="ucuslar"    onclick="switchProfileTab(this,'ucuslar')">✈️ Uçuşlar</button>
@@ -135,8 +241,13 @@ function renderReservationProfile(res) {
       ${notes ? `<button class="tab-btn" data-tab="notlar" onclick="switchProfileTab(this,'notlar')">📝 Notlar</button>` : ''}
     </div>
 
+    <!-- Tab: Zaman Cetveli -->
+    <div class="tab-content active card" id="tc-timeline">
+      <div class="timeline">${timelineHTML}</div>
+    </div>
+
     <!-- Tab: Yolcular -->
-    <div class="tab-content active card" id="tc-yolcular">
+    <div class="tab-content card" id="tc-yolcular">
       ${guestsHTML}
     </div>
 

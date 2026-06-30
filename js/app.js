@@ -58,7 +58,7 @@ function renderLayout(title, content, activeNav) {
           ${navItem('👥','Rezervasyonlar','reservations','/reservations')}
 
           <div class="nav-section">Sistem</div>
-          ${Auth.isOwner() ? navItem('📈','İstatistikler','stats','/stats') : ''}
+          ${Auth.canEdit() ? navItem('📈','İstatistikler','stats','/stats') : ''}
           ${navItem('⚙️','Ayarlar','settings','/settings')}
         </div>
 
@@ -79,6 +79,7 @@ function renderLayout(title, content, activeNav) {
         <header class="top-header">
           <button class="mobile-menu-btn" onclick="toggleMobMenu()">☰</button>
           <div class="top-header-title">${title}</div>
+          <button class="theme-toggle-btn" onclick="toggleTheme()" title="Tema Degistir" style="background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:6px 10px;cursor:pointer;font-size:16px;transition:all var(--ease)">☀️</button>
           <div class="top-header-actions" id="headerActions"></div>
         </header>
         <main class="page-content page-enter" id="pageContent">
@@ -98,10 +99,28 @@ function closeMobMenu() {
   document.getElementById('mobOverlay')?.classList.remove('vis');
 }
 
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') !== 'light';
+  const newTheme = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('turTakipTheme', newTheme);
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.textContent = newTheme === 'light' ? '🌙' : '☀️';
+    btn.title = newTheme === 'light' ? 'Koyu Temaya Geç' : 'Açık Temaya Geç';
+  });
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('turTakipTheme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+}
+
 /* ============================================================
    Route kayıtları
    ============================================================ */
 function initApp() {
+  initTheme();
   const y = new Date().getFullYear();
 
   Router
@@ -145,7 +164,7 @@ function initApp() {
     })
 
     .on('/reservation/new', () => {
-      if (!Auth.canEdit()) { showNotif('Bu işlem için yetkiniz yok.','error'); return; }
+      if (!Auth.canEdit()) { Router.navigate('/reservations', true); return; }
       document.getElementById('app').innerHTML = renderLayout('Yeni Rezervasyon', renderReservationForm(null), 'reservations');
       initFormCounters(null);
     })
@@ -161,7 +180,7 @@ function initApp() {
     })
 
     .on('/reservation/:id/edit', ({ id }) => {
-      if (!Auth.canEdit()) { showNotif('Bu işlem için yetkiniz yok.','error'); return; }
+      if (!Auth.canEdit()) { Router.navigate('/reservation/' + id, true); return; }
       const r = DB.getReservation(id);
       if (!r) { showNotif('Rezervasyon bulunamadı','error'); Router.navigate('/reservations'); return; }
       document.getElementById('app').innerHTML = renderLayout('Rezervasyon Düzenle', renderReservationForm(r), 'reservations');
@@ -173,6 +192,7 @@ function initApp() {
     })
 
     .on('/stats', () => {
+      if (!Auth.canEdit()) { Router.navigate('/dashboard', true); return; }
       document.getElementById('app').innerHTML = renderLayout('İstatistikler & Denetim', renderStatsView(), 'stats');
     })
 
@@ -186,6 +206,12 @@ function initApp() {
   } else {
     Router.init();
   }
+
+  // Set correct theme icon on load
+  const _savedTheme = localStorage.getItem('turTakipTheme') || 'dark';
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.textContent = _savedTheme === 'light' ? '🌙' : '☀️';
+  });
 }
 
 document.addEventListener('DOMContentLoaded', initApp);

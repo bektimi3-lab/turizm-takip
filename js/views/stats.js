@@ -2,11 +2,8 @@
 
 function renderStatsView() {
   if (!Auth.canEdit()) {
-    return `<div class="empty-state">
-      <div class="empty-ico">🔒</div>
-      <div class="empty-title">Erişim Engellendi</div>
-      <div class="empty-desc">Bu sayfayı yalnızca Patron ve Editör rolündeki kullanıcılar görüntüleyebilir.</div>
-    </div>`;
+    setTimeout(() => Router.navigate('/dashboard'), 0);
+    return '';
   }
 
   const rs = DB.reservations;
