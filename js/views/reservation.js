@@ -56,9 +56,9 @@ function renderReservationProfile(res) {
   const flightsHTML = !(flights?.length)
     ? '<div style="color:var(--text-muted);font-size:13px">Uçuş eklenmemiş.</div>'
     : flights.map(f => `<div class="tl-item">
-        <div class="tl-ico flight">${f.direction==='giriş'?'🛬':'🛫'}</div>
+        <div class="tl-ico flight">${f.direction==='giris'?'🛬':'🛫'}</div>
         <div class="tl-content">
-          <div class="tl-title">${f.flightNo||'—'} — ${f.direction==='giriş'?'Giriş':'Çıkış'}</div>
+          <div class="tl-title">${f.flightNo||'—'} — ${f.direction==='giris'?'Giriş':'Çıkış'}</div>
           <div class="tl-meta">
             ${f.fromAirport||'—'} → ${f.toAirport||'—'}<br>
             Kalkış: ${formatDateTime(f.departureTime)} &nbsp;·&nbsp; Varış: ${formatDateTime(f.arrivalTime)}

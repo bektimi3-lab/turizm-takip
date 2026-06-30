@@ -17,7 +17,7 @@ function updatePerPerson(totalInputEl, perPersonId) {
   const total = parseFloat(totalInputEl.value) || 0;
   const pp = gc > 0 ? (total / gc).toFixed(2) : '0';
   const el = document.getElementById(perPersonId);
-  if (el) el.textContent = pp + ' / kisi';
+  if (el) el.textContent = pp + ' / kişi';
 }
 
 function renderReservationForm(res) {
@@ -253,12 +253,12 @@ function _priceFieldsStatic(pfx, obj, gc) {
   const tCost  = obj?.totalCost  != null ? obj.totalCost  : '';
   const tPrice = obj?.totalPrice != null ? obj.totalPrice : '';
   const g = parseInt(gc) || 1;
-  const ppCost  = tCost  !== '' ? (parseFloat(tCost)  / g).toFixed(2) + ' / kisi' : '';
-  const ppPrice = tPrice !== '' ? (parseFloat(tPrice) / g).toFixed(2) + ' / kisi' : '';
+  const ppCost  = tCost  !== '' ? (parseFloat(tCost)  / g).toFixed(2) + ' / kişi' : '';
+  const ppPrice = tPrice !== '' ? (parseFloat(tPrice) / g).toFixed(2) + ' / kişi' : '';
   return `
   <div class="form-row form-row-2" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
     <div class="form-group" style="margin:0">
-      <label class="form-label">Toplam Maliyet <span style="color:var(--text-muted);font-size:11px">(bos = girilmedi)</span></label>
+      <label class="form-label">Toplam Maliyet <span style="color:var(--text-muted);font-size:11px">(boş = girilmedi)</span></label>
       <div style="position:relative">
         <input type="number" name="${pfx}TotalCost" class="form-control" value="${tCost}" placeholder="---" min="0"
           oninput="updatePerPerson(this,'pp-cost-${pfx}')">
@@ -266,7 +266,7 @@ function _priceFieldsStatic(pfx, obj, gc) {
       </div>
     </div>
     <div class="form-group" style="margin:0">
-      <label class="form-label">Toplam Satis <span style="color:var(--text-muted);font-size:11px">(bos = girilmedi)</span></label>
+      <label class="form-label">Toplam Satış <span style="color:var(--text-muted);font-size:11px">(boş = girilmedi)</span></label>
       <div style="position:relative">
         <input type="number" name="${pfx}TotalPrice" class="form-control" value="${tPrice}" placeholder="---" min="0"
           oninput="updatePerPerson(this,'pp-price-${pfx}')">
@@ -281,12 +281,12 @@ function _priceFields(pfx, idx, obj, gc) {
   const tCost  = obj?.totalCost  != null ? obj.totalCost  : '';
   const tPrice = obj?.totalPrice != null ? obj.totalPrice : '';
   const g = parseInt(gc) || _guestCount || 1;
-  const ppCost  = tCost  !== '' ? (parseFloat(tCost)  / g).toFixed(2) + ' / kisi' : '';
-  const ppPrice = tPrice !== '' ? (parseFloat(tPrice) / g).toFixed(2) + ' / kisi' : '';
+  const ppCost  = tCost  !== '' ? (parseFloat(tCost)  / g).toFixed(2) + ' / kişi' : '';
+  const ppPrice = tPrice !== '' ? (parseFloat(tPrice) / g).toFixed(2) + ' / kişi' : '';
   return `
   <div class="form-row form-row-2" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
     <div class="form-group" style="margin:0">
-      <label class="form-label">Toplam Maliyet <span style="color:var(--text-muted);font-size:11px">(bos = girilmedi)</span></label>
+      <label class="form-label">Toplam Maliyet <span style="color:var(--text-muted);font-size:11px">(boş = girilmedi)</span></label>
       <div style="position:relative">
         <input type="number" name="${pfx}TotalCost_${idx}" class="form-control" value="${tCost}" placeholder="---" min="0"
           oninput="updatePerPerson(this,'pp-cost-${pfx}-${idx}')">
@@ -294,7 +294,7 @@ function _priceFields(pfx, idx, obj, gc) {
       </div>
     </div>
     <div class="form-group" style="margin:0">
-      <label class="form-label">Toplam Satis <span style="color:var(--text-muted);font-size:11px">(bos = girilmedi)</span></label>
+      <label class="form-label">Toplam Satış <span style="color:var(--text-muted);font-size:11px">(boş = girilmedi)</span></label>
       <div style="position:relative">
         <input type="number" name="${pfx}TotalPrice_${idx}" class="form-control" value="${tPrice}" placeholder="---" min="0"
           oninput="updatePerPerson(this,'pp-price-${pfx}-${idx}')">
