@@ -38,7 +38,7 @@ function renderReservationForm(res) {
       <button class="btn btn-ghost btn-sm" onclick="history.back()">&#8592; Geri</button>
     </div>
 
-    <form id="resForm" onsubmit="saveReservationForm(event,'${res?.id||''}')">
+    <form id="resForm" novalidate onsubmit="saveReservationForm(event,'${res?.id||''}')">
 
       <!-- Temel Bilgiler -->
       <div class="card" style="margin-bottom:14px">
@@ -46,17 +46,17 @@ function renderReservationForm(res) {
           <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">&#x1F4CB; Rezervasyon Bilgileri</div>
         </div>
         <div class="form-row form-row-2">
-          <div class="form-group"><label class="form-label">Grup Adi (Bas Kisi Adi)</label><input name="firstName" type="text" class="form-control" value="${gf('firstName')}" placeholder="Ad"></div>
-          <div class="form-group"><label class="form-label">Grup Soyadi</label><input name="lastName" type="text" class="form-control" value="${gf('lastName')}" placeholder="Soyad"></div>
+          <div class="form-group"><label class="form-label">Grup Adı (Baş Kişi Adı) <span style="color:var(--red)">*</span></label><input name="firstName" type="text" class="form-control" value="${gf('firstName')}" placeholder="Ad" required></div>
+          <div class="form-group"><label class="form-label">Grup Soyadı <span style="color:var(--red)">*</span></label><input name="lastName" type="text" class="form-control" value="${gf('lastName')}" placeholder="Soyad" required></div>
         </div>
         <div class="form-row form-row-2">
           <div class="form-group"><label class="form-label">Telefon</label><input name="phone" type="tel" class="form-control" value="${gf('phone')}" placeholder="+90 555..."></div>
           <div class="form-group"><label class="form-label">E-posta</label><input name="email" type="email" class="form-control" value="${gf('email')}" placeholder="ornek@mail.com"></div>
         </div>
         <div class="form-row form-row-3">
-          <div class="form-group"><label class="form-label">Kisi Sayisi</label><input id="guestCountInput" name="guestCount" type="number" min="1" class="form-control" value="${t.guestCount}" onchange="updateGuestRows()"></div>
-          <div class="form-group"><label class="form-label">Baslangic Tarihi</label><input name="startDate" type="date" class="form-control" value="${t.startDate}"></div>
-          <div class="form-group"><label class="form-label">Gun Sayisi</label><input name="days" type="number" min="1" class="form-control" value="${t.days}"></div>
+          <div class="form-group"><label class="form-label">Kişi Sayısı <span style="color:var(--red)">*</span></label><input id="guestCountInput" name="guestCount" type="number" min="1" class="form-control" value="${t.guestCount}" onchange="updateGuestRows()" required></div>
+          <div class="form-group"><label class="form-label">Başlangıç Tarihi <span style="color:var(--red)">*</span></label><input name="startDate" type="date" class="form-control" value="${t.startDate}" required></div>
+          <div class="form-group"><label class="form-label">Gün Sayısı <span style="color:var(--red)">*</span></label><input name="days" type="number" min="1" class="form-control" value="${t.days}" required></div>
         </div>
       </div>
 
@@ -73,7 +73,7 @@ function renderReservationForm(res) {
       <!-- Balon -->
       <div class="card" style="margin-bottom:14px">
         <div class="form-section-highlight">
-          <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">&#x1F388; Balon Secenegi</div>
+          <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">&#x1F388; Balon Seçeneği</div>
         </div>
         <div class="form-row form-row-2">
           <div class="form-group"><label class="form-label">Balon Var Mi?</label>
@@ -93,7 +93,7 @@ function renderReservationForm(res) {
           <div class="sec-title" style="margin:0;border:none;padding:0">&#x1F3E8; Oteller</div>
           <button type="button" class="btn btn-secondary btn-sm" onclick="addHotelRow()">+ Otel Ekle</button>
         </div>
-        <div id="hotelRows">${(t.hotels||[]).map((h,i) => _hotelRow(i, h, t.guestCount)).join('') || '<div id="noHotels" style="color:var(--text-muted);font-size:13px">Henuz otel eklenmedi.</div>'}</div>
+        <div id="hotelRows">${(t.hotels||[]).map((h,i) => _hotelRow(i, h, t.guestCount)).join('') || '<button type="button" id="noHotels" class="empty-add-btn" style="width:100%" onclick="addHotelRow()">+ İlk Oteli Ekle</button>'}</div>
       </div>
 
       <!-- Turlar -->
@@ -102,16 +102,16 @@ function renderReservationForm(res) {
           <div class="sec-title" style="margin:0;border:none;padding:0">&#x1F3F7;&#xFE0F; Turlar</div>
           <button type="button" class="btn btn-secondary btn-sm" onclick="addTourRow()">+ Tur Ekle</button>
         </div>
-        <div id="tourRows">${(t.tours||[]).map((tr,i) => _tourRow(i, tr, t.guestCount)).join('') || '<div id="noTours" style="color:var(--text-muted);font-size:13px">Henuz tur eklenmedi.</div>'}</div>
+        <div id="tourRows">${(t.tours||[]).map((tr,i) => _tourRow(i, tr, t.guestCount)).join('') || '<button type="button" id="noTours" class="empty-add-btn" style="width:100%" onclick="addTourRow()">+ İlk Turu Ekle</button>'}</div>
       </div>
 
-      <!-- Ucuslar -->
+      <!-- Uçuşlar -->
       <div class="card" style="margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <div class="sec-title" style="margin:0;border:none;padding:0">&#x2708;&#xFE0F; Ucuslar</div>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="addFlightRow()">+ Ucus Ekle</button>
+          <div class="sec-title" style="margin:0;border:none;padding:0">&#x2708;&#xFE0F; Uçuşlar</div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addFlightRow()">+ Uçuş Ekle</button>
         </div>
-        <div id="flightRows">${(t.flights||[]).map((f,i) => _flightRow(i, f, t.guestCount)).join('') || '<div id="noFlights" style="color:var(--text-muted);font-size:13px">Henuz ucus eklenmedi.</div>'}</div>
+        <div id="flightRows">${(t.flights||[]).map((f,i) => _flightRow(i, f, t.guestCount)).join('') || '<button type="button" id="noFlights" class="empty-add-btn" style="width:100%" onclick="addFlightRow()">+ İlk Uçuşu Ekle</button>'}</div>
       </div>
 
       <!-- Transferler -->
@@ -120,13 +120,13 @@ function renderReservationForm(res) {
           <div class="sec-title" style="margin:0;border:none;padding:0">&#x1F68C; Transferler</div>
           <button type="button" class="btn btn-secondary btn-sm" onclick="addTransferRow()">+ Transfer Ekle</button>
         </div>
-        <div id="transferRows">${(t.transfers||[]).map((tf,i) => _transferRow(i, tf, t.guestCount)).join('') || '<div id="noTransfers" style="color:var(--text-muted);font-size:13px">Henuz transfer eklenmedi.</div>'}</div>
+        <div id="transferRows">${(t.transfers||[]).map((tf,i) => _transferRow(i, tf, t.guestCount)).join('') || '<button type="button" id="noTransfers" class="empty-add-btn" style="width:100%" onclick="addTransferRow()">+ İlk Transferi Ekle</button>'}</div>
       </div>
 
-      <!-- Odeme -->
+      <!-- Ödeme -->
       <div class="card" style="margin-bottom:14px">
         <div class="form-section-highlight">
-          <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">&#x1F4B3; Odeme</div>
+          <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">&#x1F4B3; Ödeme</div>
         </div>
         <div class="form-row form-row-3">
           <div class="form-group"><label class="form-label">Toplam Tutar</label><input name="total" type="number" class="form-control" value="${t.payment?.total||''}" placeholder="0" min="0" step="0.01"></div>
@@ -140,13 +140,13 @@ function renderReservationForm(res) {
           <div class="form-group"><label class="form-label">Genel Durum</label>
             <select name="payStatus" class="form-control">
               <option value="bekliyor" ${t.payment?.status==='bekliyor'?'selected':''}>Bekliyor</option>
-              <option value="kismi"    ${t.payment?.status==='kismi'   ?'selected':''}>Kismi Odendi</option>
-              <option value="odendi"   ${t.payment?.status==='odendi'  ?'selected':''}>Tamami Odendi</option>
+              <option value="kısmi"    ${t.payment?.status==='kısmi'   ?'selected':''}>Kısmi Ödendi</option>
+              <option value="ödendi"   ${t.payment?.status==='ödendi'  ?'selected':''}>Tamamı Ödendi</option>
             </select>
           </div>
         </div>
         <div style="font-size:12px;color:var(--text-muted);margin-top:8px">
-          * Tahsilat/Odeme gecmisi kayit islemleri rezervasyon detay (profil) sayfasindan yonetilmektedir.
+          * Tahsilat/Ödeme geçmişi kayıt işlemleri rezervasyon detay (profil) sayfasından yönetilmektedir.
         </div>
       </div>
 
@@ -155,8 +155,8 @@ function renderReservationForm(res) {
         <div class="form-group" style="margin:0"><label class="form-label">&#x1F4DD; Notlar</label><textarea name="notes" class="form-control" rows="3">${t.notes||''}</textarea></div>
       </div>
 
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button type="button" class="btn btn-ghost" onclick="history.back()">Iptal</button>
+      <div class="sticky-form-footer">
+        <button type="button" class="btn btn-ghost" onclick="history.back()">İptal</button>
         <button type="submit" class="btn btn-primary">Kaydet</button>
       </div>
 
@@ -204,20 +204,20 @@ function _guestRow(i, g) {
       <div class="form-group" style="margin:0"><input type="text" name="g_ln_${i}" class="form-control" value="${g.lastName||''}" placeholder="Soyad"></div>
     </div>
     <div class="form-row form-row-3" style="margin-bottom:10px">
-      <div class="form-group" style="margin:0"><input type="text" name="g_nat_${i}" class="form-control" value="${g.nationality||''}" placeholder="Uyruk (orn: Ingiliz)"></div>
+      <div class="form-group" style="margin:0"><input type="text" name="g_nat_${i}" class="form-control" value="${g.nationality||''}" placeholder="Uyruk (örn: İngiliz)"></div>
       <div class="form-group" style="margin:0"><input type="text" name="g_pass_${i}" class="form-control" value="${g.passport||''}" placeholder="Pasaport No"></div>
       <div class="form-group" style="margin:0">
         <select name="g_gender_${i}" class="form-control">
           <option value="">Cinsiyet</option>
           <option value="Erkek" ${g.gender==='Erkek'?'selected':''}>Erkek</option>
-          <option value="Kadin" ${g.gender==='Kadin'?'selected':''}>Kadin</option>
+          <option value="Kadın" ${g.gender==='Kadın'?'selected':''}>Kadın</option>
         </select>
       </div>
     </div>
     <div class="form-row form-row-3">
-      <div class="form-group" style="margin:0"><label class="form-label" style="font-size:11px">Dogum Tarihi</label><input type="date" name="g_dob_${i}" class="form-control" value="${g.dob||''}"></div>
-      <div class="form-group" style="margin:0"><label class="form-label" style="font-size:11px">Pasaport Baslangic</label><input type="date" name="g_pstart_${i}" class="form-control" value="${g.passportStart||''}"></div>
-      <div class="form-group" style="margin:0"><label class="form-label" style="font-size:11px">Pasaport Bitis</label><input type="date" name="g_pend_${i}" class="form-control" value="${g.passportEnd||''}"></div>
+      <div class="form-group" style="margin:0"><label class="form-label" style="font-size:11px">Doğum Tarihi</label><input type="date" name="g_dob_${i}" class="form-control" value="${g.dob||''}"></div>
+      <div class="form-group" style="margin:0"><label class="form-label" style="font-size:11px">Pasaport Başlangıç</label><input type="date" name="g_pstart_${i}" class="form-control" value="${g.passportStart||''}"></div>
+      <div class="form-group" style="margin:0"><label class="form-label" style="font-size:11px">Pasaport Bitiş</label><input type="date" name="g_pend_${i}" class="form-control" value="${g.passportEnd||''}"></div>
     </div>
   </div>`;
 }
@@ -304,66 +304,89 @@ function _priceFields(pfx, idx, obj, gc) {
   </div>`;
 }
 
+function toggleAcBody(btn) {
+  const body = btn.closest('.activity-card').querySelector('.ac-body');
+  if(body.style.display === 'none') {
+    body.style.display = 'block';
+    btn.innerHTML = 'Daralt 🔼';
+  } else {
+    body.style.display = 'none';
+    btn.innerHTML = 'Genişlet 🔽';
+  }
+}
+
 function _hotelRow(idx, h={}, gc) {
   const opts = DB.hotelOptions.map(o => '<option value="'+o.id+'" '+(o.id===h.hotelId?'selected':'')+'>'+o.name+'</option>').join('');
-  return '<div class="h-row" id="hr-'+idx+'" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-    +'<select name="hotelId_'+idx+'" class="form-control" style="max-width:300px" onchange="loadTemplateData(this,\'hotel\',\''+idx+'\')"><option value="">Otel Sec</option>'+opts+'</select>'
-    +'<button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById(\'hr-'+idx+'\').remove()">Kaldir</button></div>'
+  return '<div class="h-row activity-card ac-hotel" id="hr-'+idx+'">'
+    +'<div class="ac-header"><div><span style="font-weight:600;font-size:13px;color:var(--text-sec)">🏨 Otel Kaydı</span></div>'
+    +'<div><button type="button" class="btn btn-ghost btn-sm" onclick="toggleAcBody(this)">Daralt 🔼</button>'
+    +'<button type="button" class="btn btn-danger btn-sm" style="margin-left:6px" onclick="document.getElementById(\'hr-'+idx+'\').remove()">Kaldır</button></div></div>'
+    +'<div class="ac-body">'
+    +'<div class="form-group" style="margin-bottom:12px">'
+    +'<select name="hotelId_'+idx+'" class="form-control" style="max-width:300px" onchange="loadTemplateData(this,\'hotel\',\''+idx+'\')"><option value="">Otel Seç</option>'+opts+'</select></div>'
     +'<div class="form-row form-row-3">'
     +'<div class="form-group" style="margin:0"><label class="form-label">Oda No</label><input type="text" name="hRoom_'+idx+'" class="form-control" value="'+(h.room||'')+'"></div>'
     +'<div class="form-group" style="margin:0"><label class="form-label">Check-in</label><input type="date" name="hIn_'+idx+'" class="form-control" value="'+(h.checkin||'')+'"></div>'
     +'<div class="form-group" style="margin:0"><label class="form-label">Check-out</label><input type="date" name="hOut_'+idx+'" class="form-control" value="'+(h.checkout||'')+'"></div>'
     +'</div>'
     +_priceFields('h', idx, h, gc)
-    +'</div>';
+    +'</div></div>';
 }
 
 function _tourRow(idx, tr={}, gc) {
   const opts = DB.tourOptions.map(t => '<option value="'+t.id+'" '+(t.id===tr.tourId?'selected':'')+'>'+t.icon+' '+t.name+'</option>').join('');
-  return '<div class="t-row" id="tr-'+idx+'" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">'
-    +'<div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:4px">'
-    +'<div class="form-group" style="margin:0;flex:2"><label class="form-label">Tur</label>'
-    +'<select name="tourId_'+idx+'" class="form-control"><option value="">Sec</option>'+opts+'</select></div>'
-    +'<div class="form-group" style="margin:0;flex:1"><label class="form-label">Tarih</label>'
+  return '<div class="t-row activity-card ac-tour" id="tr-'+idx+'">'
+    +'<div class="ac-header"><div><span style="font-weight:600;font-size:13px;color:var(--text-sec)">🏷️ Tur Kaydı</span></div>'
+    +'<div><button type="button" class="btn btn-ghost btn-sm" onclick="toggleAcBody(this)">Daralt 🔼</button>'
+    +'<button type="button" class="btn btn-danger btn-sm" style="margin-left:6px" onclick="document.getElementById(\'tr-'+idx+'\').remove()">Kaldır</button></div></div>'
+    +'<div class="ac-body">'
+    +'<div class="form-row form-row-2" style="margin-bottom:4px">'
+    +'<div class="form-group" style="margin:0"><label class="form-label">Tur</label>'
+    +'<select name="tourId_'+idx+'" class="form-control"><option value="">Seç</option>'+opts+'</select></div>'
+    +'<div class="form-group" style="margin:0"><label class="form-label">Tarih</label>'
     +'<input type="date" name="tourDate_'+idx+'" class="form-control" value="'+(tr.date||'')+'"></div>'
-    +'<button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById(\'tr-'+idx+'\').remove()" style="margin-bottom:1px">&#x1F5D1;&#xFE0F;</button>'
     +'</div>'
     +_priceFields('t', idx, tr, gc)
-    +'</div>';
+    +'</div></div>';
 }
 
 function _flightRow(idx, f={}, gc) {
   const opts = DB.flightOptions.map(o => '<option value="'+o.id+'">'+o.flightNo+' ('+o.fromAirport+'->'+o.toAirport+')</option>').join('');
-  return '<div class="f-row" id="fr-'+idx+'" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-    +'<select class="form-control" style="max-width:300px" onchange="loadTemplateData(this,\'flight\',\''+idx+'\')"><option value="">Sablondan Doldur</option>'+opts+'</select>'
-    +'<button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById(\'fr-'+idx+'\').remove()">Kaldir</button></div>'
+  return '<div class="f-row activity-card ac-flight" id="fr-'+idx+'">'
+    +'<div class="ac-header"><div><span style="font-weight:600;font-size:13px;color:var(--text-sec)">✈️ Uçuş Kaydı</span></div>'
+    +'<div><button type="button" class="btn btn-ghost btn-sm" onclick="toggleAcBody(this)">Daralt 🔼</button>'
+    +'<button type="button" class="btn btn-danger btn-sm" style="margin-left:6px" onclick="document.getElementById(\'fr-'+idx+'\').remove()">Kaldır</button></div></div>'
+    +'<div class="ac-body">'
+    +'<div class="form-group" style="margin-bottom:12px">'
+    +'<select class="form-control" style="max-width:300px" onchange="loadTemplateData(this,\'flight\',\''+idx+'\')"><option value="">Şablondan Doldur</option>'+opts+'</select></div>'
     +'<div class="form-row form-row-3" style="margin-bottom:10px">'
-    +'<div class="form-group" style="margin:0"><label class="form-label">Ucus No</label><input type="text" name="flNo_'+idx+'" class="form-control" value="'+(f.flightNo||'')+'"></div>'
-    +'<div class="form-group" style="margin:0"><label class="form-label">Yon</label>'
+    +'<div class="form-group" style="margin:0"><label class="form-label">Uçuş No</label><input type="text" name="flNo_'+idx+'" class="form-control" value="'+(f.flightNo||'')+'"></div>'
+    +'<div class="form-group" style="margin:0"><label class="form-label">Yön</label>'
     +'<select name="flDir_'+idx+'" class="form-control">'
-    +'<option value="giris" '+(f.direction==='giris'?'selected':'')+'>Giris (Varis)</option>'
-    +'<option value="cikis" '+(f.direction==='cikis'?'selected':'')+'>Cikis (Kalkis)</option>'
+    +'<option value="giris" '+(f.direction==='giris'?'selected':'')+'>Giriş (Varış)</option>'
+    +'<option value="cikis" '+(f.direction==='cikis'?'selected':'')+'>Çıkış (Kalkış)</option>'
     +'</select></div><div></div></div>'
     +'<div class="form-row form-row-2" style="margin-bottom:10px">'
-    +'<div class="form-group" style="margin:0"><label class="form-label">Kalkis Havalimani</label><input type="text" name="flFrom_'+idx+'" class="form-control" value="'+(f.fromAirport||'')+'"></div>'
-    +'<div class="form-group" style="margin:0"><label class="form-label">Varis Havalimani</label><input type="text" name="flTo_'+idx+'" class="form-control" value="'+(f.toAirport||'')+'"></div>'
+    +'<div class="form-group" style="margin:0"><label class="form-label">Kalkış Havalimanı</label><input type="text" name="flFrom_'+idx+'" class="form-control" value="'+(f.fromAirport||'')+'"></div>'
+    +'<div class="form-group" style="margin:0"><label class="form-label">Varış Havalimanı</label><input type="text" name="flTo_'+idx+'" class="form-control" value="'+(f.toAirport||'')+'"></div>'
     +'</div>'
     +'<div class="form-row form-row-2" style="margin-bottom:4px">'
-    +'<div class="form-group" style="margin:0"><label class="form-label">Kalkis Zamani</label><input type="datetime-local" name="flDep_'+idx+'" class="form-control" value="'+(f.departureTime||'')+'"></div>'
-    +'<div class="form-group" style="margin:0"><label class="form-label">Varis Zamani</label><input type="datetime-local" name="flArr_'+idx+'" class="form-control" value="'+(f.arrivalTime||'')+'"></div>'
+    +'<div class="form-group" style="margin:0"><label class="form-label">Kalkış Zamanı</label><input type="datetime-local" name="flDep_'+idx+'" class="form-control" value="'+(f.departureTime||'')+'"></div>'
+    +'<div class="form-group" style="margin:0"><label class="form-label">Varış Zamanı</label><input type="datetime-local" name="flArr_'+idx+'" class="form-control" value="'+(f.arrivalTime||'')+'"></div>'
     +'</div>'
     +_priceFields('fl', idx, f, gc)
-    +'</div>';
+    +'</div></div>';
 }
 
 function _transferRow(idx, tf={}, gc) {
   const opts = DB.transferOptions.map(o => '<option value="'+o.id+'" '+(o.id===tf.transferId?'selected':'')+'>'+o.name+'</option>').join('');
-  return '<div class="tf-row" id="tfr-'+idx+'" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-    +'<select name="transferId_'+idx+'" class="form-control" style="max-width:300px" onchange="loadTemplateData(this,\'transfer\',\''+idx+'\')"><option value="">Sablondan Doldur / Sec</option>'+opts+'</select>'
-    +'<button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById(\'tfr-'+idx+'\').remove()">Kaldir</button></div>'
+  return '<div class="tf-row activity-card ac-transfer" id="tfr-'+idx+'">'
+    +'<div class="ac-header"><div><span style="font-weight:600;font-size:13px;color:var(--text-sec)">🚌 Transfer Kaydı</span></div>'
+    +'<div><button type="button" class="btn btn-ghost btn-sm" onclick="toggleAcBody(this)">Daralt 🔼</button>'
+    +'<button type="button" class="btn btn-danger btn-sm" style="margin-left:6px" onclick="document.getElementById(\'tfr-'+idx+'\').remove()">Kaldır</button></div></div>'
+    +'<div class="ac-body">'
+    +'<div class="form-group" style="margin-bottom:12px">'
+    +'<select name="transferId_'+idx+'" class="form-control" style="max-width:300px" onchange="loadTemplateData(this,\'transfer\',\''+idx+'\')"><option value="">Şablondan Doldur / Seç</option>'+opts+'</select></div>'
     +'<div class="form-row form-row-2" style="margin-bottom:10px">'
     +'<div class="form-group" style="margin:0"><label class="form-label">Nereden</label><input type="text" name="tfFrom_'+idx+'" class="form-control" value="'+(tf.from||'')+'"></div>'
     +'<div class="form-group" style="margin:0"><label class="form-label">Nereye</label><input type="text" name="tfTo_'+idx+'" class="form-control" value="'+(tf.to||'')+'"></div>'
@@ -374,7 +397,7 @@ function _transferRow(idx, tf={}, gc) {
     +'</div>'
     +'<div class="form-group" style="margin:0"><label class="form-label">Not</label><input type="text" name="tfNote_'+idx+'" class="form-control" value="'+(tf.note||'')+'"></div>'
     +_priceFields('tf', idx, tf, gc)
-    +'</div>';
+    +'</div></div>';
 }
 
 function addHotelRow()    { document.getElementById('noHotels')?.remove();    document.getElementById('hotelRows').insertAdjacentHTML('beforeend',_hotelRow(_htc++, {}, _guestCount)); }
@@ -389,6 +412,34 @@ function syncBalloons(isActive) {
 function saveReservationForm(e, existingId) {
   e.preventDefault();
   const form = document.getElementById('resForm');
+
+  // Custom Validation Highlights
+  let hasError = false;
+  let firstErrorEl = null;
+  Array.from(form.elements).forEach(el => {
+    el.classList.remove('error-highlight');
+    if (el.hasAttribute('required') && !el.value.trim()) {
+      hasError = true;
+      el.classList.add('error-highlight');
+      if (!firstErrorEl) firstErrorEl = el;
+    }
+  });
+
+  if (hasError) {
+    showNotif('Lütfen zorunlu alanları doldurun.', 'error');
+    if (firstErrorEl) {
+      // Ensure accordion is open
+      const acBody = firstErrorEl.closest('.ac-body');
+      if (acBody && acBody.style.display === 'none') {
+        const toggleBtn = acBody.parentElement.querySelector('.ac-header button');
+        if (toggleBtn) toggleAcBody(toggleBtn);
+      }
+      firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstErrorEl.focus();
+    }
+    return;
+  }
+
   const fd   = new FormData(form);
   const g    = n => fd.get(n) || '';
   const gn   = n => { const v = fd.get(n); return v !== null && v !== '' ? parseFloat(v) : null; };

@@ -519,7 +519,79 @@ textarea.form-control { resize: vertical; min-height: 84px; }
 .dtc-meta  { font-size: 11.5px; color: var(--text-muted); margin-bottom: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dtc-evs   { display: flex; gap: 5px; flex-wrap: wrap; }
 .dtc-right { flex-shrink: 0; text-align: right; }
-.dtc-arrow { color: var(--text-muted); font-size: 20px; align-self: center; }
+.dtc-arrow  { color: var(--text-muted); font-size: 18px; flex-shrink: 0; }
+
+/* Activity Micro-Cards */
+.activity-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  background: var(--surface);
+  overflow: hidden;
+  transition: all var(--ease);
+}
+.ac-hotel { border-left: 4px solid var(--purple); background: var(--purple-dim); }
+.ac-flight { border-left: 4px solid var(--blue); background: var(--blue-dim); }
+.ac-tour { border-left: 4px solid var(--orange); background: var(--orange-dim); }
+.ac-transfer { border-left: 4px solid var(--green); background: var(--green-dim); }
+
+.ac-header {
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed rgba(0,0,0,0.05);
+}
+[data-theme="dark"] .ac-header { border-bottom: 1px dashed rgba(255,255,255,0.05); }
+
+.ac-body { padding: 14px; }
+
+/* Interactive Empty States */
+.empty-add-btn {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  text-align: center;
+  color: var(--text-sec);
+  cursor: pointer;
+  transition: all var(--ease);
+  font-weight: 500;
+  font-size: 13px;
+  background: transparent;
+}
+.empty-add-btn:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: var(--orange-dim);
+}
+
+/* Sticky Form Footer */
+.sticky-form-footer {
+  position: sticky;
+  bottom: 0;
+  background: var(--card);
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  z-index: 100;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  margin: 0 -20px -20px -20px;
+}
+
+/* Validation Highlights */
+.error-highlight {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.2) !important;
+  animation: shake 0.4s ease-in-out;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
 
 /* ============================================================
    TOURIST PROFILE

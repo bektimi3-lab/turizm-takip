@@ -45,8 +45,8 @@ function renderReservationsList() {
       const stripeClass = status === 'odendi' ? 'paid' : status === 'kismi' ? 'partial' : 'pending';
       
       const PAY_LABELS = {
-        'odendi':  { text: '✅ Odendi',       cls: 'paid'    },
-        'kismi':   { text: '🔶 Kismi',        cls: 'partial' },
+        'odendi':  { text: '✅ Ödendi',       cls: 'paid'    },
+        'kismi':   { text: '🔶 Kısmi',        cls: 'partial' },
         'bekliyor':{ text: '⏳ Bekliyor',     cls: 'pending' },
       };
       const payLabel = PAY_LABELS[status] || { text: status, cls: 'pending' };
@@ -62,15 +62,15 @@ function renderReservationsList() {
         if (t) icons.push(`<span class="res-card-icon-badge badge-orange">${t.icon} ${t.name}</span>`);
         if (r.tours.length > 1) icons.push(`<span class="res-card-icon-badge badge-orange">+${r.tours.length-1} tur</span>`);
       }
-      if (r.flights?.length) icons.push(`<span class="res-card-icon-badge badge-blue">✈️ ${r.flights.length} Ucus</span>`);
+      if (r.flights?.length) icons.push(`<span class="res-card-icon-badge badge-blue">✈️ ${r.flights.length} Uçuş</span>`);
       if (r.transfers?.length) icons.push(`<span class="res-card-icon-badge badge-green">🚌 ${r.transfers.length} Transfer</span>`);
       if (r.hotels?.length) {
         const h = DB.hotelOptions.find(o => o.id === r.hotels[0].hotelId);
         if (h) icons.push(`<span class="res-card-icon-badge badge-purple">🏨 ${h.name.split(' ')[0]}</span>`);
       }
 
-      const guestText = `${r.guestCount || 1} Kisi`;
-      const dayText   = `${r.days || 1} Gun`;
+      const guestText = `${r.guestCount || 1} Kişi`;
+      const dayText   = `${r.days || 1} Gün`;
       const staggerCls = i < 10 ? `stagger-${(i%5)+1}` : '';
       
       const searchData = [
@@ -100,7 +100,7 @@ function renderReservationsList() {
             <div class="res-card-footer" onclick="event.stopPropagation()">
               <div>
                 <div class="res-card-amount">${total}</div>
-                <div class="res-card-amount-sub">${paid} odendi</div>
+                <div class="res-card-amount-sub">${paid} ödendi</div>
               </div>
               ${Auth.canEdit() ? `
               <button class="quick-pay-btn ${stripeClass}" onclick="cyclePayStatus(event,'${r.id}')">
@@ -133,7 +133,7 @@ function renderReservationsList() {
     <div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap">
       <div class="tabs" id="listTabs" style="margin-bottom:0; flex:1; min-width:300px">
         <button class="tab-btn active" data-tab="list-aktif" onclick="switchListTab(this,'list-aktif')">🟢 Aktif Dosyalar (${activeRs.length})</button>
-        <button class="tab-btn" data-tab="list-arsiv" onclick="switchListTab(this,'list-arsiv')">📦 Arsiv / Kapananlar (${closedRs.length})</button>
+        <button class="tab-btn" data-tab="list-arsiv" onclick="switchListTab(this,'list-arsiv')">📦 Arşiv / Kapananlar (${closedRs.length})</button>
       </div>
       <div style="flex-shrink:0; position:relative;">
         <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:14px">🔍</span>
