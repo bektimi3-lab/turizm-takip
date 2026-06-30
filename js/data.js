@@ -64,7 +64,7 @@ function _buildDemoReservations() {
         { tourId: 'to_1', date: fmt(add(now, 1)) },
         { tourId: 'to_2', date: fmt(add(now, 3)) },
       ],
-      balloon: { active: true, count: 2, date: fmt(add(now, 1)) },
+      balloon: { active: true, count: 2, date: fmt(add(now, 1)), price: 250, cost: 50 },
       transfers: [
         { transferId: 'tf_1', date: fmt(now),       time: '15:00', note: 'VIP karşılama' },
         { transferId: 'tf_3', date: fmt(add(now,5)), time: '10:00', note: '' },
@@ -74,7 +74,11 @@ function _buildDemoReservations() {
         { id:'f1', flightNo:'TK1234', fromAirport:'LHR', toAirport:'IST', departureTime: fmt(now)+'T08:30', arrivalTime: fmt(now)+'T14:15', direction:'giriş' },
         { id:'f2', flightNo:'TK1235', fromAirport:'IST', toAirport:'LHR', departureTime: fmt(add(now,5))+'T16:00', arrivalTime: fmt(add(now,5))+'T18:30', direction:'çıkış' },
       ],
-      payment: { total: 7000, paid: 4000, currency: 'EUR', method: 'kredi kartı', status: 'kısmi' },
+      payment: { 
+        total: 7000, paid: 4000, currency: 'EUR', method: 'kredi kartı', status: 'kısmi',
+        history: [{ id: uuid(), date: fmt(now), amount: 4000, method: 'kredi kartı', receiver: 'Patron' }]
+      },
+      status: 'aktif',
       notes: 'Balayı çifti. Özel ilgi gösterilsin.',
       createdAt: ts(), updatedAt: ts(),
     },
@@ -91,7 +95,7 @@ function _buildDemoReservations() {
         { tourId: 'to_3', date: fmt(add(now,2)) },
         { tourId: 'to_2', date: fmt(add(now,3)) },
       ],
-      balloon: { active: false, count: 0, date: '' },
+      balloon: { active: false, count: 0, date: '', price: 0, cost: 0 },
       transfers: [
         { transferId: 'tf_2', date: fmt(add(now,1)), time: '12:00', note: '' },
       ],
@@ -99,7 +103,11 @@ function _buildDemoReservations() {
       flights: [
         { id:'f3', flightNo:'LH3456', fromAirport:'FRA', toAirport:'SAW', departureTime: fmt(add(now,1))+'T06:45', arrivalTime: fmt(add(now,1))+'T11:00', direction:'giriş' },
       ],
-      payment: { total: 1800, paid: 1800, currency: 'EUR', method: 'nakit', status: 'ödendi' },
+      payment: { 
+        total: 1800, paid: 1800, currency: 'EUR', method: 'nakit', status: 'ödendi',
+        history: [{ id: uuid(), date: fmt(now), amount: 1800, method: 'nakit', receiver: 'Ahmet' }]
+      },
+      status: 'kapandi',
       notes: '',
       createdAt: ts(), updatedAt: ts(),
     },
@@ -118,7 +126,7 @@ function _buildDemoReservations() {
         { tourId: 'to_3', date: fmt(now) },
         { tourId: 'to_1', date: fmt(add(now,2)) },
       ],
-      balloon: { active: true, count: 2, date: fmt(add(now,2)) },
+      balloon: { active: true, count: 2, date: fmt(add(now,2)), price: 280, cost: 60 },
       transfers: [
         { transferId: 'tf_1', date: fmt(add(now,-1)), time: '17:30', note: '' },
         { transferId: 'tf_3', date: fmt(add(now,3)), time: '09:00', note: 'Çıkış transferi' },
@@ -127,7 +135,11 @@ function _buildDemoReservations() {
       flights: [
         { id:'f4', flightNo:'IB9012', fromAirport:'MAD', toAirport:'IST', departureTime: fmt(add(now,-1))+'T10:20', arrivalTime: fmt(add(now,-1))+'T16:45', direction:'giriş' },
       ],
-      payment: { total: 4500, paid: 0, currency: 'EUR', method: 'transfer', status: 'bekliyor' },
+      payment: { 
+        total: 4500, paid: 0, currency: 'EUR', method: 'transfer', status: 'bekliyor',
+        history: []
+      },
+      status: 'aktif',
       notes: 'Vejetaryen yemek tercihi.',
       createdAt: ts(), updatedAt: ts(),
     },
@@ -144,7 +156,7 @@ function _buildDemoReservations() {
         { tourId: 'to_4', date: fmt(add(now,3)) },
         { tourId: 'to_5', date: fmt(add(now,5)) },
       ],
-      balloon: { active: false, count: 0, date: '' },
+      balloon: { active: false, count: 0, date: '', price: 0, cost: 0 },
       transfers: [
         { transferId: 'tf_1', date: fmt(add(now,2)), time: '18:30', note: 'Çevirmen eşliğinde' },
       ],
@@ -153,7 +165,11 @@ function _buildDemoReservations() {
         { id:'f5', flightNo:'TK198', fromAirport:'NRT', toAirport:'IST', departureTime: fmt(add(now,2))+'T10:00', arrivalTime: fmt(add(now,2))+'T17:30', direction:'giriş' },
         { id:'f6', flightNo:'TK197', fromAirport:'IST', toAirport:'NRT', departureTime: fmt(add(now,7))+'T20:00', arrivalTime: fmt(add(now,8))+'T16:00', direction:'çıkış' },
       ],
-      payment: { total: 9200, paid: 9200, currency: 'EUR', method: 'transfer', status: 'ödendi' },
+      payment: { 
+        total: 9200, paid: 9200, currency: 'EUR', method: 'transfer', status: 'ödendi',
+        history: [{ id: uuid(), date: fmt(add(now,-2)), amount: 9200, method: 'transfer', receiver: 'Banka' }]
+      },
+      status: 'aktif',
       notes: 'Seyahat acentesi grubu.',
       createdAt: ts(), updatedAt: ts(),
     },
@@ -231,6 +247,9 @@ const DB = {
   /* ---- Rezervasyon CRUD ---- */
   addReservation(data) {
     const list = this.reservations;
+    // status eklendi, history boş dizi olabilir
+    if (!data.status) data.status = 'aktif';
+    if (data.payment && !data.payment.history) data.payment.history = [];
     const r = { ...data, id: uuid(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     list.push(r); this.reservations = list; 
     this._logAction('oluşturdu', r.id, `${r.personal.firstName} ${r.personal.lastName}`);
@@ -275,6 +294,7 @@ const DB = {
   getEventsForDate(dateStr) {
     const result = [];
     for (const res of this.reservations) {
+      if (res.status === 'kapandi') continue;
       const evs = [];
       for (const t of (res.tours||[]))
         if (t.date === dateStr) evs.push({ type:'tour', tourId: t.tourId });

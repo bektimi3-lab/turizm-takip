@@ -14,8 +14,17 @@ function renderStatsView() {
 
   // Finans
   let total = 0, paid = 0;
-  rs.forEach(r => { total += (r.payment?.total||0); paid += (r.payment?.paid||0); });
+  let balloonSales = 0, balloonCost = 0;
+  rs.forEach(r => { 
+    total += (r.payment?.total||0); 
+    paid += (r.payment?.paid||0); 
+    if (r.balloon && r.balloon.active && r.balloon.count > 0) {
+      balloonSales += (r.balloon.price || 0) * r.balloon.count;
+      balloonCost += (r.balloon.cost || 0) * r.balloon.count;
+    }
+  });
   const remain = total - paid;
+  const balloonProfit = balloonSales - balloonCost;
   
   // Basit SVG Donut
   const pct = total > 0 ? (paid / total) * 100 : 0;
@@ -158,6 +167,16 @@ function renderStatsView() {
           </div>
         </div>
 
+        <div class="card" style="display:flex;flex-direction:column;justify-content:center">
+          <div class="sec-title">🎈 Balon Karlılık Analizi</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <div><div style="font-size:11px;color:var(--text-muted)">Balon Satış Hacmi</div><div style="font-size:16px;font-weight:600">${formatCurrency(balloonSales, cur)}</div></div>
+            <div><div style="font-size:11px;color:var(--text-muted)">Balon Maliyeti</div><div style="font-size:16px;font-weight:600;color:var(--orange)">${formatCurrency(balloonCost, cur)}</div></div>
+          </div>
+          <div style="padding-top:12px;border-top:1px solid var(--border)">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Net Balon Karı</div>
+            <div style="font-size:24px;font-weight:800;color:var(--green)">${formatCurrency(balloonProfit, cur)}</div>
+          </div>
         </div>
 
       </div>

@@ -54,6 +54,7 @@ function renderLayout(title, content, activeNav) {
           ${navItem('📅','Yıllık Takvim','year','/year/'+year)}
 
           <div class="nav-section">Yönetim</div>
+          ${navItem('🔔','Yaklaşan Aktiviteler','activities','/activities')}
           ${navItem('👥','Rezervasyonlar','reservations','/reservations')}
 
           <div class="nav-section">Sistem</div>
@@ -137,6 +138,10 @@ function initApp() {
 
     .on('/reservations', () => {
       document.getElementById('app').innerHTML = renderLayout('Rezervasyonlar', renderReservationsList(), 'reservations');
+    })
+
+    .on('/activities', () => {
+      document.getElementById('app').innerHTML = renderLayout('Yaklaşan Aktiviteler', renderActivitiesView(), 'activities');
     })
 
     .on('/reservation/new', () => {

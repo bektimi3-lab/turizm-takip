@@ -59,7 +59,7 @@ function renderMonthView(year, month) {
     </div>`;
   }
 
-  return `
+  let html = `
   <div class="month-header">
     <button class="month-nav" onclick="Router.navigate('/month/${pY}/${String(pM+1).padStart(2,'0')}')">‹</button>
     <div class="month-title-wrap">
@@ -73,4 +73,34 @@ function renderMonthView(year, month) {
     ${WDAYS_SHORT.map(w => `<div class="month-wday">${w}</div>`).join('')}
     ${cells}
   </div>`;
+
+  if (Auth.canEdit()) {
+    // Calculate monthly financials
+    let mTotal = 0, mPaid = 0;
+    const rs = DB.reservations.filter(r => r.status !== 'kapandi');
+    rs.forEach(r => {
+      if (!r.startDate) return;
+      const sd = new Date(r.startDate + 'T00:00:00');
+      if (sd.getFullYear() === year && sd.getMonth() === month) {
+        mTotal += (r.payment?.total || 0);
+        mPaid += (r.payment?.paid || 0);
+      }
+    });
+    const mRemain = mTotal - mPaid;
+    const cur = DB.settings.currency || 'EUR';
+
+    html += `
+    <div class="card" style="margin-top:20px;display:flex;align-items:center;gap:30px">
+      <div style="flex:1">
+        <div class="sec-title">💰 Bu Ayki Finansal Özet (${MONTHS_TR[month]} ${year})</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:10px">
+          <div><div style="font-size:11px;color:var(--text-muted)">Toplam Beklenen Ciro</div><div style="font-size:18px;font-weight:700">${formatCurrency(mTotal, cur)}</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted)">Tahsil Edilen</div><div style="font-size:18px;font-weight:700;color:var(--green)">${formatCurrency(mPaid, cur)}</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted)">Kalan Bakiye (Alacak)</div><div style="font-size:18px;font-weight:700;color:${mRemain>0?'var(--red)':'var(--green)'}">${formatCurrency(mRemain, cur)}</div></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return html;
 }

@@ -105,7 +105,7 @@ function renderReservationProfile(res) {
     <div class="profile-header">
       <div class="profile-avatar" style="background:${col}">${ini}</div>
       <div class="profile-main">
-        <div class="profile-name">${nm}</div>
+        <div class="profile-name">${nm} ${res.status === 'kapandi' ? '<span class="badge badge-red" style="margin-left:8px">📦 Arşivlendi</span>' : ''}</div>
         <div class="profile-sub">${guestCount} Kişi &nbsp;·&nbsp; ${res.days} Gün &nbsp;·&nbsp; Başlangıç: ${formatDate(res.startDate)}</div>
         <div class="profile-bdgs">
           <span class="badge ${ps.cls}">${ps.text}</span>
@@ -117,6 +117,7 @@ function renderReservationProfile(res) {
       </div>
       <div class="profile-acts">
         ${can ? `
+          ${res.status !== 'kapandi' ? `<button class="btn btn-secondary btn-sm" onclick="toggleResStatus('${res.id}', 'kapandi')">📦 Dosyayı Kapat</button>` : `<button class="btn btn-secondary btn-sm" onclick="toggleResStatus('${res.id}', 'aktif')">📂 Yeniden Aç</button>`}
           <button class="btn btn-secondary btn-sm" onclick="Router.navigate('/reservation/${res.id}/edit')">✏️ Düzenle</button>
           <button class="btn btn-danger btn-sm" onclick="confirmDeleteReservation('${res.id}')">🗑️ Sil</button>
         ` : ''}
@@ -164,24 +165,63 @@ function renderReservationProfile(res) {
       <div class="pay-grid">
         <div class="pay-item">
           <div class="pay-amt">${formatCurrency(total, cur)}</div>
-          <div class="pay-lbl">Toplam</div>
+          <div class="pay-lbl">Toplam Tutar</div>
         </div>
         <div class="pay-item">
           <div class="pay-amt" style="color:var(--green)">${formatCurrency(paid, cur)}</div>
-          <div class="pay-lbl">Ödenen</div>
+          <div class="pay-lbl">Toplam Tahsil Edilen</div>
         </div>
         <div class="pay-item">
           <div class="pay-amt" style="color:${remain>0?'var(--red)':'var(--green)'}">${formatCurrency(remain, cur)}</div>
-          <div class="pay-lbl">Kalan</div>
+          <div class="pay-lbl">Kalan Bakiye (Cari)</div>
         </div>
       </div>
       <div class="pay-bar"><div class="pay-fill" style="width:${pct}%;background:${pctCol}"></div></div>
-      <div style="text-align:right;font-size:11px;color:var(--text-muted);margin-top:4px">${pct.toFixed(0)}% ödendi</div>
-      <div class="divider"></div>
-      <div class="info-grid">
-        <div><div class="info-lbl">Yöntem</div><div class="info-val">${payment?.method||'—'}</div></div>
-        <div><div class="info-lbl">Durum</div><div class="info-val"><span class="badge ${ps.cls}">${ps.text}</span></div></div>
-        <div><div class="info-lbl">Para Birimi</div><div class="info-val">${cur}</div></div>
+      <div style="text-align:right;font-size:11px;color:var(--text-muted);margin-top:4px">${pct.toFixed(0)}% tahsil edildi</div>
+      
+      <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px">
+        <div style="font-weight:600;margin-bottom:12px;font-size:14px">Tahsilat / Ödeme Geçmişi</div>
+        ${payment?.history?.length ? `
+          <div style="overflow-x:auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Tarih</th>
+                  <th>Tutar</th>
+                  <th>Yöntem</th>
+                  <th>Alan Kişi</th>
+                  ${can ? '<th>İşlem</th>' : ''}
+                </tr>
+              </thead>
+              <tbody>
+                ${payment.history.map(h => `
+                  <tr>
+                    <td>${formatDate(h.date)}</td>
+                    <td style="color:var(--green);font-weight:600">${h.amount} ${cur}</td>
+                    <td>${h.method}</td>
+                    <td>${h.receiver || '—'}</td>
+                    ${can ? `<td><button class="btn btn-danger btn-sm" style="padding:2px 6px;font-size:11px" onclick="removePayment('${res.id}', '${h.id}')">Sil</button></td>` : ''}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : '<div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Henüz tahsilat girilmemiş.</div>'}
+
+        ${can ? `
+          <form onsubmit="handleAddPayment(event, '${res.id}')" style="display:flex;gap:8px;margin-top:14px;background:var(--bg);padding:12px;border-radius:var(--radius-sm);align-items:center;flex-wrap:wrap">
+            <div style="font-size:12px;font-weight:600;width:100%;margin-bottom:4px">Yeni Tahsilat Ekle</div>
+            <input type="date" id="p_date" class="form-control" style="flex:1;min-width:110px" required value="${new Date().toISOString().split('T')[0]}">
+            <input type="number" id="p_amt" class="form-control" style="flex:1;min-width:90px" placeholder="Tutar" min="0.01" step="0.01" required>
+            <select id="p_method" class="form-control" style="flex:1;min-width:110px">
+              <option value="nakit">💵 Nakit</option>
+              <option value="kredi kartı">💳 Kredi Kartı</option>
+              <option value="transfer">🏦 Transfer</option>
+            </select>
+            <input type="text" id="p_rec" class="form-control" style="flex:1;min-width:100px" placeholder="Alan Kişi (Opsiyonel)">
+            <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap">＋ Ekle</button>
+          </form>
+        ` : ''}
       </div>
     </div>
 
@@ -195,6 +235,78 @@ function renderReservationProfile(res) {
 function switchProfileTab(btn, tabId) {
   document.querySelectorAll('#pTabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tc-' + tabId));
+}
+
+function toggleResStatus(id, newStatus) {
+  DB.updateReservation(id, { status: newStatus });
+  showNotif(newStatus === 'kapandi' ? 'Dosya arşive kaldırıldı.' : 'Dosya yeniden aktif edildi.', 'success');
+  Router.navigate('/reservation/' + id);
+}
+
+function handleAddPayment(e, id) {
+  e.preventDefault();
+  const amt = parseFloat(document.getElementById('p_amt').value) || 0;
+  if (amt <= 0) return;
+  
+  const res = DB.getReservation(id);
+  if (!res) return;
+  
+  const history = res.payment?.history || [];
+  history.push({
+    id: uuid(),
+    date: document.getElementById('p_date').value,
+    amount: amt,
+    method: document.getElementById('p_method').value,
+    receiver: document.getElementById('p_rec').value
+  });
+  
+  const totalPaid = history.reduce((sum, h) => sum + h.amount, 0);
+  const total = res.payment?.total || 0;
+  
+  // Update status based on payments
+  let payStatus = res.payment?.status || 'bekliyor';
+  if (totalPaid >= total && total > 0) payStatus = 'ödendi';
+  else if (totalPaid > 0) payStatus = 'kısmi';
+
+  DB.updateReservation(id, {
+    payment: {
+      ...res.payment,
+      history,
+      paid: totalPaid,
+      status: payStatus
+    }
+  });
+  
+  showNotif('Tahsilat eklendi', 'success');
+  Router.navigate('/reservation/' + id);
+  setTimeout(() => document.querySelector('[data-tab="odeme"]').click(), 50);
+}
+
+function removePayment(resId, paymentId) {
+  if (!confirm('Bu tahsilat kaydını silmek istediğinize emin misiniz?')) return;
+  const res = DB.getReservation(resId);
+  if (!res) return;
+  
+  const history = res.payment?.history?.filter(h => h.id !== paymentId) || [];
+  const totalPaid = history.reduce((sum, h) => sum + h.amount, 0);
+  const total = res.payment?.total || 0;
+  
+  let payStatus = res.payment?.status || 'bekliyor';
+  if (totalPaid >= total && total > 0) payStatus = 'ödendi';
+  else if (totalPaid > 0) payStatus = 'kısmi';
+  else payStatus = 'bekliyor';
+
+  DB.updateReservation(resId, {
+    payment: {
+      ...res.payment,
+      history,
+      paid: totalPaid,
+      status: payStatus
+    }
+  });
+  showNotif('Tahsilat silindi', 'success');
+  Router.navigate('/reservation/' + resId);
+  setTimeout(() => document.querySelector('[data-tab="odeme"]').click(), 50);
 }
 
 function confirmDeleteReservation(id) {

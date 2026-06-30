@@ -26,6 +26,7 @@ function renderDashboardView() {
   // Sadece tüm rezervasyonları tarayalım
   const rs = DB.reservations;
   rs.forEach(r => {
+    if (r.status === 'kapandi') return;
     const sd = new Date(r.startDate + 'T00:00:00');
     const diff = (sd - new Date(today + 'T00:00:00')) / 86400000;
     if (diff >= 0 && diff <= 7) {
@@ -60,7 +61,7 @@ function renderDashboardView() {
   }
 
   // Son Eklenen 5 Rezervasyon
-  const recent = [...rs].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0,5);
+  const recent = [...rs].filter(r => r.status !== 'kapandi').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0,5);
   let recentHTML = recent.map(r => `
     <div class="dash-event-item" onclick="Router.navigate('/reservation/${r.id}')">
       <div class="dei-name">${r.personal.firstName} ${r.personal.lastName}</div>

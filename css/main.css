@@ -875,12 +875,16 @@ textarea.form-control { resize: vertical; min-height: 84px; }
 /* ============================================================
    RESPONSIVE
    ============================================================ */
+.table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-responsive table { min-width: 600px; }
+
 @media (max-width: 1200px) {
   .year-grid { grid-template-columns: repeat(3,1fr); }
 }
 @media (max-width: 900px) {
   .year-grid   { grid-template-columns: repeat(2,1fr); }
   .form-row-3  { grid-template-columns: 1fr 1fr; }
+  .form-row-4  { grid-template-columns: 1fr 1fr; }
   .pay-grid    { grid-template-columns: 1fr 1fr; }
   .info-grid   { grid-template-columns: 1fr 1fr; }
 }
@@ -895,6 +899,8 @@ textarea.form-control { resize: vertical; min-height: 84px; }
   .month-grid   { gap: 3px; }
   .month-day    { min-height: 64px; padding: 5px; }
   .form-row-2   { grid-template-columns: 1fr; }
+  .form-row-3   { grid-template-columns: 1fr; }
+  .form-row-4   { grid-template-columns: 1fr; }
   .profile-header { flex-direction: column; }
   .profile-acts   { width: 100%; }
   .pay-grid       { grid-template-columns: 1fr; }

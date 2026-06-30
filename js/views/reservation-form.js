@@ -66,15 +66,16 @@ function renderReservationForm(res) {
         <div class="form-section-highlight">
           <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">🎈 Balon Seçeneği</div>
         </div>
-        <div class="form-row form-row-3">
-          <div class="form-group"><label class="form-label">Balon Var Mı?</label>
-            <select name="balActive" class="form-control">
+        <div class="form-row form-row-4">
+          <div class="form-group"><label class="form-label">Balon Var Mı? (Tüm yolcular için işaretler)</label>
+            <select name="balActive" class="form-control" onchange="syncBalloons(this.value === 'true')">
               <option value="false" ${!t.balloon?.active ? 'selected' : ''}>Hayır</option>
               <option value="true" ${t.balloon?.active ? 'selected' : ''}>Evet</option>
             </select>
           </div>
-          <div class="form-group"><label class="form-label">Kaç Kişi?</label><input name="balCount" type="number" class="form-control" value="${t.balloon?.count||''}"></div>
           <div class="form-group"><label class="form-label">Tarih</label><input name="balDate" type="date" class="form-control" value="${t.balloon?.date||''}"></div>
+          <div class="form-group"><label class="form-label">Kişi Başı Maliyet</label><input name="balCost" type="number" class="form-control" value="${t.balloon?.cost||'0'}" placeholder="0" min="0"></div>
+          <div class="form-group"><label class="form-label">Kişi Başı Satış</label><input name="balPrice" type="number" class="form-control" value="${t.balloon?.price||'0'}" placeholder="0" min="0"></div>
         </div>
       </div>
 
@@ -121,7 +122,6 @@ function renderReservationForm(res) {
         </div>
         <div class="form-row form-row-3">
           <div class="form-group"><label class="form-label">Toplam Tutar</label><input name="total" type="number" class="form-control" value="${t.payment?.total||''}" placeholder="0" min="0" step="0.01"></div>
-          <div class="form-group"><label class="form-label">Ödenen</label><input name="paid" type="number" class="form-control" value="${t.payment?.paid||''}" placeholder="0" min="0" step="0.01"></div>
           <div class="form-group"><label class="form-label">Para Birimi</label>
             <select name="currency" class="form-control">
               <option value="EUR" ${(t.payment?.currency||'EUR')==='EUR'?'selected':''}>€ EUR</option>
@@ -129,22 +129,16 @@ function renderReservationForm(res) {
               <option value="TRY" ${t.payment?.currency==='TRY'?'selected':''}>₺ TRY</option>
             </select>
           </div>
-        </div>
-        <div class="form-row form-row-2">
-          <div class="form-group"><label class="form-label">Yöntem</label>
-            <select name="payMethod" class="form-control">
-              <option value="nakit"       ${t.payment?.method==='nakit'       ?'selected':''}>💵 Nakit</option>
-              <option value="kredi kartı" ${t.payment?.method==='kredi kartı' ?'selected':''}>💳 Kredi Kartı</option>
-              <option value="transfer"    ${t.payment?.method==='transfer'    ?'selected':''}>🏦 Banka Transferi</option>
-            </select>
-          </div>
-          <div class="form-group"><label class="form-label">Durum</label>
+          <div class="form-group"><label class="form-label">Genel Durum</label>
             <select name="payStatus" class="form-control">
               <option value="bekliyor" ${t.payment?.status==='bekliyor'?'selected':''}>⏳ Bekliyor</option>
-              <option value="kısmi"    ${t.payment?.status==='kısmi'   ?'selected':''}>🔶 Kısmi Ödeme</option>
-              <option value="ödendi"   ${t.payment?.status==='ödendi'  ?'selected':''}>✅ Ödendi</option>
+              <option value="kısmi"    ${t.payment?.status==='kısmi'   ?'selected':''}>🌗 Kısmi Ödendi</option>
+              <option value="ödendi"   ${t.payment?.status==='ödendi'  ?'selected':''}>✅ Tamamı Ödendi</option>
             </select>
           </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:8px">
+          * Tahsilat/Ödeme geçmişi kayıt işlemleri rezervasyon detay (profil) sayfasından yönetilmektedir.
         </div>
       </div>
 
@@ -207,7 +201,12 @@ function renderGuestRows(res) {
 function _guestRow(i, g) {
   return `
   <div class="guest-row" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">
-    <div style="font-size:12px;font-weight:700;color:var(--text-sec);margin-bottom:12px">Yolcu ${i+1}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-sec)">Yolcu ${i+1}</div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--bg);padding:4px 8px;border-radius:4px">
+        <input type="checkbox" name="g_balloon_${i}" class="guest-balloon-cb" value="true" ${g.balloon ? 'checked' : ''}> 🎈 Balon
+      </label>
+    </div>
     <div class="form-row form-row-2" style="margin-bottom:10px">
       <div class="form-group" style="margin:0"><input type="text" name="g_fn_${i}" class="form-control" value="${g.firstName||''}" placeholder="Ad"></div>
       <div class="form-group" style="margin:0"><input type="text" name="g_ln_${i}" class="form-control" value="${g.lastName||''}" placeholder="Soyad"></div>
@@ -339,6 +338,10 @@ function addTourRow()     { document.getElementById('noTours')?.remove();     do
 function addFlightRow()   { document.getElementById('noFlights')?.remove();   document.getElementById('flightRows').insertAdjacentHTML('beforeend',_flightRow(_frc++)); }
 function addTransferRow() { document.getElementById('noTransfers')?.remove(); document.getElementById('transferRows').insertAdjacentHTML('beforeend',_transferRow(_tfc++)); }
 
+function syncBalloons(isActive) {
+  document.querySelectorAll('.guest-balloon-cb').forEach(cb => cb.checked = isActive);
+}
+
 function saveReservationForm(e, existingId) {
   e.preventDefault();
   const form = document.getElementById('resForm');
@@ -352,7 +355,8 @@ function saveReservationForm(e, existingId) {
       firstName: g(`g_fn_${i}`), lastName: g(`g_ln_${i}`),
       nationality: g(`g_nat_${i}`), passport: g(`g_pass_${i}`), dob: g(`g_dob_${i}`),
       passportStart: g(`g_pstart_${i}`), passportEnd: g(`g_pend_${i}`),
-      gender: g(`g_gender_${i}`)
+      gender: g(`g_gender_${i}`),
+      balloon: fd.get(`g_balloon_${i}`) === 'true'
     });
   }
 
@@ -403,9 +407,23 @@ function saveReservationForm(e, existingId) {
     personal: { firstName: g('firstName'), lastName: g('lastName'), phone: g('phone'), email: g('email') },
     guestCount, guests,
     startDate: g('startDate'), days: parseInt(g('days'))||1,
-    balloon: { active: g('balActive')==='true', count: parseInt(g('balCount'))||0, date: g('balDate') },
+    balloon: { 
+      active: g('balActive')==='true', 
+      count: guests.filter(x => x.balloon).length, 
+      date: g('balDate'),
+      cost: parseFloat(g('balCost'))||0,
+      price: parseFloat(g('balPrice'))||0
+    },
     hotels, tours, flights, transfers,
-    payment: { total: parseFloat(g('total'))||0, paid: parseFloat(g('paid'))||0, currency: g('currency')||'EUR', method: g('payMethod'), status: g('payStatus') },
+    payment: { 
+      total: parseFloat(g('total'))||0, 
+      currency: g('currency')||'EUR', 
+      status: g('payStatus'),
+      // Keep existing history and paid values if they exist
+      history: existingId ? (DB.getReservation(existingId)?.payment?.history || []) : [],
+      paid: existingId ? (DB.getReservation(existingId)?.payment?.paid || 0) : 0
+    },
+    status: existingId ? (DB.getReservation(existingId)?.status || 'aktif') : 'aktif',
     notes: g('notes')
   };
 
