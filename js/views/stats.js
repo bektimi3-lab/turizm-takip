@@ -15,16 +15,52 @@ function renderStatsView() {
   // Finans
   let total = 0, paid = 0;
   let balloonSales = 0, balloonCost = 0;
+  let tourSales = 0, tourCost = 0;
+  let hotelSales = 0, hotelCost = 0;
+  let flightSales = 0, flightCost = 0;
+  let transferSales = 0, transferCost = 0;
+
   rs.forEach(r => { 
     total += (r.payment?.total||0); 
-    paid += (r.payment?.paid||0); 
-    if (r.balloon && r.balloon.active && r.balloon.count > 0) {
-      balloonSales += (r.balloon.price || 0) * r.balloon.count;
-      balloonCost += (r.balloon.cost || 0) * r.balloon.count;
+    paid  += (r.payment?.paid||0); 
+
+    // Balon
+    if (r.balloon && r.balloon.active) {
+      balloonSales += (r.balloon.totalPrice != null ? r.balloon.totalPrice : (r.balloon.price||0) * (r.balloon.count||1));
+      balloonCost  += (r.balloon.totalCost  != null ? r.balloon.totalCost  : (r.balloon.cost||0)  * (r.balloon.count||1));
     }
+    // Turlar
+    (r.tours||[]).forEach(t => {
+      if (t.totalPrice != null) tourSales += t.totalPrice;
+      if (t.totalCost  != null) tourCost  += t.totalCost;
+    });
+    // Oteller
+    (r.hotels||[]).forEach(h => {
+      if (h.totalPrice != null) hotelSales += h.totalPrice;
+      if (h.totalCost  != null) hotelCost  += h.totalCost;
+    });
+    // Ucuslar
+    (r.flights||[]).forEach(f => {
+      if (f.totalPrice != null) flightSales += f.totalPrice;
+      if (f.totalCost  != null) flightCost  += f.totalCost;
+    });
+    // Transferler
+    (r.transfers||[]).forEach(tf => {
+      if (tf.totalPrice != null) transferSales += tf.totalPrice;
+      if (tf.totalCost  != null) transferCost  += tf.totalCost;
+    });
   });
   const remain = total - paid;
-  const balloonProfit = balloonSales - balloonCost;
+  const balloonProfit  = balloonSales  - balloonCost;
+  const tourProfit     = tourSales     - tourCost;
+  const hotelProfit    = hotelSales    - hotelCost;
+  const flightProfit   = flightSales   - flightCost;
+  const transferProfit = transferSales - transferCost;
+
+  // Toplam aktivite maliyet/gelir (girilen)
+  const activitySalesTotal = balloonSales + tourSales + hotelSales + flightSales + transferSales;
+  const activityCostTotal  = balloonCost  + tourCost  + hotelCost  + flightCost  + transferCost;
+  const activityProfit     = activitySalesTotal - activityCostTotal;
   
   // Basit SVG Donut
   const pct = total > 0 ? (paid / total) * 100 : 0;
@@ -127,21 +163,25 @@ function renderStatsView() {
     `).join('') || '<div style="font-size:13px;color:var(--text-muted)">Veri yok.</div>';
   };
 
-  // Audit Logs
+  // Audit Logs — patron islemi gizlenir, sadece editor/viewer gorulur
   const logs = DB.auditLogs;
-  const logsEditHTML = logs.filter(l => l.action !== 'görüntüledi').map(l => `
-    <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;font-size:13px">
-      <div style="color:var(--text-muted);min-width:110px">${formatDateTime(l.time)}</div>
-      <div><strong>${l.userName}</strong> (${l.userRole}) <span style="color:var(--text-sec)">${l.details}</span> kaydını <strong>${l.action}</strong>.</div>
-    </div>
-  `).join('') || '<div style="font-size:13px;color:var(--text-muted)">Kayıt yok.</div>';
+  const visibleLogs = Auth.isOwner() 
+    ? logs  // Patron herkesi gorebilir
+    : logs.filter(l => l.userRole !== 'owner');  // Diger kullanicilar patron islemlerini goremez
 
-  const logsViewHTML = logs.filter(l => l.action === 'görüntüledi').slice(0,100).map(l => `
+  const logsEditHTML = visibleLogs.filter(l => l.action !== 'goruntuledi').map(l => `
     <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;font-size:13px">
       <div style="color:var(--text-muted);min-width:110px">${formatDateTime(l.time)}</div>
-      <div><strong>${l.userName}</strong> (${l.userRole}) <span style="color:var(--text-sec)">${l.details}</span> profiline baktı.</div>
+      <div><strong>${l.userName}</strong> (${l.userRole}) <span style="color:var(--text-sec)">${l.details}</span> kaydini <strong>${l.action}</strong>.</div>
     </div>
-  `).join('') || '<div style="font-size:13px;color:var(--text-muted)">Kayıt yok.</div>';
+  `).join('') || '<div style="font-size:13px;color:var(--text-muted)">Kayit yok.</div>';
+
+  const logsViewHTML = visibleLogs.filter(l => l.action === 'goruntuledi').slice(0,100).map(l => `
+    <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;font-size:13px">
+      <div style="color:var(--text-muted);min-width:110px">${formatDateTime(l.time)}</div>
+      <div><strong>${l.userName}</strong> (${l.userRole}) <span style="color:var(--text-sec)">${l.details}</span> profiline bakti.</div>
+    </div>
+  `).join('') || '<div style="font-size:13px;color:var(--text-muted)">Kayit yok.</div>';
 
   return `
   <div style="max-width:960px;margin:0 auto;padding-bottom:50px">
@@ -152,36 +192,39 @@ function renderStatsView() {
       <button class="tab-btn" data-tab="st-denetim" onclick="switchStatsTab(this,'st-denetim')">🔍 Denetim</button>
     </div>
 
-    ${Auth.isOwner() ? `
     <!-- Sekme: Genel -->
     <div class="tab-content active" id="tc-st-genel">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px,1fr));gap:20px">
-        
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px,1fr));gap:20px;margin-bottom:20px">
         <div class="card" style="display:flex;align-items:center;gap:30px">
           <div>${donutSVG}</div>
           <div style="flex:1">
-            <div class="sec-title">Finansal Özet (Tüm Zamanlar)</div>
-            <div style="margin-bottom:8px"><div style="font-size:11px;color:var(--text-muted)">Toplam Ciro</div><div style="font-size:18px;font-weight:700">${formatCurrency(total, cur)}</div></div>
+            <div class="sec-title">Finansal Ozet (Tum Zamanlar)</div>
+            <div style="margin-bottom:8px"><div style="font-size:11px;color:var(--text-muted)">Toplam Beklenen Ciro</div><div style="font-size:18px;font-weight:700">${formatCurrency(total, cur)}</div></div>
             <div style="margin-bottom:8px"><div style="font-size:11px;color:var(--text-muted)">Tahsil Edilen</div><div style="font-size:18px;font-weight:700;color:var(--green)">${formatCurrency(paid, cur)}</div></div>
             <div><div style="font-size:11px;color:var(--text-muted)">Kalan Alacak</div><div style="font-size:18px;font-weight:700;color:var(--red)">${formatCurrency(remain, cur)}</div></div>
           </div>
         </div>
-
-        <div class="card" style="display:flex;flex-direction:column;justify-content:center">
-          <div class="sec-title">🎈 Balon Karlılık Analizi</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-            <div><div style="font-size:11px;color:var(--text-muted)">Balon Satış Hacmi</div><div style="font-size:16px;font-weight:600">${formatCurrency(balloonSales, cur)}</div></div>
-            <div><div style="font-size:11px;color:var(--text-muted)">Balon Maliyeti</div><div style="font-size:16px;font-weight:600;color:var(--orange)">${formatCurrency(balloonCost, cur)}</div></div>
+        <div class="card">
+          <div class="sec-title">Aktivite Kar Analizi (Girilen Maliyetler)</div>
+          <div style="overflow-x:auto">
+            <table class="table" style="margin-top:8px">
+              <thead><tr><th>Aktivite</th><th style="text-align:right">Satis</th><th style="text-align:right">Maliyet</th><th style="text-align:right">Net Kar</th></tr></thead>
+              <tbody>
+                <tr><td>Balon</td><td style="text-align:right">${formatCurrency(balloonSales,cur)}</td><td style="text-align:right;color:var(--orange)">${formatCurrency(balloonCost,cur)}</td><td style="text-align:right;font-weight:700;color:${balloonProfit>=0?'var(--green)':'var(--red)'}">${formatCurrency(balloonProfit,cur)}</td></tr>
+                <tr><td>Turlar</td><td style="text-align:right">${formatCurrency(tourSales,cur)}</td><td style="text-align:right;color:var(--orange)">${formatCurrency(tourCost,cur)}</td><td style="text-align:right;font-weight:700;color:${tourProfit>=0?'var(--green)':'var(--red)'}">${formatCurrency(tourProfit,cur)}</td></tr>
+                <tr><td>Oteller</td><td style="text-align:right">${formatCurrency(hotelSales,cur)}</td><td style="text-align:right;color:var(--orange)">${formatCurrency(hotelCost,cur)}</td><td style="text-align:right;font-weight:700;color:${hotelProfit>=0?'var(--green)':'var(--red)'}">${formatCurrency(hotelProfit,cur)}</td></tr>
+                <tr><td>Ucuslar</td><td style="text-align:right">${formatCurrency(flightSales,cur)}</td><td style="text-align:right;color:var(--orange)">${formatCurrency(flightCost,cur)}</td><td style="text-align:right;font-weight:700;color:${flightProfit>=0?'var(--green)':'var(--red)'}">${formatCurrency(flightProfit,cur)}</td></tr>
+                <tr><td>Transferler</td><td style="text-align:right">${formatCurrency(transferSales,cur)}</td><td style="text-align:right;color:var(--orange)">${formatCurrency(transferCost,cur)}</td><td style="text-align:right;font-weight:700;color:${transferProfit>=0?'var(--green)':'var(--red)'}">${formatCurrency(transferProfit,cur)}</td></tr>
+                <tr style="border-top:2px solid var(--border);font-weight:700"><td>TOPLAM</td><td style="text-align:right">${formatCurrency(activitySalesTotal,cur)}</td><td style="text-align:right;color:var(--orange)">${formatCurrency(activityCostTotal,cur)}</td><td style="text-align:right;font-size:16px;color:${activityProfit>=0?'var(--green)':'var(--red)'}">${formatCurrency(activityProfit,cur)}</td></tr>
+              </tbody>
+            </table>
           </div>
-          <div style="padding-top:12px;border-top:1px solid var(--border)">
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Net Balon Karı</div>
-            <div style="font-size:24px;font-weight:800;color:var(--green)">${formatCurrency(balloonProfit, cur)}</div>
-          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px">* Yalnizca fiyat girilen aktiviteler dahildir.</div>
         </div>
-
       </div>
     </div>
     ` : ''}
+
 
     <!-- Sekme: Demografi -->
     <div class="tab-content ${!Auth.isOwner() ? 'active' : ''}" id="tc-st-demografi">
