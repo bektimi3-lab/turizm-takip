@@ -189,6 +189,7 @@ function renderStatsView() {
       <button class="tab-btn" data-tab="st-denetim" onclick="switchStatsTab(this,'st-denetim')">🔍 Denetim</button>
     </div>
 
+    ${Auth.isOwner() ? `
     <!-- Sekme: Genel -->
     <div class="tab-content active" id="tc-st-genel">
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px,1fr));gap:20px;margin-bottom:20px">
