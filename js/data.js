@@ -225,6 +225,60 @@ function _buildDemoReservations() {
       notes: 'Kalabalık arkadaş grubu.',
       createdAt: ts(), updatedAt: ts(),
     },
+    {
+      id: 'res_7',
+      personal: { firstName: 'Lucas', lastName: 'Silva' },
+      guestCount: 2,
+      guests: [
+        { firstName: 'Lucas', lastName: 'Silva', nationality: 'Brezilyalı', passport: 'BR112233', dob: '1992-05-10', passportStart: '', passportEnd: '' },
+        { firstName: 'Julia', lastName: 'Silva', nationality: 'Brezilyalı', passport: 'BR112234', dob: '1994-08-15', passportStart: '', passportEnd: '' },
+      ],
+      startDate: fmt(add(now, 3)),
+      days: 4,
+      tours: [
+        { tourId: 'to_1', date: fmt(add(now, 4)), totalPrice: 200, totalCost: 100 },
+        { tourId: 'to_4', date: fmt(add(now, 5)), totalPrice: 150, totalCost: 80 },
+      ],
+      balloon: { active: true, count: 2, date: fmt(add(now, 4)), price: 250, cost: 60 },
+      transfers: [],
+      hotels: [{ hotelId: 'h_3', room: '405', checkin: fmt(add(now, 3)), checkout: fmt(add(now, 7)), totalPrice: 800, totalCost: 400 }],
+      flights: [],
+      payment: {
+        total: 1650, paid: 500, currency: 'EUR', method: 'kredi kartı', status: 'kısmi',
+        history: [{ id: uuid(), date: fmt(now), amount: 500, method: 'kredi kartı', receiver: 'Patron' }]
+      },
+      status: 'aktif',
+      notes: 'Balayı çifti, odaya ikram.',
+      createdAt: ts(), updatedAt: ts(),
+    },
+    {
+      id: 'res_8',
+      personal: { firstName: 'Chen', lastName: 'Wei' },
+      guestCount: 15,
+      guests: [
+        { firstName: 'Chen', lastName: 'Wei', nationality: 'Çinli', passport: 'CN998877', dob: '1980-12-01', passportStart: '', passportEnd: '' },
+      ],
+      startDate: fmt(add(now, 7)),
+      days: 10,
+      tours: [
+        { tourId: 'to_5', date: fmt(add(now, 8)), totalPrice: 1500, totalCost: 900 },
+        { tourId: 'to_1', date: fmt(add(now, 10)), totalPrice: 2000, totalCost: 1200 },
+      ],
+      balloon: { active: true, count: 15, date: fmt(add(now, 10)), price: 200, cost: 50 },
+      transfers: [
+        { transferId: 'tf_1', date: fmt(add(now, 7)), time: '10:00', note: 'Büyük otobüs' },
+        { transferId: 'tf_3', date: fmt(add(now, 17)), time: '08:00', note: 'Büyük otobüs' },
+      ],
+      hotels: [{ hotelId: 'h_4', room: 'Grup', checkin: fmt(add(now, 7)), checkout: fmt(add(now, 17)), totalPrice: 15000, totalCost: 8000 }],
+      flights: [],
+      payment: {
+        total: 21500, paid: 21500, currency: 'EUR', method: 'transfer', status: 'ödendi',
+        history: [{ id: uuid(), date: fmt(add(now, -1)), amount: 21500, method: 'transfer', receiver: 'Banka' }]
+      },
+      status: 'aktif',
+      notes: 'Büyük Asya grubu.',
+      createdAt: ts(), updatedAt: ts(),
+    },
   ];
 }
 

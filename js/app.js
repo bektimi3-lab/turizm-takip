@@ -139,6 +139,19 @@ function initTheme() {
    ============================================================ */
 function initApp() {
   initTheme();
+  
+  // Eksik demo rezervasyonları (yeni eklenenleri) localStorage'a dahil et
+  const demos = _buildDemoReservations();
+  const currentRes = DB.reservations;
+  let changed = false;
+  demos.forEach(d => {
+    if (!currentRes.find(r => r.id === d.id)) {
+      currentRes.push(d);
+      changed = true;
+    }
+  });
+  if (changed) DB.reservations = currentRes;
+
   const y = new Date().getFullYear();
 
   Router
