@@ -493,6 +493,10 @@ textarea.form-control { resize: vertical; min-height: 84px; }
   padding-bottom: 20px;
   min-height: calc(100vh - 200px);
 }
+.kanban-board.fit-screen .kanban-col {
+  flex: 1;
+  min-width: 0;
+}
 .kanban-col {
   flex: 0 0 280px;
   background: var(--surface);
