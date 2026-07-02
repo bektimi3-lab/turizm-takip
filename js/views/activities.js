@@ -1,265 +1,183 @@
-/* views/activities.js — Yaklaşan Aktiviteler */
+/* views/activities.js — Yaklaşan Aktiviteler (Kanban Board) */
+
+let activitiesStartDate = todayStr(); // Global state for the date picker
+
+function changeActivitiesDate(val) {
+  activitiesStartDate = val || todayStr();
+  Router.navigate('/activities'); // Refresh the view
+}
 
 function renderActivitiesView() {
   const rs = DB.reservations;
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const todayMs = today.getTime();
+  
+  const startDt = new Date(activitiesStartDate + 'T00:00:00');
+  
+  // Create an array of 7 days
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startDt);
+    d.setDate(d.getDate() + i);
+    days.push({
+      dateStr: d.toISOString().split('T')[0], // YYYY-MM-DD
+      dateObj: d,
+      events: []
+    });
+  }
 
-  // Helper to parse dates
-  const parseDate = (dStr) => {
-    if (!dStr) return 0;
-    // Attempt to parse YYYY-MM-DD or YYYY-MM-DDTHH:MM
-    const d = new Date(dStr);
-    return isNaN(d.getTime()) ? 0 : d.getTime();
-  };
-
-  // 1. Balonlar
-  const balloons = [];
+  // Collect events and push to corresponding day
   rs.forEach(r => {
     if (r.status === 'kapandi') return;
+    
+    // 1. Balloons
     if (r.balloon && r.balloon.active && r.balloon.date) {
-      const ms = parseDate(r.balloon.date);
-      if (ms >= todayMs) {
-        // Collect guests with balloon = true
-        const activeGuests = (r.guests || []).filter(g => g.balloon).map(g => `${g.firstName} ${g.lastName}`);
-        if (activeGuests.length > 0) {
-          balloons.push({
-            time: ms,
-            dateStr: r.balloon.date,
-            resId: r.id,
-            resName: `${r.personal.firstName} ${r.personal.lastName}`,
-            guests: activeGuests
+      const activeGuests = (r.guests || []).filter(g => g.balloon).map(g => `${g.firstName} ${g.lastName}`);
+      if (activeGuests.length > 0) {
+        const idx = days.findIndex(d => d.dateStr === r.balloon.date);
+        if (idx !== -1) {
+          days[idx].events.push({
+            type: 'balloon', title: `${r.personal.firstName} ${r.personal.lastName}`,
+            subtitle: `${activeGuests.length} Kişi Uçuş`,
+            time: '05:00', // Balon sabah erken
+            ico: '🎈', color: 'var(--red)',
+            resId: r.id
           });
         }
       }
     }
-  });
-  balloons.sort((a,b) => a.time - b.time);
-
-  // 2. Turlar
-  const tours = [];
-  rs.forEach(r => {
-    if (r.status === 'kapandi') return;
+    
+    // 2. Tours
     (r.tours || []).forEach(t => {
       if (t.date) {
-        const ms = parseDate(t.date);
-        if (ms >= todayMs) {
+        const idx = days.findIndex(d => d.dateStr === t.date);
+        if (idx !== -1) {
           const opt = DB.tourOptions.find(o => o.id === t.tourId);
-          tours.push({
-            time: ms,
-            dateStr: t.date,
-            resId: r.id,
-            resName: `${r.personal.firstName} ${r.personal.lastName}`,
-            tourName: opt ? `${opt.icon} ${opt.name}` : 'Bilinmeyen Tur',
-            pax: r.guestCount || 1
+          days[idx].events.push({
+            type: 'tour', title: `${r.personal.firstName} ${r.personal.lastName}`,
+            subtitle: `${opt ? opt.name : 'Tur'} · ${r.guestCount} Kişi`,
+            time: '09:00',
+            ico: opt ? opt.icon : '🏷️', color: 'var(--orange)',
+            resId: r.id
           });
         }
       }
     });
-  });
-  tours.sort((a,b) => a.time - b.time);
 
-  // 3. Uçuşlar
-  const flights = [];
-  rs.forEach(r => {
-    if (r.status === 'kapandi') return;
+    // 3. Flights
     (r.flights || []).forEach(f => {
       const timeStr = f.direction === 'giriş' ? f.arrivalTime : f.departureTime;
       if (timeStr) {
-        const ms = parseDate(timeStr);
-        if (ms >= todayMs) {
-          flights.push({
-            time: ms,
-            dateStr: timeStr.replace('T', ' '),
-            resId: r.id,
-            resName: `${r.personal.firstName} ${r.personal.lastName}`,
-            flightNo: f.flightNo,
-            route: `${f.fromAirport} → ${f.toAirport}`,
-            dir: f.direction === 'giriş' ? '🛬 Varış' : '🛫 Kalkış',
-            pax: r.guestCount || 1
+        const tDate = timeStr.split('T')[0];
+        const tTime = timeStr.split('T')[1] || '';
+        const idx = days.findIndex(d => d.dateStr === tDate);
+        if (idx !== -1) {
+          days[idx].events.push({
+            type: 'flight', title: `${r.personal.firstName} ${r.personal.lastName}`,
+            subtitle: `${f.flightNo||''} ${f.fromAirport||''}→${f.toAirport||''} (${f.direction === 'giriş' ? 'Varış' : 'Kalkış'})`,
+            time: tTime.substring(0,5),
+            ico: f.direction === 'giriş' ? '🛬' : '🛫', color: 'var(--blue)',
+            resId: r.id
           });
         }
       }
     });
-  });
-  flights.sort((a,b) => a.time - b.time);
 
-  // 4. Oteller
-  const hotels = [];
-  rs.forEach(r => {
-    if (r.status === 'kapandi') return;
+    // 4. Hotels
     (r.hotels || []).forEach(h => {
       const opt = DB.hotelOptions.find(o => o.id === h.hotelId);
-      const hName = opt ? opt.name : 'Bilinmeyen Otel';
+      const hName = opt ? opt.name : 'Otel';
       
       if (h.checkin) {
-        const inMs = parseDate(h.checkin);
-        if (inMs >= todayMs) {
-          hotels.push({
-            time: inMs,
-            dateStr: h.checkin,
-            resId: r.id,
-            resName: `${r.personal.firstName} ${r.personal.lastName}`,
-            hotelName: hName,
-            type: 'Giriş (Check-in)',
-            color: 'var(--green)'
+        const idx = days.findIndex(d => d.dateStr === h.checkin);
+        if (idx !== -1) {
+          days[idx].events.push({
+            type: 'checkin', title: `${r.personal.firstName} ${r.personal.lastName}`,
+            subtitle: `${hName} (Check-in)`,
+            time: '14:00',
+            ico: '🏨', color: 'var(--green)',
+            resId: r.id
           });
         }
       }
       if (h.checkout) {
-        const outMs = parseDate(h.checkout);
-        if (outMs >= todayMs) {
-          hotels.push({
-            time: outMs,
-            dateStr: h.checkout,
-            resId: r.id,
-            resName: `${r.personal.firstName} ${r.personal.lastName}`,
-            hotelName: hName,
-            type: 'Çıkış (Check-out)',
-            color: 'var(--red)'
+        const idx = days.findIndex(d => d.dateStr === h.checkout);
+        if (idx !== -1) {
+          days[idx].events.push({
+            type: 'checkout', title: `${r.personal.firstName} ${r.personal.lastName}`,
+            subtitle: `${hName} (Check-out)`,
+            time: '12:00',
+            ico: '🏨', color: 'var(--red)',
+            resId: r.id
           });
         }
       }
     });
-  });
-  hotels.sort((a,b) => a.time - b.time);
 
-  // 5. Transferler
-  const transfers = [];
-  rs.forEach(r => {
-    if (r.status === 'kapandi') return;
+    // 5. Transfers
     (r.transfers || []).forEach(tf => {
       if (tf.date) {
-        const ms = parseDate(tf.date + (tf.time ? 'T'+tf.time : ''));
-        if (ms >= todayMs) {
-          transfers.push({
-            time: ms,
-            dateStr: tf.date + (tf.time ? ' ' + tf.time : ''),
-            resId: r.id,
-            resName: `${r.personal.firstName} ${r.personal.lastName}`,
-            route: `${tf.from} → ${tf.to}`,
-            note: tf.note,
-            pax: r.guestCount || 1
+        const idx = days.findIndex(d => d.dateStr === tf.date);
+        if (idx !== -1) {
+          days[idx].events.push({
+            type: 'transfer', title: `${r.personal.firstName} ${r.personal.lastName}`,
+            subtitle: `${tf.from} → ${tf.to}`,
+            time: tf.time || '10:00',
+            ico: '🚌', color: 'var(--purple)',
+            resId: r.id
           });
         }
       }
     });
   });
-  transfers.sort((a,b) => a.time - b.time);
 
-  // HTML Üretimi
-  const renderCard = (content) => `
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;box-shadow:var(--shadow-sm);transition:transform var(--ease);cursor:default" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-      ${content}
-    </div>
-  `;
+  // Sort events inside each day by time
+  days.forEach(d => {
+    d.events.sort((a,b) => (a.time||'').localeCompare(b.time||''));
+  });
 
-  const emptyMsg = '<div style="font-size:13px;color:var(--text-muted);padding:10px;text-align:center;background:var(--card);border-radius:var(--radius-sm);border:1px dashed var(--border)">Yaklaşan kayıt bulunamadı. 🎉</div>';
+  // Render HTML
+  const colsHtml = days.map(d => {
+    const dayName = d.dateObj.toLocaleDateString('tr-TR', { weekday: 'long' });
+    const dayNum = d.dateObj.getDate();
+    const monthName = d.dateObj.toLocaleDateString('tr-TR', { month: 'short' });
+    
+    const evsHtml = d.events.map(e => `
+      <div class="kanban-card" onclick="Router.navigate('/reservation/${e.resId}')">
+        <div class="kc-title">
+          <span>${e.title}</span>
+        </div>
+        <div class="kc-sub">
+          <span style="display:inline-block;width:14px;text-align:center">${e.ico}</span>
+          <span style="font-weight:600;color:${e.color}">${e.time||'—'}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-sec);padding-left:18px">${e.subtitle}</div>
+      </div>
+    `).join('') || '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:30px 0;font-style:italic;opacity:0.6">Kayıt yok.</div>';
 
-  const balloonHTML = balloons.length ? balloons.map((b,i) => renderCard(`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;animation:fadeUp 0.3s ease-out forwards;animation-delay:${i*0.05}s;opacity:0">
-      <div style="font-weight:700;color:var(--text);font-size:15px">🎈 ${formatDate(b.dateStr)}</div>
-      <a href="#/reservation/${b.resId}" class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--orange);padding:4px 8px">Grup: ${b.resName} →</a>
-    </div>
-    <div style="font-size:13px;color:var(--text-sec)">
-      <strong>Uçacak Kişiler (${b.guests.length}):</strong><br>
-      ${b.guests.join(', ')}
-    </div>
-  `)).join('') : emptyMsg;
-
-  const tourHTML = tours.length ? tours.map((t,i) => renderCard(`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;animation:fadeUp 0.3s ease-out forwards;animation-delay:${i*0.05}s;opacity:0">
-      <div style="font-weight:700;color:var(--text);font-size:15px">${t.tourName}</div>
-      <a href="#/reservation/${t.resId}" class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--orange);padding:4px 8px">Grup: ${t.resName} →</a>
-    </div>
-    <div style="font-size:13px;color:var(--text-sec)">
-      📅 Tarih: <strong>${formatDate(t.dateStr)}</strong> &nbsp; | &nbsp; 👥 Kişi: <strong>${t.pax}</strong>
-    </div>
-  `)).join('') : emptyMsg;
-
-  const flightHTML = flights.length ? flights.map((f,i) => renderCard(`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;animation:fadeUp 0.3s ease-out forwards;animation-delay:${i*0.05}s;opacity:0">
-      <div style="font-weight:700;color:var(--text);font-size:15px">${f.dir} - ${f.flightNo}</div>
-      <a href="#/reservation/${f.resId}" class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--orange);padding:4px 8px">Grup: ${f.resName} →</a>
-    </div>
-    <div style="font-size:13px;color:var(--text-sec)">
-      📅 Zaman: <strong>${f.dateStr}</strong><br>
-      ✈️ Rota: <strong>${f.route}</strong> &nbsp; | &nbsp; 👥 Kişi: <strong>${f.pax}</strong>
-    </div>
-  `)).join('') : emptyMsg;
-
-  const hotelHTML = hotels.length ? hotels.map((h,i) => renderCard(`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;animation:fadeUp 0.3s ease-out forwards;animation-delay:${i*0.05}s;opacity:0">
-      <div style="font-weight:700;color:${h.color};font-size:15px">${h.type}</div>
-      <a href="#/reservation/${h.resId}" class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--orange);padding:4px 8px">Grup: ${h.resName} →</a>
-    </div>
-    <div style="font-size:13px;color:var(--text-sec)">
-      🏨 Otel: <strong>${h.hotelName}</strong><br>
-      📅 Tarih: <strong>${formatDate(h.dateStr)}</strong>
-    </div>
-  `)).join('') : emptyMsg;
-
-  const transferHTML = transfers.length ? transfers.map((t,i) => renderCard(`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;animation:fadeUp 0.3s ease-out forwards;animation-delay:${i*0.05}s;opacity:0">
-      <div style="font-weight:700;color:var(--text);font-size:15px">🚌 ${t.route}</div>
-      <a href="#/reservation/${t.resId}" class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--orange);padding:4px 8px">Grup: ${t.resName} →</a>
-    </div>
-    <div style="font-size:13px;color:var(--text-sec)">
-      📅 Zaman: <strong>${t.dateStr}</strong> &nbsp; | &nbsp; 👥 Kişi: <strong>${t.pax}</strong>
-      ${t.note ? `<br>📝 Not: <em style="color:var(--text-muted)">${t.note}</em>` : ''}
-    </div>
-  `)).join('') : emptyMsg;
+    return `
+      <div class="kanban-col">
+        <div class="kanban-col-header">
+          <span>${dayNum} ${monthName} - ${dayName}</span>
+          <span style="background:var(--bg);padding:2px 8px;border-radius:10px;font-size:12px;color:var(--text-muted)">${d.events.length}</span>
+        </div>
+        <div class="kanban-col-body">
+          ${evsHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
 
   return `
-  <div style="max-width:960px;margin:0 auto;padding-bottom:50px">
-    
-    <div class="tabs" id="actTabs">
-      <button class="tab-btn active" data-tab="act-balon" onclick="switchActTab(this,'act-balon')">🎈 Balonlar</button>
-      <button class="tab-btn" data-tab="act-tur" onclick="switchActTab(this,'act-tur')">🏷️ Turlar</button>
-      <button class="tab-btn" data-tab="act-ucus" onclick="switchActTab(this,'act-ucus')">✈️ Uçuşlar</button>
-      <button class="tab-btn" data-tab="act-otel" onclick="switchActTab(this,'act-otel')">🏨 Oteller</button>
-      <button class="tab-btn" data-tab="act-transfer" onclick="switchActTab(this,'act-transfer')">🚌 Transferler</button>
+  <div style="max-width:1800px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:14px">
+      <div class="sec-title" style="margin:0;border:0;padding:0">📋 Yaklaşan Aktiviteler</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label style="font-size:13px;font-weight:600;color:var(--text-sec)">Başlangıç:</label>
+        <input type="date" class="form-control" style="width:auto" value="${activitiesStartDate}" onchange="changeActivitiesDate(this.value)">
+        <button class="btn btn-secondary btn-sm" onclick="changeActivitiesDate('${todayStr()}')">Bugün</button>
+      </div>
     </div>
-
-    <style>
-      @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-    </style>
-
-    <!-- Sekmeler -->
-    <div class="tab-content active" id="tc-act-balon">
-      <div class="sec-title" style="margin-bottom:16px">Yaklaşan Balon Uçuşları (Bugün ve Sonrası)</div>
-      ${balloonHTML}
+    <div class="kanban-board">
+      ${colsHtml}
     </div>
-
-    <div class="tab-content" id="tc-act-tur">
-      <div class="sec-title" style="margin-bottom:16px">Yaklaşan Turlar (Bugün ve Sonrası)</div>
-      ${tourHTML}
-    </div>
-
-    <div class="tab-content" id="tc-act-ucus">
-      <div class="sec-title" style="margin-bottom:16px">Yaklaşan Uçuşlar (Bugün ve Sonrası)</div>
-      ${flightHTML}
-    </div>
-
-    <div class="tab-content" id="tc-act-otel">
-      <div class="sec-title" style="margin-bottom:16px">Yaklaşan Otel Giriş/Çıkışları (Bugün ve Sonrası)</div>
-      ${hotelHTML}
-    </div>
-
-    <div class="tab-content" id="tc-act-transfer">
-      <div class="sec-title" style="margin-bottom:16px">Yaklaşan Transferler (Bugün ve Sonrası)</div>
-      ${transferHTML}
-    </div>
-
-  </div>
-  `;
-}
-
-function switchActTab(btn, tabId) {
-  document.querySelectorAll('#actTabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
-  document.querySelectorAll('[id^="tc-act-"]').forEach(c => c.classList.toggle('active', c.id === 'tc-' + tabId));
+  </div>`;
 }

@@ -89,7 +89,7 @@ function renderReservationProfile(res) {
         return `<div class="tl-item">
           <div class="tl-ico checkin">🏨</div>
           <div class="tl-content">
-            <div class="tl-title">${ht?.name || 'Otel'} — Oda: ${h.room||'—'}</div>
+            <div class="tl-title">${ht?.name || 'Otel'}</div>
             <div class="tl-meta">Check-in: ${formatDate(h.checkin)} · Check-out: ${formatDate(h.checkout)} (${n} gece)</div>
           </div>
         </div>`;
@@ -153,7 +153,7 @@ function renderReservationProfile(res) {
         dateStr: formatDate(h.checkin),
         ico: '🏨',
         cls: 'checkin',
-        title: `${ht?.name || 'Otel'} — Oda: ${h.room||'—'} (Giriş)`,
+        title: `${ht?.name || 'Otel'} (Giriş)`,
         meta: `Check-in: ${formatDate(h.checkin)} · Check-out: ${formatDate(h.checkout)} (${n} gece)`
       });
       if (h.checkout) {
@@ -162,7 +162,7 @@ function renderReservationProfile(res) {
           dateStr: formatDate(h.checkout),
           ico: '🏨',
           cls: 'checkout',
-          title: `${ht?.name || 'Otel'} — Oda: ${h.room||'—'} (Çıkış)`,
+          title: `${ht?.name || 'Otel'} (Çıkış)`,
           meta: `Check-in: ${formatDate(h.checkin)} · Check-out: ${formatDate(h.checkout)} (${n} gece)`
         });
       }
@@ -212,6 +212,10 @@ function renderReservationProfile(res) {
       <div class="profile-main">
         <div class="profile-name">${nm} ${res.status === 'kapandi' ? '<span class="badge badge-red" style="margin-left:8px">📦 Arşivlendi</span>' : ''}</div>
         <div class="profile-sub">${guestCount} Kişi &nbsp;·&nbsp; ${res.days} Gün &nbsp;·&nbsp; Başlangıç: ${formatDate(res.startDate)}</div>
+        <div class="profile-bdgs" style="margin-bottom:8px">
+          ${res.personal.salesperson ? `<span class="badge" style="background:var(--surface);border:1px solid var(--border);color:var(--text-sec)">Satışçı: ${res.personal.salesperson}</span>` : ''}
+          ${res.personal.phone ? `<span class="badge" style="background:var(--surface);border:1px solid var(--border);color:var(--text-sec)">📞 ${res.personal.phone}</span>` : ''}
+        </div>
         <div class="profile-bdgs">
           <span class="badge ${ps.cls}">${ps.text}</span>
           ${balloon?.active ? `<span class="badge badge-red">🎈 Balon (${balloon.count} Kişi)</span>` : ''}
@@ -220,12 +224,18 @@ function renderReservationProfile(res) {
           ${flights?.length ? `<span class="badge badge-blue">✈️ ${flights.length} Uçuş</span>` : ''}
         </div>
       </div>
-      <div class="profile-acts">
+      <div class="profile-acts" style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="exportSgk('${res.id}')">📄 SGK Çıktısı</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportTour('${res.id}')">✈️ Tur Çıktısı</button>
+        </div>
+        <div style="display:flex;gap:6px">
         ${can ? `
           ${res.status !== 'kapandi' ? `<button class="btn btn-secondary btn-sm" onclick="toggleResStatus('${res.id}', 'kapandi')">📦 Dosyayı Kapat</button>` : `<button class="btn btn-secondary btn-sm" onclick="toggleResStatus('${res.id}', 'aktif')">📂 Yeniden Aç</button>`}
           <button class="btn btn-secondary btn-sm" onclick="Router.navigate('/reservation/${res.id}/edit')">✏️ Düzenle</button>
           <button class="btn btn-danger btn-sm" onclick="confirmDeleteReservation('${res.id}')">🗑️ Sil</button>
         ` : ''}
+        </div>
       </div>
     </div>
 
@@ -418,6 +428,88 @@ function removePayment(resId, paymentId) {
   showNotif('Tahsilat silindi', 'success');
   Router.navigate('/reservation/' + resId);
   setTimeout(() => document.querySelector('[data-tab="odeme"]').click(), 50);
+}
+
+/* ============================================================
+   DIŞA AKTARIM (EXPORT) MODAL & FONKSIYONLARI
+   ============================================================ */
+function showExportModal(title, text) {
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  m.innerHTML = `
+    <div class="card" style="width:100%;max-width:600px;background:var(--surface);display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,0.4)">
+      <div style="font-size:16px;font-weight:700;display:flex;justify-content:space-between;align-items:center">
+        <span>${title}</span>
+        <button style="background:none;border:none;color:var(--text-sec);cursor:pointer;font-size:18px" onclick="this.closest('.card').parentElement.remove()">×</button>
+      </div>
+      <textarea id="expText" style="width:100%;height:320px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-family:monospace;font-size:13px;resize:none;line-height:1.5" readonly>${text}</textarea>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px">
+        <button class="btn btn-secondary" onclick="this.closest('.card').parentElement.remove()">Kapat</button>
+        <button class="btn btn-primary" onclick="navigator.clipboard.writeText(document.getElementById('expText').value); showNotif('Panoya kopyalandı!','success');">Kopyala</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(m);
+}
+
+function exportSgk(id) {
+  const r = DB.getReservation(id);
+  if (!r) return;
+  const tStart = formatDate(r.startDate);
+  // Use endDate if exists, otherwise fallback to startDate + days
+  let tEnd = '';
+  if (r.endDate) {
+    tEnd = formatDate(r.endDate);
+  } else {
+    const d = new Date(r.startDate);
+    d.setDate(d.getDate() + (r.days || 1));
+    tEnd = formatDate(d.toISOString().split('T')[0]);
+  }
+  
+  let out = 'SGK SİGORTA BİLGİLERİ\n-----------------------\n\n';
+  r.guests.forEach(g => {
+    out += `${g.firstName} ${g.lastName} - ${formatDate(g.dob)} - ${g.passport||'Belirtilmemiş'} - Bşl: ${tStart} - Bit: ${tEnd}\n`;
+  });
+  showExportModal('SGK Çıktısı', out);
+}
+
+function exportTour(id) {
+  const r = DB.getReservation(id);
+  if (!r) return;
+  
+  let out = `Satış Temsilcisi: ${r.personal.salesperson || 'Belirtilmemiş'}\n\n`;
+  
+  const evs = [];
+  (r.flights||[]).forEach(f => {
+    const tStr = f.direction === 'giriş' ? f.arrivalTime : f.departureTime;
+    if (tStr) {
+      const d = new Date(tStr);
+      evs.push({
+        time: d.getTime(),
+        text: `${d.toLocaleDateString('tr-TR', {day:'numeric', month:'long'})}: ${f.fromAirport||'XXX'}-${f.toAirport||'XXX'} ${f.flightNo||''} ${f.direction === 'giriş' ? 'Arr' : 'Dep'} ${d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}`
+      });
+    }
+  });
+  (r.tours||[]).forEach(t => {
+    if (t.date) {
+      const d = new Date(t.date);
+      const to = DB.tourOptions.find(o=>o.id===t.tourId);
+      evs.push({
+        time: d.getTime(),
+        text: `${d.toLocaleDateString('tr-TR', {day:'numeric', month:'long'})}: ${to ? to.name : 'Tur'}`
+      });
+    }
+  });
+  
+  evs.sort((a,b)=>a.time - b.time);
+  evs.forEach(e => out += e.text + '\n\n');
+  
+  out += `\nYOLCU LİSTESİ VE PASAPORT BİLGİLERİ\n-----------------------------------\n`;
+  r.guests.forEach(g => {
+    out += `${g.firstName} ${g.lastName} | Uyruk: ${g.nationality||'-'} | Pasaport: ${g.passport||'-'} | D.Tarihi: ${formatDate(g.dob)}\n`;
+  });
+  
+  showExportModal('Tur / Operasyon Çıktısı', out);
 }
 
 function confirmDeleteReservation(id) {

@@ -6,18 +6,18 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Backgrounds */
-  --bg:          #0b0f19;
-  --surface:     #131929;
-  --card:        #1a2235;
-  --card-hover:  #1f2a42;
-  --border:      #263047;
-  --border-light:#30394f;
+  /* Backgrounds (Dark Mode Softened) */
+  --bg:          #121212;
+  --surface:     #1a1a1a;
+  --card:        #1e1e1e;
+  --card-hover:  #252525;
+  --border:      #333333;
+  --border-light:#404040;
 
   /* Text */
-  --text:        #e8eef8;
-  --text-sec:    #9aaac4;
-  --text-muted:  #5a6a85;
+  --text:        #e0e0e0;
+  --text-sec:    #a0a0a0;
+  --text-muted:  #707070;
 
   /* Brand – Orange */
   --orange:      #f97316;
@@ -52,15 +52,15 @@
 }
 
 [data-theme="light"] {
-  --bg:          #f0f4f8;
+  --bg:          #f4f6f8;
   --surface:     #ffffff;
   --card:        #ffffff;
-  --card-hover:  #f8fafc;
-  --border:      #e2e8f0;
-  --border-light:#cbd5e1;
-  --text:        #1e293b;
-  --text-sec:    #475569;
-  --text-muted:  #94a3b8;
+  --card-hover:  #fafbfc;
+  --border:      #e4e7eb;
+  --border-light:#edf0f2;
+  --text:        #2d3748;
+  --text-sec:    #4a5568;
+  --text-muted:  #718096;
   --orange-dim:  rgba(249,115,22,.10);
   --orange-brd:  rgba(249,115,22,.30);
   --blue-dim:    rgba(59,130,246,.10);
@@ -255,8 +255,11 @@ a { text-decoration: none; color: inherit; }
 
 /* ---- CARDS ---- */
 .card {
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
   position: relative;
 }
 .card-clickable { transition: all var(--ease); cursor: pointer; }
@@ -478,7 +481,63 @@ textarea.form-control { resize: vertical; min-height: 84px; }
 }
 .day-nav {
   background: var(--card); border: 1px solid var(--border);
-  color: var(--text-sec); border-radius: var(--radius-sm);
+  color: var(--text-sec);
+  pointer-events: none;
+}
+
+/* Kanban / Activities Board */
+.kanban-board {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  padding-bottom: 20px;
+  min-height: calc(100vh - 200px);
+}
+.kanban-col {
+  flex: 0 0 280px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+}
+.kanban-col-header {
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--border);
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card);
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
+}
+.kanban-col-body {
+  padding: 12px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kanban-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: transform var(--ease), border-color var(--ease);
+}
+.kanban-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--orange-brd);
+}
+.kc-title { font-weight: 600; font-size: 13px; margin-bottom: 6px; display:flex; align-items:center; justify-content:space-between; }
+.kc-sub { font-size: 11px; color: var(--text-sec); display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+.kc-badges { margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
+.day-nav {
   padding: 7px 14px; cursor: pointer; font-size: 13px;
   font-family: inherit; transition: all var(--ease);
 }
@@ -934,6 +993,61 @@ textarea.form-control { resize: vertical; min-height: 84px; }
 .empty-ico { font-size: 56px; margin-bottom: 20px; opacity: 0.9; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4)); animation: float 3s ease-in-out infinite; }
 .empty-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .empty-desc { font-size: 14px; color: var(--text-muted); max-width: 300px; margin: 0 auto; line-height: 1.5; }
+
+/* ============================================================
+   KANBAN BOARD (Activities)
+   ============================================================ */
+.kanban-board {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  padding-bottom: 20px;
+  min-height: calc(100vh - 200px);
+}
+.kanban-col {
+  flex: 0 0 280px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+}
+.kanban-col-header {
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--border);
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card);
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
+}
+.kanban-col-body {
+  padding: 12px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kanban-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: transform var(--ease), border-color var(--ease);
+}
+.kanban-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--orange-brd);
+}
+.kc-title { font-weight: 600; font-size: 13px; margin-bottom: 6px; display:flex; align-items:center; justify-content:space-between; }
+.kc-sub { font-size: 11px; color: var(--text-sec); display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+.kc-badges { margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
 
 /* ============================================================
    MISC

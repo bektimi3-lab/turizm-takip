@@ -20,6 +20,18 @@ function updatePerPerson(totalInputEl, perPersonId) {
   if (el) el.textContent = pp + ' / kişi';
 }
 
+function calcFormDays() {
+  const s = document.getElementById('startDateInput')?.value;
+  const e = document.getElementById('endDateInput')?.value;
+  if(s && e) {
+    const ds = new Date(s), de = new Date(e);
+    let diff = Math.ceil((de - ds) / (1000*60*60*24));
+    if(diff < 1) diff = 1; // en az 1 gun
+    document.getElementById('daysInput').value = diff;
+    document.getElementById('daysDisplay').textContent = '(Toplam: ' + diff + ' Gün)';
+  }
+}
+
 function renderReservationForm(res) {
   const isNew = !res;
   const t = res || {
@@ -51,12 +63,26 @@ function renderReservationForm(res) {
         </div>
         <div class="form-row form-row-2">
           <div class="form-group"><label class="form-label">Telefon</label><input name="phone" type="tel" class="form-control" value="${gf('phone')}" placeholder="+90 555..."></div>
-          <div class="form-group"><label class="form-label">E-posta</label><input name="email" type="email" class="form-control" value="${gf('email')}" placeholder="ornek@mail.com"></div>
+          <div class="form-group"><label class="form-label">Satışçı İsim</label><input name="salesperson" type="text" class="form-control" value="${gf('salesperson')}" placeholder="Örn: Ahmet Bey"></div>
         </div>
-        <div class="form-row form-row-3">
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:20px;">
           <div class="form-group"><label class="form-label">Kişi Sayısı <span style="color:var(--red)">*</span></label><input id="guestCountInput" name="guestCount" type="number" min="1" class="form-control" value="${t.guestCount}" onchange="updateGuestRows()" required></div>
-          <div class="form-group"><label class="form-label">Başlangıç Tarihi <span style="color:var(--red)">*</span></label><input name="startDate" type="date" class="form-control" value="${t.startDate}" required></div>
-          <div class="form-group"><label class="form-label">Gün Sayısı <span style="color:var(--red)">*</span></label><input name="days" type="number" min="1" class="form-control" value="${t.days}" required></div>
+          <div class="form-group"><label class="form-label">Başlangıç Tarihi <span style="color:var(--red)">*</span></label><input id="startDateInput" name="startDate" type="date" class="form-control" value="${t.startDate}" onchange="calcFormDays()" required></div>
+          <div class="form-group"><label class="form-label">Bitiş Tarihi</label>
+            ${(() => {
+              let eStr = '';
+              if (t.startDate) {
+                const sd = new Date(t.startDate);
+                sd.setDate(sd.getDate() + (t.days || 1));
+                eStr = sd.toISOString().split('T')[0];
+              }
+              return `<input id="endDateInput" name="endDate" type="date" class="form-control" value="${eStr}" onchange="calcFormDays()">`;
+            })()}
+          </div>
+          <div class="form-group" style="display:flex;align-items:center;padding-top:28px">
+            <span id="daysDisplay" style="font-size:13px;font-weight:600;color:var(--text-sec);white-space:nowrap">(Toplam: ${t.days||1} Gün)</span>
+            <input type="hidden" id="daysInput" name="days" value="${t.days||1}">
+          </div>
         </div>
       </div>
 
@@ -324,8 +350,7 @@ function _hotelRow(idx, h={}, gc) {
     +'<div class="ac-body">'
     +'<div class="form-group" style="margin-bottom:12px">'
     +'<select name="hotelId_'+idx+'" class="form-control" style="max-width:300px" onchange="loadTemplateData(this,\'hotel\',\''+idx+'\')"><option value="">Otel Seç</option>'+opts+'</select></div>'
-    +'<div class="form-row form-row-3">'
-    +'<div class="form-group" style="margin:0"><label class="form-label">Oda No</label><input type="text" name="hRoom_'+idx+'" class="form-control" value="'+(h.room||'')+'"></div>'
+    +'<div class="form-row form-row-2">'
     +'<div class="form-group" style="margin:0"><label class="form-label">Check-in</label><input type="date" name="hIn_'+idx+'" class="form-control" value="'+(h.checkin||'')+'"></div>'
     +'<div class="form-group" style="margin:0"><label class="form-label">Check-out</label><input type="date" name="hOut_'+idx+'" class="form-control" value="'+(h.checkout||'')+'"></div>'
     +'</div>'
@@ -458,8 +483,12 @@ function saveReservationForm(e, existingId) {
 
   const hotels = Array.from(form.querySelectorAll('.h-row')).map(row => {
     const i = row.id.split('-')[1];
-    return { hotelId: g('hotelId_'+i), room: g('hRoom_'+i), checkin: g('hIn_'+i), checkout: g('hOut_'+i),
-      totalCost: gn('hTotalCost_'+i), totalPrice: gn('hTotalPrice_'+i) };
+    return {
+      hotelId: g('hotelId_'+i),
+      checkin: g('hIn_'+i),
+      checkout: g('hOut_'+i),
+      ..._parsePriceFields(fd, 'h', i)
+    };
   }).filter(x => x.hotelId);
 
   for (let h of hotels) {
@@ -498,10 +527,18 @@ function saveReservationForm(e, existingId) {
   const balTotalPrice = gn('balTotalPrice');
   const balCount = guests.filter(x => x.balloon).length;
 
-  const data = {
-    personal: { firstName: g('firstName'), lastName: g('lastName'), phone: g('phone'), email: g('email') },
-    guestCount, guests,
-    startDate: g('startDate'), days: parseInt(g('days'))||1,
+  const res = {
+    id: existingId || uuid(),
+    personal: {
+      firstName: g('firstName'),
+      lastName: g('lastName'),
+      phone: g('phone'),
+      salesperson: g('salesperson')
+    },
+    guestCount: guestCount,
+    startDate: g('startDate'),
+    endDate: g('endDate'),
+    days: parseInt(g('days')) || ((new Date(g('endDate')) - new Date(g('startDate'))) / (1000 * 60 * 60 * 24)) || 1,
     balloon: { 
       active: g('balActive')==='true', 
       count: balCount, 
