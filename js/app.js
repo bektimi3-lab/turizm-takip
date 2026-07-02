@@ -82,7 +82,7 @@ function renderLayout(title, content, activeNav) {
           
           <div style="display:flex;align-items:center">
             <div style="position:relative; margin-right:8px;">
-              <button class="theme-toggle-btn" onclick="toggleNotifPanel()" title="Bildirimler / İşlem Geçmişi" style="background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:6px 10px;cursor:pointer;font-size:16px;position:relative">
+              <button onclick="toggleNotifPanel()" title="Bildirimler / İşlem Geçmişi" style="background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:6px 10px;cursor:pointer;font-size:16px;position:relative">
                 🔔<span id="notifBadge" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:10px;padding:2px 5px;border-radius:10px;display:none;font-weight:bold">0</span>
               </button>
               <div id="notifPanel" style="display:none;position:absolute;top:44px;right:0;width:320px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:0 10px 30px rgba(0,0,0,0.3);z-index:9999;max-height:400px;overflow-y:auto;flex-direction:column">

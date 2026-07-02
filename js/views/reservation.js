@@ -200,6 +200,9 @@ function renderReservationProfile(res) {
       </div>
     `).join('');
 
+  const actT = localStorage.getItem('turTakipActiveTab') || 'timeline';
+  const isActive = (t) => actT === t ? 'active' : '';
+
   return `
   <div style="max-width:920px;margin:0 auto">
     <div style="margin-bottom:14px">
@@ -241,48 +244,48 @@ function renderReservationProfile(res) {
 
     <!-- Tabs -->
     <div class="tabs" id="pTabs">
-      <button class="tab-btn active" data-tab="timeline"    onclick="switchProfileTab(this,'timeline')">📅 Zaman Cetveli</button>
-      <button class="tab-btn"        data-tab="yolcular"   onclick="switchProfileTab(this,'yolcular')">👥 Yolcular</button>
-      <button class="tab-btn"        data-tab="konaklama"  onclick="switchProfileTab(this,'konaklama')">🏨 Konaklama</button>
-      <button class="tab-btn"        data-tab="turlar"     onclick="switchProfileTab(this,'turlar')">🏷️ Turlar</button>
-      <button class="tab-btn"        data-tab="ucuslar"    onclick="switchProfileTab(this,'ucuslar')">✈️ Uçuşlar</button>
-      <button class="tab-btn"        data-tab="transferler" onclick="switchProfileTab(this,'transferler')">🚌 Transferler</button>
-      <button class="tab-btn"        data-tab="odeme"      onclick="switchProfileTab(this,'odeme')">💳 Ödeme</button>
-      ${notes ? `<button class="tab-btn" data-tab="notlar" onclick="switchProfileTab(this,'notlar')">📝 Notlar</button>` : ''}
+      <button class="tab-btn ${isActive('timeline')}" data-tab="timeline"    onclick="switchProfileTab(this,'timeline')">📅 Zaman Cetveli</button>
+      <button class="tab-btn ${isActive('yolcular')}"        data-tab="yolcular"   onclick="switchProfileTab(this,'yolcular')">👥 Yolcular</button>
+      <button class="tab-btn ${isActive('konaklama')}"        data-tab="konaklama"  onclick="switchProfileTab(this,'konaklama')">🏨 Konaklama</button>
+      <button class="tab-btn ${isActive('turlar')}"        data-tab="turlar"     onclick="switchProfileTab(this,'turlar')">🏷️ Turlar</button>
+      <button class="tab-btn ${isActive('ucuslar')}"        data-tab="ucuslar"    onclick="switchProfileTab(this,'ucuslar')">✈️ Uçuşlar</button>
+      <button class="tab-btn ${isActive('transferler')}"        data-tab="transferler" onclick="switchProfileTab(this,'transferler')">🚌 Transferler</button>
+      <button class="tab-btn ${isActive('odeme')}"        data-tab="odeme"      onclick="switchProfileTab(this,'odeme')">💳 Ödeme</button>
+      ${notes ? `<button class="tab-btn ${isActive('notlar')}" data-tab="notlar" onclick="switchProfileTab(this,'notlar')">📝 Notlar</button>` : ''}
     </div>
 
     <!-- Tab: Zaman Cetveli -->
-    <div class="tab-content active card" id="tc-timeline">
+    <div class="tab-content ${isActive('timeline')} card" id="tc-timeline">
       <div class="timeline">${timelineHTML}</div>
     </div>
 
     <!-- Tab: Yolcular -->
-    <div class="tab-content card" id="tc-yolcular">
+    <div class="tab-content ${isActive('yolcular')} card" id="tc-yolcular">
       ${guestsHTML}
     </div>
 
     <!-- Tab: Konaklama -->
-    <div class="tab-content card" id="tc-konaklama">
+    <div class="tab-content ${isActive('konaklama')} card" id="tc-konaklama">
       <div class="timeline">${hotelsHTML}</div>
     </div>
 
     <!-- Tab: Turlar -->
-    <div class="tab-content card" id="tc-turlar">
+    <div class="tab-content ${isActive('turlar')} card" id="tc-turlar">
       <div class="timeline">${toursHTML}</div>
     </div>
 
     <!-- Tab: Uçuşlar -->
-    <div class="tab-content card" id="tc-ucuslar">
+    <div class="tab-content ${isActive('ucuslar')} card" id="tc-ucuslar">
       <div class="timeline">${flightsHTML}</div>
     </div>
 
     <!-- Tab: Transferler -->
-    <div class="tab-content card" id="tc-transferler">
+    <div class="tab-content ${isActive('transferler')} card" id="tc-transferler">
       <div class="timeline">${transHTML}</div>
     </div>
 
     <!-- Tab: Ödeme -->
-    <div class="tab-content card" id="tc-odeme">
+    <div class="tab-content ${isActive('odeme')} card" id="tc-odeme">
       <div class="pay-grid">
         <div class="pay-item">
           <div class="pay-amt">${formatCurrency(total, cur)}</div>
@@ -347,7 +350,7 @@ function renderReservationProfile(res) {
     </div>
 
     <!-- Tab: Notlar -->
-    <div class="tab-content card" id="tc-notlar">
+    <div class="tab-content ${isActive('notlar')} card" id="tc-notlar">
       <div style="font-size:14px;line-height:1.8;white-space:pre-wrap;color:var(--text-sec)">${notes||'—'}</div>
     </div>
   </div>`;
@@ -356,6 +359,7 @@ function renderReservationProfile(res) {
 function switchProfileTab(btn, tabId) {
   document.querySelectorAll('#pTabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tc-' + tabId));
+  localStorage.setItem('turTakipActiveTab', tabId);
 }
 
 function toggleResStatus(id, newStatus) {
