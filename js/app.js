@@ -135,10 +135,97 @@ function initTheme() {
 }
 
 /* ============================================================
+   GÜNÜN ETKİNLİKLERİ BİLDİRİMİ
+   ============================================================ */
+function showTodayBriefing() {
+  if (!Auth.isLoggedIn()) return;
+
+  const today = todayStr();
+  const suppressedKey = 'turTakipBriefingSuppressed';
+
+  // "Bugün tekrar gösterme" seçildiyse çık
+  if (localStorage.getItem(suppressedKey) === today) return;
+
+  const evList = DB.getEventsForDate(today);
+  if (!evList || evList.length === 0) return; // Etkinlik yoksa gösterme
+
+  // Toplam kişi sayısı
+  const totalGuests = evList.reduce((s, e) => s + (e.reservation.guestCount || 1), 0);
+
+  const rows = evList.map(({ reservation, events }) => {
+    const nm = `${reservation.personal.firstName} ${reservation.personal.lastName}`;
+    const badges = events.map(ev => {
+      if (ev.type === 'tour')     return `<span style="background:var(--orange-dim);color:var(--orange);border-radius:4px;padding:2px 6px;font-size:11px">🏷️ Tur</span>`;
+      if (ev.type === 'balloon')  return `<span style="background:var(--red-dim);color:var(--red);border-radius:4px;padding:2px 6px;font-size:11px">🎈 Balon</span>`;
+      if (ev.type === 'flight')   return `<span style="background:var(--blue-dim);color:var(--blue);border-radius:4px;padding:2px 6px;font-size:11px">✈️ Uçuş</span>`;
+      if (ev.type === 'transfer') return `<span style="background:var(--purple-dim);color:var(--purple);border-radius:4px;padding:2px 6px;font-size:11px">🚌 Transfer</span>`;
+      if (ev.type === 'checkin')  return `<span style="background:var(--green-dim);color:var(--green);border-radius:4px;padding:2px 6px;font-size:11px">🏨 Check-in</span>`;
+      if (ev.type === 'checkout') return `<span style="background:var(--red-dim);color:var(--red);border-radius:4px;padding:2px 6px;font-size:11px">🏨 Check-out</span>`;
+      return '';
+    }).join(' ');
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer"
+           onclick="closeTodayBriefing(); Router.navigate('/reservation/${reservation.id}')">
+        <div>
+          <div style="font-weight:600;font-size:14px;margin-bottom:4px">${nm}</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">${badges}</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-left:12px;flex-shrink:0">${reservation.guestCount||1} Kişi</div>
+      </div>`;
+  }).join('');
+
+  const html = `
+    <div id="todayBriefingOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.60);z-index:99998;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.2s ease">
+      <div style="width:100%;max-width:480px;background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 20px 60px rgba(0,0,0,0.5);overflow:hidden">
+        <!-- Header -->
+        <div style="background:var(--orange);padding:18px 20px;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:18px;font-weight:800;color:#fff">☀️ Günaydın!</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:2px">${new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'})} · Bugün <strong>${evList.length} grup, ${totalGuests} kişi</strong> var</div>
+          </div>
+          <button onclick="closeTodayBriefing()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">×</button>
+        </div>
+        <!-- List -->
+        <div style="padding:4px 20px;max-height:320px;overflow-y:auto">
+          ${rows}
+        </div>
+        <!-- Footer -->
+        <div style="padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);gap:10px">
+          <button onclick="suppressTodayBriefing()" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-sm);padding:7px 14px;cursor:pointer;font-size:12px;transition:all var(--ease)">
+            🚫 Bugün tekrar gösterme
+          </button>
+          <button onclick="closeTodayBriefing(); Router.navigate('/activities')" style="background:var(--orange);border:none;color:#fff;border-radius:var(--radius-sm);padding:7px 16px;cursor:pointer;font-size:13px;font-weight:600">
+            Aktiviteleri Gör →
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Append to body after a short delay so layout is ready
+  setTimeout(() => {
+    if (!document.getElementById('todayBriefingOverlay')) {
+      document.body.insertAdjacentHTML('beforeend', html);
+    }
+  }, 600);
+}
+
+function closeTodayBriefing() {
+  const el = document.getElementById('todayBriefingOverlay');
+  if (el) el.remove();
+}
+
+function suppressTodayBriefing() {
+  localStorage.setItem('turTakipBriefingSuppressed', todayStr());
+  closeTodayBriefing();
+}
+
+/* ============================================================
    Route kayıtları
    ============================================================ */
 function initApp() {
   initTheme();
+  showTodayBriefing();
   
   // Eksik demo rezervasyonları (yeni eklenenleri) localStorage'a dahil et
   const demos = _buildDemoReservations();

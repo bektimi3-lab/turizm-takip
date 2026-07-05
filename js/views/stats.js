@@ -219,6 +219,16 @@ function renderStatsView() {
           <div style="font-size:11px;color:var(--text-muted);margin-top:8px">* Yalnızca fiyat girilen aktiviteler dahildir.</div>
         </div>
       </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px,1fr));gap:20px;margin-top:20px">
+        <div class="card">
+          <div class="sec-title">🌍 En Çok Gelen Uyruklar</div>
+          ${renderBars(demoAll.nats)}
+        </div>
+        <div class="card">
+          <div class="sec-title">🏷️ Popüler Turlar</div>
+          ${toursHTML}
+        </div>
+      </div>
     </div>
     ` : ''}
 

@@ -25,6 +25,27 @@ function renderSettingsView() {
       </div>
     </div>
 
+    <div class="card" style="margin-bottom:20px">
+      <div class="sec-title">🔐 Şifre Değiştir</div>
+      <div class="form-row form-row-3">
+        <div class="form-group">
+          <label class="form-label">Mevcut Şifre</label>
+          <input type="password" id="pwCurrent" class="form-control" placeholder="Mevcut şifreniz">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Yeni Şifre</label>
+          <input type="password" id="pwNew" class="form-control" placeholder="Yeni şifre">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Yeni Şifre (Tekrar)</label>
+          <input type="password" id="pwNewConfirm" class="form-control" placeholder="Yeni şifre tekrar">
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn btn-primary" onclick="changePassword()">🔒 Şifreyi Güncelle</button>
+      </div>
+    </div>
+
     <!-- Akıllı Listeler -->
     <div class="tabs" id="listTabs">
       <button class="tab-btn active" data-tab="list-turlar" onclick="switchListTab(this,'list-turlar')">🏷️ Turlar</button>
@@ -215,4 +236,39 @@ function saveList(type) {
     DB.hotelOptions = list;
     showNotif('Oteller kaydedildi', 'success');
   }
+}
+
+function changePassword() {
+  const current = document.getElementById('pwCurrent').value;
+  const newPw   = document.getElementById('pwNew').value;
+  const confirm = document.getElementById('pwNewConfirm').value;
+
+  const user = Auth.currentUser;
+  if (!user) { showNotif('Oturum bulunamadı.', 'error'); return; }
+
+  if (user.password !== current) {
+    showNotif('Mevcut şifre hatalı.', 'error'); return;
+  }
+  if (newPw.length < 4) {
+    showNotif('Yeni şifre en az 4 karakter olmalıdır.', 'error'); return;
+  }
+  if (newPw !== confirm) {
+    showNotif('Yeni şifreler eşleşmiyor.', 'error'); return;
+  }
+
+  /* Update password in DB.users */
+  const idx = DB.users.findIndex(u => u.email === user.email);
+  if (idx === -1) { showNotif('Kullanıcı bulunamadı.', 'error'); return; }
+  DB.users[idx].password = newPw;
+
+  /* Update cached session */
+  Auth._user = { ...user, password: newPw };
+  localStorage.setItem('tts_session', JSON.stringify(Auth._user));
+
+  showNotif('Şifre başarıyla güncellendi.', 'success');
+
+  /* Clear inputs */
+  document.getElementById('pwCurrent').value = '';
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwNewConfirm').value = '';
 }

@@ -16,8 +16,8 @@
 
   /* Text */
   --text:        #e0e0e0;
-  --text-sec:    #a0a0a0;
-  --text-muted:  #707070;
+  --text-sec:    #b8b8b8;
+  --text-muted:  #909090;
 
   /* Brand – Orange */
   --orange:      #f97316;
@@ -52,17 +52,22 @@
 }
 
 [data-theme="light"] {
-  --bg:          #f4f6f8;
-  --surface:     #ffffff;
-  --card:        #ffffff;
-  --card-hover:  #fafbfc;
-  --border:      #e4e7eb;
-  --border-light:#edf0f2;
-  --text:        #2d3748;
-  --text-sec:    #4a5568;
-  --text-muted:  #718096;
-  --orange-dim:  rgba(249,115,22,.10);
-  --orange-brd:  rgba(249,115,22,.30);
+  /* Warm parchment/beige backgrounds — no pure white, no harsh contrast */
+  --bg:          #eeeae4;
+  --surface:     #f7f4ef;
+  --card:        #f7f4ef;
+  --card-hover:  #f0ece5;
+  --border:      #dcd7cf;
+  --border-light:#e8e4dd;
+
+  /* Text — dark warm brown instead of cold slate */
+  --text:        #2c2520;
+  --text-sec:    #5a4f45;
+  --text-muted:  #9c8f83;
+
+  /* Dimmed accent overlays */
+  --orange-dim:  rgba(249,115,22,.12);
+  --orange-brd:  rgba(249,115,22,.32);
   --blue-dim:    rgba(59,130,246,.10);
   --green-dim:   rgba(34,197,94,.10);
   --yellow-dim:  rgba(245,158,11,.10);

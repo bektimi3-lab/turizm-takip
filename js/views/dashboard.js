@@ -115,6 +115,32 @@ function renderDashboardView() {
         </div>
       </div>
 
+      <!-- Borçlu & Yaklaşan Aktivite Uyarısı -->
+      ${(() => {
+        const now14 = new Date(); now14.setDate(now14.getDate() + 14);
+        const todayDt = new Date(); todayDt.setHours(0,0,0,0);
+        const debtWarnings = rs.filter(r => {
+          if (r.status === 'kapandi') return false;
+          const remaining = (r.payment?.total || 0) - (r.payment?.paid || 0);
+          if (remaining <= 0) return false;
+          return (r.tours||[]).some(t => { const d = t.date ? new Date(t.date+'T00:00:00') : null; return d && d >= todayDt && d <= now14; }) ||
+            (r.balloon?.active && r.balloon?.date && (() => { const d = new Date(r.balloon.date+'T00:00:00'); return d >= todayDt && d <= now14; })());
+        }).sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+        if (!debtWarnings.length) return '';
+        return `<div style="background:var(--red-dim);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px">
+          <div style="font-size:15px;font-weight:700;color:var(--red);margin-bottom:12px">⚠️ Borçlu &amp; Yaklaşan Aktivite (${debtWarnings.length} Rezervasyon)</div>
+          ${debtWarnings.map(r => {
+            const remaining = (r.payment?.total||0) - (r.payment?.paid||0);
+            const cur2 = r.payment?.currency || 'EUR';
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(239,68,68,.2);cursor:pointer" onclick="Router.navigate(\'/reservation/' + r.id + '\')">' +
+              '<div><div style="font-weight:600;font-size:14px">' + r.personal.firstName + ' ' + r.personal.lastName + '</div>' +
+              '<div style="font-size:12px;color:var(--text-sec)">Başlangıç: ' + formatDate(r.startDate) + ' · ' + r.guestCount + ' Kişi</div></div>' +
+              '<div style="font-weight:700;color:var(--red);font-size:15px">' + formatCurrency(remaining, cur2) + '</div>' +
+              '</div>';
+          }).join('')}
+        </div>`;
+      })()}
+
       <!-- Ortak Listeler -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px,1fr));gap:20px">
         <div>${todayCard}</div>
