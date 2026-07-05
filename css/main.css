@@ -52,28 +52,28 @@
 }
 
 [data-theme="light"] {
-  /* Warm parchment/beige backgrounds — no pure white, no harsh contrast */
-  --bg:          #eeeae4;
-  --surface:     #f7f4ef;
-  --card:        #f7f4ef;
-  --card-hover:  #f0ece5;
-  --border:      #dcd7cf;
-  --border-light:#e8e4dd;
+  /* Koyu krem — çok parlak değil, mat ve ılık */
+  --bg:          #e4dfd8;
+  --surface:     #ede9e3;
+  --card:        #ede9e3;
+  --card-hover:  #e6e1da;
+  --border:      #cec9c1;
+  --border-light:#d9d4cd;
 
-  /* Text — dark warm brown instead of cold slate */
-  --text:        #2c2520;
-  --text-sec:    #5a4f45;
-  --text-muted:  #9c8f83;
+  /* Yazılar — sıcak koyu kahverengi */
+  --text:        #1e1a17;
+  --text-sec:    #4a4038;
+  --text-muted:  #847869;
 
-  /* Dimmed accent overlays */
-  --orange-dim:  rgba(249,115,22,.12);
-  --orange-brd:  rgba(249,115,22,.32);
-  --blue-dim:    rgba(59,130,246,.10);
-  --green-dim:   rgba(34,197,94,.10);
-  --yellow-dim:  rgba(245,158,11,.10);
-  --red-dim:     rgba(239,68,68,.10);
-  --purple-dim:  rgba(168,85,247,.10);
-  --cyan-dim:    rgba(6,182,212,.10);
+  /* Accent overlays */
+  --orange-dim:  rgba(180,90,20,.13);
+  --orange-brd:  rgba(180,90,20,.30);
+  --blue-dim:    rgba(40,100,200,.09);
+  --green-dim:   rgba(20,150,70,.09);
+  --yellow-dim:  rgba(200,140,10,.09);
+  --red-dim:     rgba(200,50,50,.09);
+  --purple-dim:  rgba(130,60,200,.09);
+  --cyan-dim:    rgba(0,150,170,.09);
 }
 
 html { font-size: 16px; scroll-behavior: smooth; }
