@@ -52,28 +52,28 @@
 }
 
 [data-theme="light"] {
-  /* Koyu krem — çok parlak değil, mat ve ılık */
-  --bg:          #e4dfd8;
-  --surface:     #ede9e3;
-  --card:        #ede9e3;
-  --card-hover:  #e6e1da;
-  --border:      #cec9c1;
-  --border-light:#d9d4cd;
+  /* Mat taş/keten — beyaz yok, patlama yok */
+  --bg:          #c8c2b9;
+  --surface:     #d4cec5;
+  --card:        #d4cec5;
+  --card-hover:  #ccc6bc;
+  --border:      #b8b2a8;
+  --border-light:#c2bdb3;
 
-  /* Yazılar — sıcak koyu kahverengi */
-  --text:        #1e1a17;
-  --text-sec:    #4a4038;
-  --text-muted:  #847869;
+  /* Yazılar */
+  --text:        #1a1714;
+  --text-sec:    #42393180;
+  --text-muted:  #7a6f63;
 
-  /* Accent overlays */
-  --orange-dim:  rgba(180,90,20,.13);
-  --orange-brd:  rgba(180,90,20,.30);
-  --blue-dim:    rgba(40,100,200,.09);
-  --green-dim:   rgba(20,150,70,.09);
-  --yellow-dim:  rgba(200,140,10,.09);
-  --red-dim:     rgba(200,50,50,.09);
-  --purple-dim:  rgba(130,60,200,.09);
-  --cyan-dim:    rgba(0,150,170,.09);
+  /* Accent overlays — biraz daha belirgin */
+  --orange-dim:  rgba(160,80,10,.15);
+  --orange-brd:  rgba(160,80,10,.32);
+  --blue-dim:    rgba(30,80,180,.10);
+  --green-dim:   rgba(15,120,60,.10);
+  --yellow-dim:  rgba(170,120,0,.10);
+  --red-dim:     rgba(180,40,40,.10);
+  --purple-dim:  rgba(110,50,180,.10);
+  --cyan-dim:    rgba(0,130,150,.10);
 }
 
 html { font-size: 16px; scroll-behavior: smooth; }
