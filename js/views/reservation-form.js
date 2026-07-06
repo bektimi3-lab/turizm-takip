@@ -58,16 +58,16 @@ function renderReservationForm(res) {
           <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">&#x1F4CB; Rezervasyon Bilgileri</div>
         </div>
         <div class="form-row form-row-2">
-          <div class="form-group"><label class="form-label">Grup Adı (Baş Kişi Adı) <span style="color:var(--red)">*</span></label><input name="firstName" type="text" class="form-control" value="${gf('firstName')}" placeholder="Ad" required></div>
-          <div class="form-group"><label class="form-label">Grup Soyadı <span style="color:var(--red)">*</span></label><input name="lastName" type="text" class="form-control" value="${gf('lastName')}" placeholder="Soyad" required></div>
+          <div class="form-group"><label class="form-label">Grup Adı (Baş Kişi Adı)</label><input name="firstName" type="text" class="form-control" value="${gf('firstName')}" placeholder="Ad"></div>
+          <div class="form-group"><label class="form-label">Grup Soyadı</label><input name="lastName" type="text" class="form-control" value="${gf('lastName')}" placeholder="Soyad"></div>
         </div>
         <div class="form-row form-row-2">
           <div class="form-group"><label class="form-label">Telefon</label><input name="phone" type="tel" class="form-control" value="${gf('phone')}" placeholder="+90 555..."></div>
           <div class="form-group"><label class="form-label">Satışçı İsim</label><input name="salesperson" type="text" class="form-control" value="${gf('salesperson')}" placeholder="Örn: Ahmet Bey"></div>
         </div>
         <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:20px;">
-          <div class="form-group"><label class="form-label">Kişi Sayısı <span style="color:var(--red)">*</span></label><input id="guestCountInput" name="guestCount" type="number" min="1" class="form-control" value="${t.guestCount}" onchange="updateGuestRows()" required></div>
-          <div class="form-group"><label class="form-label">Başlangıç Tarihi <span style="color:var(--red)">*</span></label><input id="startDateInput" name="startDate" type="date" class="form-control" value="${t.startDate}" onchange="calcFormDays()" required></div>
+          <div class="form-group"><label class="form-label">Kişi Sayısı</label><input id="guestCountInput" name="guestCount" type="number" min="1" class="form-control" value="${t.guestCount}" onchange="updateGuestRows()"></div>
+          <div class="form-group"><label class="form-label">Başlangıç Tarihi</label><input id="startDateInput" name="startDate" type="date" class="form-control" value="${t.startDate}" onchange="calcFormDays()"></div>
           <div class="form-group"><label class="form-label">Bitiş Tarihi</label>
             ${(() => {
               let eStr = '';
@@ -561,7 +561,7 @@ function saveReservationForm(e, existingId) {
   };
 
   // Prevent negative inputs
-  if (data.payment.total < 0) {
+  if (res.payment.total < 0) {
     showNotif('Toplam tutar negatif olamaz!', 'error'); return;
   }
   if (balTotalCost < 0 || balTotalPrice < 0) {
@@ -576,11 +576,11 @@ function saveReservationForm(e, existingId) {
   }
 
   if (existingId) {
-    DB.updateReservation(existingId, data);
+    DB.updateReservation(existingId, res);
     showNotif('Rezervasyon guncellendi!', 'success');
     Router.navigate('/reservation/' + existingId);
   } else {
-    const nr = DB.addReservation(data);
+    const nr = DB.addReservation(res);
     showNotif('Rezervasyon eklendi!', 'success');
     Router.navigate('/reservation/' + nr.id);
   }

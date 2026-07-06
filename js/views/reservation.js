@@ -470,11 +470,17 @@ function exportSgk(id) {
     tEnd = formatDate(d.toISOString().split('T')[0]);
   }
   
-  let out = 'SGK SİGORTA BİLGİLERİ\n-----------------------\n\n';
+  let csv = 'Adı;Soyadı;Doğum Tarihi;Pasaport No;Tur Başlangıç Tarihi;Tur Bitiş Tarihi\n';
   r.guests.forEach(g => {
-    out += `${g.firstName} ${g.lastName} - ${formatDate(g.dob)} - ${g.passport||'Belirtilmemiş'} - Bşl: ${tStart} - Bit: ${tEnd}\n`;
+    csv += `${g.firstName||''};${g.lastName||''};${formatDate(g.dob)||''};${g.passport||''};${tStart||''};${tEnd||''}\n`;
   });
-  showExportModal('SGK Çıktısı', out);
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `SGK_${r.personal.firstName}_${r.personal.lastName}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function exportTour(id) {
@@ -490,7 +496,8 @@ function exportTour(id) {
       const d = new Date(tStr);
       evs.push({
         time: d.getTime(),
-        text: `${d.toLocaleDateString('tr-TR', {day:'numeric', month:'long'})}: ${f.fromAirport||'XXX'}-${f.toAirport||'XXX'} ${f.flightNo||''} ${f.direction === 'giriş' ? 'Arr' : 'Dep'} ${d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}`
+        dateStr: d.toLocaleDateString('tr-TR', {day:'numeric', month:'long'}),
+        text: `${f.fromAirport||'XXX'}-${f.toAirport||'XXX'} ${f.flightNo||''} ${f.direction === 'giriş' ? 'Arr' : 'Dep'} ${d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}`
       });
     }
   });
@@ -500,13 +507,23 @@ function exportTour(id) {
       const to = DB.tourOptions.find(o=>o.id===t.tourId);
       evs.push({
         time: d.getTime(),
-        text: `${d.toLocaleDateString('tr-TR', {day:'numeric', month:'long'})}: ${to ? to.name : 'Tur'}`
+        dateStr: d.toLocaleDateString('tr-TR', {day:'numeric', month:'long'}),
+        text: to ? to.name : 'Tur'
       });
     }
   });
   
   evs.sort((a,b)=>a.time - b.time);
-  evs.forEach(e => out += e.text + '\n\n');
+  
+  const groups = {};
+  evs.forEach(e => {
+    if (!groups[e.dateStr]) groups[e.dateStr] = [];
+    groups[e.dateStr].push(e.text);
+  });
+  
+  for (const dateStr in groups) {
+    out += `${dateStr}: ${groups[dateStr].join(' - ')}\n`;
+  }
   
   out += `\nYOLCU LİSTESİ VE PASAPORT BİLGİLERİ\n-----------------------------------\n`;
   r.guests.forEach(g => {

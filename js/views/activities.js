@@ -2,7 +2,7 @@
 
 let activitiesStartDate = todayStr(); // Global state for the date picker
 let activitiesFilter = 'all'; // all, balloon, tour, flight, checkin, checkout, transfer
-let activitiesFitScreen = false;
+let activitiesFitScreen = true;
 
 function changeActivitiesDate(val) {
   activitiesStartDate = val || todayStr();
@@ -137,6 +137,23 @@ function renderActivitiesView() {
         }
       });
     }
+  });
+
+  days.forEach(d => {
+    const grouped = {};
+    d.events.forEach(e => {
+      if (!grouped[e.resId]) grouped[e.resId] = [];
+      grouped[e.resId].push(e);
+    });
+    d.events = Object.values(grouped).map(group => {
+      if (group.length === 1) return group[0];
+      // Combine multiple events into one card
+      // Sort group by time
+      group.sort((a,b) => (a.time||'').localeCompare(b.time||''));
+      const combinedSubtitle = group.map(e => e.subtitle).join(' - ');
+      const combinedIco = group.map(e => e.ico).join('');
+      return { ...group[0], subtitle: combinedSubtitle, ico: combinedIco, time: group[0].time };
+    });
   });
 
   days.forEach(d => {
