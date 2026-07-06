@@ -39,6 +39,9 @@
   --cyan:        #06b6d4;
   --cyan-dim:    rgba(6,182,212,.13);
 
+  /* Shadows */
+  --shadow-card: 0 4px 12px rgba(0,0,0,0.2);
+
   /* Layout */
   --sidebar-w:   224px;
   --header-h:    58px;
@@ -52,28 +55,31 @@
 }
 
 [data-theme="light"] {
-  /* Mat taş/keten — beyaz yok, patlama yok */
-  --bg:          #c8c2b9;
-  --surface:     #d4cec5;
-  --card:        #d4cec5;
-  --card-hover:  #ccc6bc;
-  --border:      #b8b2a8;
-  --border-light:#c2bdb3;
+  /* Premium Fildişi/Keten Zemin — Saf beyaz yok, çok şık */
+  --bg:          #dedacb;
+  --surface:     #e8e4d8;
+  --card:        #e8e4d8;
+  --card-hover:  #f0ece2;
+  --border:      #d1cbbd;
+  --border-light:#e4dfd5;
 
-  /* Yazılar — kontrastlı, parlak değil */
-  --text:        #1a1714;
-  --text-sec:    #3d3028;
-  --text-muted:  #6b5f54;
+  /* Yazılar — Yüksek okunaklılık, sıcak füme */
+  --text:        #2c2825;
+  --text-sec:    #5a524a;
+  --text-muted:  #8a8075;
 
-  /* Accent overlays — biraz daha belirgin */
-  --orange-dim:  rgba(160,80,10,.15);
-  --orange-brd:  rgba(160,80,10,.32);
-  --blue-dim:    rgba(30,80,180,.10);
-  --green-dim:   rgba(15,120,60,.10);
-  --yellow-dim:  rgba(170,120,0,.10);
-  --red-dim:     rgba(180,40,40,.10);
-  --purple-dim:  rgba(110,50,180,.10);
-  --cyan-dim:    rgba(0,130,150,.10);
+  /* Gölgeler — Lüks derinlik hissi */
+  --shadow-card: 0 8px 30px rgba(0,0,0,0.06);
+
+  /* Accent overlays */
+  --orange-dim:  rgba(249,115,22,.15);
+  --orange-brd:  rgba(249,115,22,.32);
+  --blue-dim:    rgba(59,130,246,.12);
+  --green-dim:   rgba(34,197,94,.12);
+  --yellow-dim:  rgba(245,158,11,.15);
+  --red-dim:     rgba(239,68,68,.12);
+  --purple-dim:  rgba(168,85,247,.12);
+  --cyan-dim:    rgba(6,182,212,.12);
 }
 
 html { font-size: 16px; scroll-behavior: smooth; }
@@ -267,7 +273,7 @@ a { text-decoration: none; color: inherit; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  box-shadow: var(--shadow-card);
   position: relative;
 }
 .card-clickable { transition: all var(--ease); cursor: pointer; }
