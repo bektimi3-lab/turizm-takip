@@ -60,7 +60,7 @@ function renderStatsView() {
   const activityProfit     = activitySalesTotal - activityCostTotal;
   
   // Basit SVG Donut
-  const pct = total > 0 ? (paid / total) * 100 : 0;
+  const pct = total > 0 ? Math.min((paid / total) * 100, 100) : 0;
   const strokeDash = `${pct} 100`;
 
   const donutSVG = `

@@ -464,10 +464,12 @@ function exportSgk(id) {
   let tEnd = '';
   if (r.endDate) {
     tEnd = formatDate(r.endDate);
-  } else {
+  } else if (r.startDate) {
     const d = new Date(r.startDate);
-    d.setDate(d.getDate() + (r.days || 1));
-    tEnd = formatDate(d.toISOString().split('T')[0]);
+    if (!isNaN(d)) {
+      d.setDate(d.getDate() + (r.days || 1));
+      tEnd = formatDate(d.toISOString().split('T')[0]);
+    }
   }
   
   let out = 'Adı\tSoyadı\tDoğum Tarihi\tPasaport No\tTur Başlangıç Tarihi\tTur Bitiş Tarihi\n';

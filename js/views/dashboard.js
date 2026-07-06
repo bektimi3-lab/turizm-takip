@@ -65,7 +65,7 @@ function renderDashboardView() {
       const diff = (sd - new Date(today + 'T00:00:00')) / 86400000;
       if (diff >= 0 && diff <= 7) {
         weekIncome += (r.payment?.total || 0);
-        if (r.payment?.status !== 'odendi') pendingCount++;
+        if (r.payment?.status !== 'ödendi') pendingCount++;
       }
       
       const rTot = r.payment?.total || 0;

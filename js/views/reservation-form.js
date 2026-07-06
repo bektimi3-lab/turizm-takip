@@ -436,7 +436,8 @@ function syncBalloons(isActive) {
 
 function saveReservationForm(e, existingId) {
   e.preventDefault();
-  const form = document.getElementById('resForm');
+  try {
+    const form = document.getElementById('resForm');
 
   // Custom Validation Highlights removed completely to allow saving without mandatory fields.
 
@@ -524,7 +525,7 @@ function saveReservationForm(e, existingId) {
       cost:  (balCount > 0 && balTotalCost  != null) ? balTotalCost  / balCount : null,
       price: (balCount > 0 && balTotalPrice != null) ? balTotalPrice / balCount : null
     },
-    hotels, tours, flights, transfers,
+    guests, hotels, tours, flights, transfers,
     payment: { 
       total: parseFloat(g('total'))||0, 
       currency: g('currency')||'EUR', 
@@ -559,5 +560,9 @@ function saveReservationForm(e, existingId) {
     const nr = DB.addReservation(res);
     showNotif('Rezervasyon eklendi!', 'success');
     Router.navigate('/reservation/' + nr.id);
+  }
+  } catch (err) {
+    alert('HATA: ' + err.message + '\nSatır: ' + err.lineNumber + '\n' + err.stack);
+    console.error(err);
   }
 }
