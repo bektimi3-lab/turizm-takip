@@ -470,17 +470,11 @@ function exportSgk(id) {
     tEnd = formatDate(d.toISOString().split('T')[0]);
   }
   
-  let csv = 'Adı;Soyadı;Doğum Tarihi;Pasaport No;Tur Başlangıç Tarihi;Tur Bitiş Tarihi\n';
+  let out = 'Adı\tSoyadı\tDoğum Tarihi\tPasaport No\tTur Başlangıç Tarihi\tTur Bitiş Tarihi\n';
   r.guests.forEach(g => {
-    csv += `${g.firstName||''};${g.lastName||''};${formatDate(g.dob)||''};${g.passport||''};${tStart||''};${tEnd||''}\n`;
+    out += `${g.firstName||''}\t${g.lastName||''}\t${formatDate(g.dob)||''}\t${g.passport||''}\t${tStart||''}\t${tEnd||''}\n`;
   });
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `SGK_${r.personal.firstName}_${r.personal.lastName}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  showExportModal('SGK Çıktısı (Kopyalayıp Excel\\'e Yapıştırın)', out);
 }
 
 function exportTour(id) {

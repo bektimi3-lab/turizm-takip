@@ -438,32 +438,7 @@ function saveReservationForm(e, existingId) {
   e.preventDefault();
   const form = document.getElementById('resForm');
 
-  // Custom Validation Highlights
-  let hasError = false;
-  let firstErrorEl = null;
-  Array.from(form.elements).forEach(el => {
-    el.classList.remove('error-highlight');
-    if (el.hasAttribute('required') && !el.value.trim()) {
-      hasError = true;
-      el.classList.add('error-highlight');
-      if (!firstErrorEl) firstErrorEl = el;
-    }
-  });
-
-  if (hasError) {
-    showNotif('Lütfen zorunlu alanları doldurun.', 'error');
-    if (firstErrorEl) {
-      // Ensure accordion is open
-      const acBody = firstErrorEl.closest('.ac-body');
-      if (acBody && acBody.style.display === 'none') {
-        const toggleBtn = acBody.parentElement.querySelector('.ac-header button');
-        if (toggleBtn) toggleAcBody(toggleBtn);
-      }
-      firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      firstErrorEl.focus();
-    }
-    return;
-  }
+  // Custom Validation Highlights removed completely to allow saving without mandatory fields.
 
   const fd   = new FormData(form);
   const g    = n => fd.get(n) || '';
