@@ -149,13 +149,16 @@ function renderActivitiesView() {
       grouped[e.resId].push(e);
     });
     d.events = Object.values(grouped).map(group => {
-      if (group.length === 1) return group[0];
+      if (group.length === 1) return { ...group[0], isGroup: false };
       // Combine multiple events into one card
-      // Sort group by time
       group.sort((a,b) => (a.time||'').localeCompare(b.time||''));
-      const combinedSubtitle = group.map(e => e.subtitle).join(' - ');
-      const combinedIco = group.map(e => e.ico).join('');
-      return { ...group[0], subtitle: combinedSubtitle, ico: combinedIco, time: group[0].time };
+      return { 
+        isGroup: true,
+        resId: group[0].resId,
+        title: group[0].title,
+        subEvents: group,
+        time: group[0].time
+      };
     });
   });
 
@@ -168,18 +171,40 @@ function renderActivitiesView() {
     const dayNum = d.dateObj.getDate();
     const monthName = d.dateObj.toLocaleDateString('tr-TR', { month: 'short' });
     
-    const evsHtml = d.events.map(e => `
-      <div class="kanban-card" onclick="Router.navigate('/reservation/${e.resId}')">
-        <div class="kc-title">
-          <span>${e.title}</span>
-        </div>
-        <div class="kc-sub">
-          <span style="display:inline-block;width:14px;text-align:center">${e.ico}</span>
-          <span style="font-weight:600;color:${e.color}">${e.time||'—'}</span>
-        </div>
-        <div style="font-size:11px;color:var(--text-sec);padding-left:18px">${e.subtitle}</div>
-      </div>
-    `).join('') || '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:30px 0;font-style:italic;opacity:0.6">Kayıt yok.</div>';
+    const evsHtml = d.events.map(e => {
+      if (e.isGroup) {
+        const subHtml = e.subEvents.map(se => `
+          <div style="display:flex;gap:6px;align-items:flex-start;margin-top:6px;padding-top:6px;border-top:1px dashed var(--border-light)">
+            <span style="font-size:12px;margin-top:1px">${se.ico}</span>
+            <div style="flex:1">
+              <div style="font-size:11px;font-weight:600;color:${se.color}">${se.time||'—'}</div>
+              <div style="font-size:11px;color:var(--text-sec);line-height:1.2;margin-top:2px">${se.subtitle}</div>
+            </div>
+          </div>
+        `).join('');
+        return `
+          <div class="kanban-card" onclick="Router.navigate('/reservation/${e.resId}')">
+            <div class="kc-title" style="margin-bottom:2px">
+              <span>${e.title}</span>
+            </div>
+            ${subHtml}
+          </div>
+        `;
+      } else {
+        return `
+          <div class="kanban-card" onclick="Router.navigate('/reservation/${e.resId}')">
+            <div class="kc-title">
+              <span>${e.title}</span>
+            </div>
+            <div class="kc-sub" style="margin-top:6px">
+              <span style="display:inline-block;width:14px;text-align:center">${e.ico}</span>
+              <span style="font-weight:600;color:${e.color}">${e.time||'—'}</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-sec);padding-left:18px;margin-top:2px;line-height:1.3">${e.subtitle}</div>
+          </div>
+        `;
+      }
+    }).join('') || '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:30px 0;font-style:italic;opacity:0.6">Kayıt yok.</div>';
 
     return `
       <div class="kanban-col">
