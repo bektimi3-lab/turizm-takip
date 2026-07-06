@@ -474,7 +474,7 @@ function exportSgk(id) {
   r.guests.forEach(g => {
     out += `${g.firstName||''}\t${g.lastName||''}\t${formatDate(g.dob)||''}\t${g.passport||''}\t${tStart||''}\t${tEnd||''}\n`;
   });
-  showExportModal('SGK Çıktısı (Kopyalayıp Excel\\'e Yapıştırın)', out);
+  showExportModal("SGK Çıktısı (Kopyalayıp Excel'e Yapıştırın)", out);
 }
 
 function exportTour(id) {
