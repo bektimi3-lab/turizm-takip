@@ -462,7 +462,8 @@ function saveReservationForm(e, existingId) {
       hotelId: g('hotelId_'+i),
       checkin: g('hIn_'+i),
       checkout: g('hOut_'+i),
-      ..._parsePriceFields(fd, 'h', i)
+      totalCost: gn('hTotalCost_'+i),
+      totalPrice: gn('hTotalPrice_'+i)
     };
   }).filter(x => x.hotelId);
 
