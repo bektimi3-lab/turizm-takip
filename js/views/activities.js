@@ -128,9 +128,12 @@ function renderActivitiesView() {
         if (tf.date) {
           const idx = days.findIndex(d => d.dateStr === tf.date);
           if (idx !== -1) {
+            const opt = DB.transferOptions.find(o => o.id === tf.transferId);
+            const tfName = opt ? opt.name : 'Transfer';
+            const subtitleText = (tf.from || tf.to) ? `${tf.from||'—'} → ${tf.to||'—'}` : tfName;
             days[idx].events.push({
               type: 'transfer', title: `${r.personal.firstName} ${r.personal.lastName}`,
-              subtitle: `${tf.from} → ${tf.to}`, time: tf.time || '10:00',
+              subtitle: subtitleText, time: tf.time || '10:00',
               ico: '🚌', color: 'var(--purple)', resId: r.id
             });
           }
