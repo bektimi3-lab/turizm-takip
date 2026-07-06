@@ -135,9 +135,10 @@ function renderReservationsList() {
         <button class="tab-btn active" data-tab="list-aktif" onclick="switchListTab(this,'list-aktif')">🟢 Aktif Dosyalar (${activeRs.length})</button>
         <button class="tab-btn" data-tab="list-arsiv" onclick="switchListTab(this,'list-arsiv')">📦 Arşiv / Kapananlar (${closedRs.length})</button>
       </div>
-      <div style="flex-shrink:0; position:relative;">
-        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:14px">🔍</span>
-        <input type="text" class="form-control" placeholder="İsim, telefon, pasaport ara..." oninput="filterReservations(this.value)" style="padding-left:36px; min-width:280px; height:100%; border-radius:var(--radius-md)">
+      <div style="flex-shrink:0; position:relative; display:flex; align-items:center;">
+        <span style="position:absolute; left:12px; font-size:14px; pointer-events:none;">🔍</span>
+        <input type="text" id="searchInput" class="form-control" placeholder="İsim, telefon, pasaport ara..." oninput="filterReservations(this.value); document.getElementById('clearSearchBtn').style.display=this.value?'block':'none'" style="padding-left:36px; padding-right:30px; min-width:280px; height:42px; border-radius:var(--radius-md)">
+        <button id="clearSearchBtn" onclick="document.getElementById('searchInput').value=''; filterReservations(''); this.style.display='none'" style="display:none; position:absolute; right:12px; background:none; border:none; font-size:12px; color:var(--text-sec); cursor:pointer; padding:4px;">✖</button>
       </div>
     </div>
     

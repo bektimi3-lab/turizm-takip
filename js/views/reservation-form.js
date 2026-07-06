@@ -46,11 +46,13 @@ function renderReservationForm(res) {
 
   return `
   <div style="max-width:860px;margin:0 auto">
-    <div style="margin-bottom:14px">
-      <button class="btn btn-ghost btn-sm" onclick="history.back()">&#8592; Geri</button>
+    <div style="margin-bottom:14px; position:sticky; top:10px; z-index:900; background:var(--surface); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border); box-shadow:0 8px 24px rgba(0,0,0,0.15); display:flex; justify-content:space-between; align-items:center;">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="if(window._isFormDirty && !confirm('Kaydedilmemiş değişiklikleriniz var, çıkmak istediğinize emin misiniz?')) return; history.back()">&#8592; Geri</button>
+      <div style="font-weight:600; font-size:15px;">${isNew ? 'Yeni Rezervasyon' : 'Rezervasyonu Düzenle'}</div>
+      <button type="button" class="btn btn-primary" onclick="document.getElementById('resForm').requestSubmit()">💾 Kaydet</button>
     </div>
 
-    <form id="resForm" novalidate onsubmit="saveReservationForm(event,'${res?.id||''}')">
+    <form id="resForm" novalidate oninput="window._isFormDirty=true" onchange="window._isFormDirty=true" onsubmit="saveReservationForm(event,'${res?.id||''}')">
 
       <!-- Temel Bilgiler -->
       <div class="card" style="margin-bottom:14px">
@@ -554,10 +556,12 @@ function saveReservationForm(e, existingId) {
 
   if (existingId) {
     DB.updateReservation(existingId, res);
-    showNotif('Rezervasyon guncellendi!', 'success');
+    window._isFormDirty = false;
+    showNotif('Rezervasyon güncellendi!', 'success');
     Router.navigate('/reservation/' + existingId);
   } else {
     const nr = DB.addReservation(res);
+    window._isFormDirty = false;
     showNotif('Rezervasyon eklendi!', 'success');
     Router.navigate('/reservation/' + nr.id);
   }

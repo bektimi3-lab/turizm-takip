@@ -134,6 +134,13 @@ function initTheme() {
   document.documentElement.setAttribute('data-theme', saved);
 }
 
+window.addEventListener('beforeunload', (e) => {
+  if (window._isFormDirty) {
+    e.preventDefault();
+    e.returnValue = 'Kaydedilmemiş değişiklikleriniz var!';
+  }
+});
+
 /* ============================================================
    GÜNÜN ETKİNLİKLERİ BİLDİRİMİ
    ============================================================ */
