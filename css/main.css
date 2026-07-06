@@ -60,10 +60,10 @@
   --border:      #b8b2a8;
   --border-light:#c2bdb3;
 
-  /* Yazılar */
+  /* Yazılar — kontrastlı, parlak değil */
   --text:        #1a1714;
-  --text-sec:    #42393180;
-  --text-muted:  #7a6f63;
+  --text-sec:    #3d3028;
+  --text-muted:  #6b5f54;
 
   /* Accent overlays — biraz daha belirgin */
   --orange-dim:  rgba(160,80,10,.15);
