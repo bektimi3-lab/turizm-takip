@@ -33,52 +33,35 @@ function renderReservationsList() {
     
     let gHtml = prefView === 'grid' ? `<div class="tourists-grid">` : `<div>`;
     list.forEach((r, i) => {
-      const fn  = r.personal.firstName;
-      const ln  = r.personal.lastName;
-      const nm  = `${fn} ${ln}`;
-      const ini = getInitials(fn, ln);
+      const fn  = r.personal.firstName || '';
+      const ln  = r.personal.lastName || '';
+      const nm  = `${fn} ${ln}`.trim() || 'İsimsiz';
+      const ini = getInitials(fn, ln) || '?';
       const col = avatarColor(nm);
-      const sd    = r.startDate ? new Date(r.startDate + 'T00:00:00') : null;
-      const day   = sd ? sd.getDate() : '—';
-      const mon   = sd ? MONTHS_TR[sd.getMonth()].substring(0, 3) : '';
-      const status = r.payment?.status || 'bekliyor';
-      const stripeClass = status === 'odendi' ? 'paid' : status === 'kismi' ? 'partial' : 'pending';
       
-      const PAY_LABELS = {
-        'odendi':  { text: '✅ Ödendi',       cls: 'paid'    },
-        'kismi':   { text: '🔶 Kısmi',        cls: 'partial' },
-        'bekliyor':{ text: '⏳ Bekliyor',     cls: 'pending' },
-      };
-      const payLabel = PAY_LABELS[status] || { text: status, cls: 'pending' };
-
-      const cur   = r.payment?.currency || DB.settings?.currency || 'EUR';
-      const total = formatCurrency(r.payment?.total || 0, cur);
-      const paid  = formatCurrency(r.payment?.paid || 0, cur);
-
-      const icons = [];
-      if (r.balloon?.active) icons.push(`<span class="res-card-icon-badge badge-red">🎈 Balon</span>`);
-      if (r.tours?.length) {
-        const t = DB.tourOptions.find(o => o.id === r.tours[0].tourId);
-        if (t) icons.push(`<span class="res-card-icon-badge badge-orange">${t.icon} ${t.name}</span>`);
-        if (r.tours.length > 1) icons.push(`<span class="res-card-icon-badge badge-orange">+${r.tours.length-1} tur</span>`);
-      }
-      if (r.flights?.length) icons.push(`<span class="res-card-icon-badge badge-blue">✈️ ${r.flights.length} Uçuş</span>`);
-      if (r.transfers?.length) icons.push(`<span class="res-card-icon-badge badge-green">🚌 ${r.transfers.length} Transfer</span>`);
-      if (r.hotels?.length) {
-        const h = DB.hotelOptions.find(o => o.id === r.hotels[0].hotelId);
-        if (h) icons.push(`<span class="res-card-icon-badge badge-purple">🏨 ${h.name.split(' ')[0]}</span>`);
+      const pax = r.guestCount || 1;
+      const days = r.days || 1;
+      const sd = formatDateShort(r.startDate);
+      
+      const cur = r.payment?.currency || DB.settings?.currency || 'EUR';
+      const total = r.payment?.total > 0 ? formatCurrency(r.payment.total, cur) : '—';
+      const paid = r.payment?.paid || 0;
+      
+      let stripeClass = 'gray';
+      let payLabel = { text:'Bekliyor', c:'var(--text-muted)' };
+      if (r.payment?.total > 0) {
+        if (paid >= r.payment.total) { stripeClass = 'paid'; payLabel = { text:'Ödendi', c:'var(--green)' }; }
+        else if (paid > 0)           { stripeClass = 'partial'; payLabel = { text:'Kısmi', c:'var(--orange)' }; }
       }
 
-      const guestText = `${r.guestCount || 1} Kişi`;
-      const dayText   = `${r.days || 1} Gün`;
-      const staggerCls = i < 10 ? `stagger-${(i%5)+1}` : '';
-      
-      const searchData = [
-        nm,
-        r.personal.phone || '',
-        r.personal.email || '',
-        ...(r.guests || []).map(g => (g.firstName||'') + ' ' + (g.lastName||'') + ' ' + (g.passport||''))
-      ].join(' ').toLowerCase();
+      let badges = '';
+      if (r.isPrivate) badges += `<span class="badge badge-purple" title="Private Tur" style="margin-right:4px">👑 VIP</span>`;
+      if (r.tours?.length) badges += `<span title="${r.tours.length} Tur" style="margin-right:4px">🚩</span>`;
+      if (r.balloon?.active) badges += `<span title="Balon" style="margin-right:4px">🎈</span>`;
+      if (r.flights?.length) badges += `<span title="${r.flights.length} Uçuş" style="margin-right:4px">✈️</span>`;
+      if (r.hotels?.length) badges += `<span title="${r.hotels.length} Otel" style="margin-right:4px">🏨</span>`;
+
+      const searchStr = `${nm} ${r.personal.phone||''} ${(r.guests||[]).map(g=>g.passport).join(' ')}`.toLowerCase();
 
       if (prefView === 'grid') {
         gHtml += `
