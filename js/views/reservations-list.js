@@ -115,8 +115,9 @@ function renderReservationsList() {
 
       if (prefView === 'grid') {
         const sDateObj = r.startDate ? new Date(r.startDate + 'T00:00:00') : null;
-        const day = sDateObj ? sDateObj.getDate() : '—';
-        const mon = sDateObj ? MONTHS_TR[sDateObj.getMonth()].substring(0, 3) : '';
+        const isValidDate = sDateObj && !isNaN(sDateObj.getTime());
+        const day = isValidDate ? sDateObj.getDate() : '—';
+        const mon = isValidDate ? MONTHS_TR[sDateObj.getMonth()].substring(0, 3) : '';
 
         gHtml += `
         <div class="res-card ${staggerCls} searchable-item" data-search="${searchStr}" onclick="Router.navigate('/reservation/${r.id}')">
