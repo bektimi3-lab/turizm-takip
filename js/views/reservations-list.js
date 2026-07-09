@@ -41,7 +41,7 @@ function renderReservationsList() {
       
       const pax = r.guestCount || 1;
       const days = r.days || 1;
-      const sd = formatDateShort(r.startDate);
+      const sd = formatDate(r.startDate);
       
       const cur = r.payment?.currency || DB.settings?.currency || 'EUR';
       const total = r.payment?.total > 0 ? formatCurrency(r.payment.total, cur) : '—';
