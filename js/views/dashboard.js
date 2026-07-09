@@ -18,7 +18,7 @@ function renderDashboardView() {
     todayEventsHTML = `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">Bugün için planlanmış etkinlik yok.</div>`;
   } else {
     todayEventsHTML = evList.map(({reservation, events}) => {
-      const nm = `${r.personal?.firstName} ${r.personal?.lastName}`;
+      const nm = `${reservation.personal?.firstName||''} ${reservation.personal?.lastName||''}`.trim() || 'İsimsiz';
       const badges = events.map(ev => {
         if (ev.type === 'tour') return `🏷️ Tur`;
         if (ev.type === 'balloon') return `🎈 Balon`;
