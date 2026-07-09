@@ -160,7 +160,7 @@ function showTodayBriefing() {
   const totalGuests = evList.reduce((s, e) => s + (e.reservation.guestCount || 1), 0);
 
   const rows = evList.map(({ reservation, events }) => {
-    const nm = `${reservation.personal.firstName} ${reservation.personal.lastName}`;
+    const nm = `${reservation.personal?.firstName || ''} ${reservation.personal?.lastName || ''}`.trim() || 'İsimsiz';
     const badges = events.map(ev => {
       if (ev.type === 'tour')     return `<span style="background:var(--orange-dim);color:var(--orange);border-radius:4px;padding:2px 6px;font-size:11px">🏷️ Tur</span>`;
       if (ev.type === 'balloon')  return `<span style="background:var(--red-dim);color:var(--red);border-radius:4px;padding:2px 6px;font-size:11px">🎈 Balon</span>`;
@@ -298,7 +298,7 @@ function initApp() {
       const r = DB.getReservation(id);
       if (!r) { showNotif('Rezervasyon bulunamadı','error'); Router.navigate('/reservations'); return; }
       document.getElementById('app').innerHTML = renderLayout(
-        `${r.personal.firstName} ${r.personal.lastName}`,
+        `${r.personal?.firstName || 'Bilinmeyen'} ${r.personal?.lastName || 'Kişi'}`,
         renderReservationProfile(r),
         'reservations'
       );

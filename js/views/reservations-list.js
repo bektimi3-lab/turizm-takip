@@ -25,16 +25,47 @@ function renderReservationsList() {
     </div>`;
   }
 
-  const activeRs = rs.filter(r => r.status !== 'kapandi').sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-  const closedRs = rs.filter(r => r.status === 'kapandi').sort((a, b) => new Date(b.startDate) - new Date(a.startDate)); // newest first
+  const sortOpt = localStorage.getItem('turTakipResSort') || 'date_asc';
+
+  let activeRs = rs.filter(r => r.status !== 'kapandi');
+  let closedRs = rs.filter(r => r.status === 'kapandi');
+  
+  const applySort = (arr, isClosed) => {
+    return arr.sort((a, b) => {
+      let r = 0;
+      if (sortOpt === 'date_asc') r = new Date(a.startDate) - new Date(b.startDate);
+      else if (sortOpt === 'date_desc') r = new Date(b.startDate) - new Date(a.startDate);
+      else if (sortOpt === 'name_asc') {
+        const nA = `${a.personal?.firstName||''} ${a.personal?.lastName||''}`.trim().toLowerCase();
+        const nB = `${b.personal?.firstName||''} ${b.personal?.lastName||''}`.trim().toLowerCase();
+        r = nA.localeCompare(nB);
+      }
+      else if (sortOpt === 'name_desc') {
+        const nA = `${a.personal?.firstName||''} ${a.personal?.lastName||''}`.trim().toLowerCase();
+        const nB = `${b.personal?.firstName||''} ${b.personal?.lastName||''}`.trim().toLowerCase();
+        r = nB.localeCompare(nA);
+      }
+      else if (sortOpt === 'amount_desc') r = (b.payment?.total||0) - (a.payment?.total||0);
+      else if (sortOpt === 'amount_asc') r = (a.payment?.total||0) - (b.payment?.total||0);
+      
+      // Default fallback if default sorting is needed but not matched
+      if (r === 0) {
+        return isClosed ? new Date(b.startDate) - new Date(a.startDate) : new Date(a.startDate) - new Date(b.startDate);
+      }
+      return r;
+    });
+  };
+
+  activeRs = applySort(activeRs, false);
+  closedRs = applySort(closedRs, true);
 
   const buildGrid = (list) => {
     if (list.length === 0) return '<div style="color:var(--text-muted);font-size:13px;padding:20px 0;text-align:center">Kayıt bulunamadı.</div>';
     
     let gHtml = prefView === 'grid' ? `<div class="tourists-grid">` : `<div>`;
     list.forEach((r, i) => {
-      const fn  = r.personal.firstName || '';
-      const ln  = r.personal.lastName || '';
+      const fn  = r.personal?.firstName || '';
+      const ln  = r.personal?.lastName || '';
       const nm  = `${fn} ${ln}`.trim() || 'İsimsiz';
       const ini = getInitials(fn, ln) || '?';
       const col = avatarColor(nm);
@@ -45,15 +76,33 @@ function renderReservationsList() {
       
       const cur = r.payment?.currency || DB.settings?.currency || 'EUR';
       const total = r.payment?.total > 0 ? formatCurrency(r.payment.total, cur) : '—';
-      const paid = r.payment?.paid || 0;
+      const paid = r.payment?.paid > 0 ? formatCurrency(r.payment.paid, cur) : '0';
+      const rawPaid = r.payment?.paid || 0;
       
       let stripeClass = 'gray';
       let payLabel = { text:'Bekliyor', c:'var(--text-muted)' };
       if (r.payment?.total > 0) {
-        if (paid >= r.payment.total) { stripeClass = 'paid'; payLabel = { text:'Ödendi', c:'var(--green)' }; }
-        else if (paid > 0)           { stripeClass = 'partial'; payLabel = { text:'Kısmi', c:'var(--orange)' }; }
+        if (rawPaid >= r.payment.total) { stripeClass = 'paid'; payLabel = { text:'Ödendi', c:'var(--green)' }; }
+        else if (rawPaid > 0)           { stripeClass = 'partial'; payLabel = { text:'Kısmi', c:'var(--orange)' }; }
       }
 
+      // Icon badges for grid
+      let icons = [];
+      if (r.isPrivate) icons.push(`<span class="res-card-icon-badge badge-purple">👑 VIP Tur</span>`);
+      if (r.tours?.length) {
+        const t = DB.tourOptions.find(o => o.id === r.tours[0].tourId);
+        if (t) icons.push(`<span class="res-card-icon-badge badge-orange">${t.icon} ${t.name.split(' ')[0]}</span>`);
+        if (r.tours.length > 1) icons.push(`<span class="res-card-icon-badge badge-orange">+${r.tours.length-1} tur</span>`);
+      }
+      if (r.flights?.length) icons.push(`<span class="res-card-icon-badge badge-blue">✈️ ${r.flights.length} Uçuş</span>`);
+      if (r.balloon?.active) icons.push(`<span class="res-card-icon-badge badge-red">🎈 Balon</span>`);
+      if (r.transfers?.length) icons.push(`<span class="res-card-icon-badge badge-green">🚌 ${r.transfers.length} Trnsf</span>`);
+      if (r.hotels?.length) {
+        const h = DB.hotelOptions.find(o => o.id === r.hotels[0].hotelId);
+        if (h) icons.push(`<span class="res-card-icon-badge badge-purple">🏨 ${h.name.split(' ')[0]}</span>`);
+      }
+
+      // Simple emojis for list view
       let badges = '';
       if (r.isPrivate) badges += `<span class="badge badge-purple" title="Private Tur" style="margin-right:4px">👑 VIP</span>`;
       if (r.tours?.length) badges += `<span title="${r.tours.length} Tur" style="margin-right:4px">🚩</span>`;
@@ -61,31 +110,45 @@ function renderReservationsList() {
       if (r.flights?.length) badges += `<span title="${r.flights.length} Uçuş" style="margin-right:4px">✈️</span>`;
       if (r.hotels?.length) badges += `<span title="${r.hotels.length} Otel" style="margin-right:4px">🏨</span>`;
 
-      const searchStr = `${nm} ${r.personal.phone||''} ${(r.guests||[]).map(g=>g.passport).join(' ')}`.toLowerCase();
+      const searchStr = `${nm} ${r.personal?.phone||''} ${(r.guests||[]).map(g=>g.passport).join(' ')}`.toLowerCase();
+      const staggerCls = i < 10 ? `stagger-${(i%5)+1}` : '';
 
       if (prefView === 'grid') {
+        const sDateObj = r.startDate ? new Date(r.startDate + 'T00:00:00') : null;
+        const day = sDateObj ? sDateObj.getDate() : '—';
+        const mon = sDateObj ? MONTHS_TR[sDateObj.getMonth()].substring(0, 3) : '';
+
         gHtml += `
-        <div class="tourist-card searchable-item card-clickable" data-search="${searchStr}" onclick="Router.navigate('/reservation/${r.id}')">
-          <div class="tc-stripe ${stripeClass}"></div>
-          <div class="tc-header">
-            <div class="tc-avatar" style="background:${col}">${ini}</div>
-            <div class="tc-info">
-              <div class="tc-name" title="${nm}">${nm}</div>
-              <div class="tc-meta">${pax} Kişi • ${days} Gün</div>
+        <div class="res-card ${staggerCls} searchable-item" data-search="${searchStr}" onclick="Router.navigate('/reservation/${r.id}')">
+          <div class="res-card-stripe ${stripeClass}"></div>
+          <div class="res-card-body">
+            <div class="res-card-top">
+              <div class="res-card-avatar" style="background:${col}">${ini}</div>
+              <div style="flex:1;min-width:0">
+                <div class="res-card-name" title="${nm}">${nm}</div>
+                <div class="res-card-meta">👥 ${pax} Kişi &nbsp;·&nbsp; 📅 ${days} Gün</div>
+              </div>
+              <div class="res-card-date">
+                <div class="res-card-date-day">${day}</div>
+                <div class="res-card-date-mon">${mon}</div>
+              </div>
             </div>
-          </div>
-          <div class="tc-body">
-            <div class="tc-date">${sd}</div>
-            <div class="tc-badges">${badges}</div>
-            <div class="tc-price">
-              <span class="badge badge-${stripeClass === 'paid' ? 'green' : stripeClass === 'partial' ? 'orange' : 'gray'}" style="margin-right:6px;cursor:pointer" ${Auth.canEdit() ? `onclick="cyclePayStatus(event,'${r.id}')"` : ''}>${payLabel.text}</span>
-              ${total}
+            ${icons.length ? `<div class="res-card-icons">${icons.join('')}</div>` : '<div style="margin-bottom:13px"></div>'}
+            <div class="res-card-footer" onclick="event.stopPropagation()">
+              <div>
+                <div class="res-card-amount">${total}</div>
+                <div class="res-card-amount-sub">${paid} ödendi</div>
+              </div>
+              ${Auth.canEdit() ? `
+              <button class="quick-pay-btn ${stripeClass}" onclick="cyclePayStatus(event,'${r.id}')">
+                ${payLabel.text}
+              </button>` : `<span class="quick-pay-btn ${stripeClass}">${payLabel.text}</span>`}
             </div>
           </div>
         </div>`;
       } else {
         gHtml += `
-        <div class="res-list-row searchable-item" data-search="${searchStr}" onclick="Router.navigate('/reservation/${r.id}')">
+        <div class="res-list-row ${staggerCls} searchable-item" data-search="${searchStr}" onclick="Router.navigate('/reservation/${r.id}')">
           <div class="rlr-avatar" style="background:${col}">${ini}</div>
           <div class="rlr-name">${nm} <span class="rlr-sub">• ${pax} kişi • ${days} gün</span></div>
           <div class="rlr-date">${sd}</div>

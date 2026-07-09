@@ -27,7 +27,7 @@ function renderMonthView(year, month) {
     const types   = new Set();
     const names   = [];
     for (const { reservation, events } of evList) {
-      names.push(`${reservation.personal.firstName} ${reservation.personal.lastName}`);
+      names.push(`${r.personal?.firstName} ${r.personal?.lastName}`);
       events.forEach(e => types.add(e.type));
     }
 

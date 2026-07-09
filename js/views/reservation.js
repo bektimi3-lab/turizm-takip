@@ -5,8 +5,8 @@ function renderReservationProfile(res) {
   DB.logView(res.id);
 
   const { personal, guests, guestCount, hotels, tours, balloon, flights, transfers, payment, notes } = res;
-  const fn   = personal.firstName || '';
-  const ln   = personal.lastName  || '';
+  const fn   = personal?.firstName || '';
+  const ln   = personal?.lastName  || '';
   const nm   = `${fn} ${ln}`;
   const col  = avatarColor(nm);
   const ini  = getInitials(fn, ln);
@@ -216,8 +216,8 @@ function renderReservationProfile(res) {
         <div class="profile-name">${nm} ${res.status === 'kapandi' ? '<span class="badge badge-red" style="margin-left:8px">📦 Arşivlendi</span>' : ''}</div>
         <div class="profile-sub">${guestCount} Kişi &nbsp;·&nbsp; ${res.days} Gün &nbsp;·&nbsp; Başlangıç: ${formatDate(res.startDate)}</div>
         <div class="profile-bdgs" style="margin-bottom:8px">
-          ${res.personal.salesperson ? `<span class="badge" style="background:var(--surface);border:1px solid var(--border);color:var(--text-sec)">Satışçı: ${res.personal.salesperson}</span>` : ''}
-          ${res.personal.phone ? `<span class="badge" style="background:var(--surface);border:1px solid var(--border);color:var(--text-sec)">📞 ${res.personal.phone}</span>` : ''}
+          ${res.personal?.salesperson ? `<span class="badge" style="background:var(--surface);border:1px solid var(--border);color:var(--text-sec)">Satışçı: ${res.personal?.salesperson}</span>` : ''}
+          ${res.personal?.phone ? `<span class="badge" style="background:var(--surface);border:1px solid var(--border);color:var(--text-sec)">📞 ${res.personal?.phone}</span>` : ''}
         </div>
         <div class="profile-bdgs">
           <span class="badge ${ps.cls}">${ps.text}</span>
@@ -483,7 +483,7 @@ function exportTour(id) {
   const r = DB.getReservation(id);
   if (!r) return;
   
-  let out = `Satış Temsilcisi: ${r.personal.salesperson || 'Belirtilmemiş'}\n\n`;
+  let out = `Satış Temsilcisi: ${res.personal?.salesperson || 'Belirtilmemiş'}\n\n`;
   
   const evs = [];
   (r.flights||[]).forEach(f => {

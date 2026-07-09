@@ -1,0 +1,502 @@
+Created At: 2026-06-27T20:21:54Z
+Completed At: 2026-06-27T20:21:54Z
+File Path: `file:///C:/Users/yusuf/.gemini/antigravity/scratch/turizm-takip/js/views/reservations-list.js`
+Total Lines: 128
+Total Bytes: 5319
+Showing lines 1 to 128
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: /* views/reservations-list.js — Rezervasyon listesi (v3 Premium Kart) */
+2: 
+3: function renderReservationsList() {
+4:   const rs = DB.reservations || [];
+5: 
+6:   setTimeout(() => {
+7:     const actions = document.getElementById('headerActions');
+8:     if (actions && Auth.canEdit()) {
+9:       actions.innerHTML = `<button class="btn btn-primary" onclick="Router.navigate('/reservation/new')">＋ Yeni Ekle</button>`;
+10:     }
+11:   }, 0);
+12: 
+13:   if (rs.length === 0) {
+14:     return `
+15:     <div class="empty-state">
+16:       <div class="empty-ico">👥</div>
+17:       <div class="empty-title">Henüz rezervasyon yok</div>
+18:       <div class="empty-desc">Sisteme yeni bir grup ekleyerek başlayabilirsiniz.</div>
+19:       ${Auth.canEdit() ? `<button class="btn btn-primary" style="margin-top:16px" onclick="Router.navigate('/reservation/new')">＋ Yeni Rezervasyon</button>` : ''}
+20:     </div>`;
+21:   }
+22: 
+23:   const sorted = [...rs].sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+24: 
+25:   let html = `<div class="tourists-grid">`;
+26: 
+27:   sorted.forEach(r => {
+28:     const fn  = r.personal.firstName;
+29:     const ln  = r.personal.lastName;
+30:     const nm  = `${fn} ${ln}`;
+31:     const ini = getInitials(fn, ln);
+32:     const col = avatarColor(nm);
+33: 
+34:     // Başlangıç tarihi parçaları
+35:     const sd    = r.startDate ? new Date(r.startDate + 'T00:00:00') : null;
+36:     const day   = sd ? sd.getDate() : '—';
+37:     const mon   = sd ? MONTHS_TR[sd.getMonth()].substring(0, 3) : '';
+38: 
+39:     //
+<truncated 2313 bytes>
+ol}">${ini}</div>
+83:           <div style="flex:1;min-width:0">
+84:             <div class="res-card-name">${nm}</div>
+85:             <div class="res-card-meta">👥 ${guestText} &nbsp;·&nbsp; 📅 ${dayText}</div>
+86:           </div>
+87:           <div class="res-card-date">
+88:             <div class="res-card-date-day">${day}</div>
+89:             <div class="res-card-date-mon">${mon}</div>
+90:           </div>
+91:         </div>
+92: 
+93:         <!-- Orta: Etkinlik ikonları -->
+94:         ${icons.length ? `<div class="res-card-icons">${icons.join('')}</div>` : '<div style="margin-bottom:13px"></div>'}
+95: 
+96:         <!-- Alt: Tutar + Hızlı Ödeme Değiştir -->
+97:         <div class="res-card-footer" onclick="event.stopPropagation()">
+98:           <div>
+99:             <div class="res-card-amount">${total}</div>
+100:             <div class="res-card-amount-sub">${paid} ödendi</div>
+101:           </div>
+102:           ${Auth.canEdit() ? `
+103:           <button class="quick-pay-btn ${stripeClass}" onclick="cyclePayStatus(event,'${r.id}')">
+104:             ${payLabel.text}
+105:           </button>` : `<span class="quick-pay-btn ${stripeClass}">${payLabel.text}</span>`}
+106:         </div>
+107: 
+108:       </div>
+109:     </div>`;
+110:   });
+111: 
+112:   html += `</div>`;
+113:   return html;
+114: }
+115: 
+116: /* Ödeme durumunu listeden tıkla değiştir */
+117: function cyclePayStatus(event, resId) {
+118:   event.stopPropagation();
+119:   const cycle = { 'bekliyor': 'kısmi', 'kısmi': 'ödendi', 'ödendi': 'bekliyor' };
+120:   const res   = DB.getReservation(resId);
+121:   if (!res) return;
+122:   const next  = cycle[res.payment?.status] || 'bekliyor';
+123:   DB.updateReservation(resId, { payment: { ...res.payment, status: next } });
+124:   // Sayfayı yeniden çiz
+125:   document.getElementById('pageContent').innerHTML = renderReservationsList();
+126:   showNotif(`Ödeme durumu: ${next}`, 'success');
+127: }
+128: 
+The above content shows the entire, complete file contents of the requested file.
+
+---
+Created At: 2026-06-30T08:51:38Z
+Completed At: 2026-06-30T08:51:38Z
+File Path: `file:///C:/Users/yusuf/.gemini/antigravity/scratch/turizm-takip/js/views/reservations-list.js`
+Total Lines: 129
+Total Bytes: 5397
+Showing lines 1 to 129
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: /* views/reservations-list.js — Rezervasyon listesi (v3 Premium Kart) */
+2: 
+3: function renderReservationsList() {
+4:   const rs = DB.reservations || [];
+5: 
+6:   setTimeout(() => {
+7:     const actions = document.getElementById('headerActions');
+8:     if (actions && Auth.canEdit()) {
+9:       actions.innerHTML = `<button class="btn btn-primary" onclick="Router.navigate('/reservation/new')">＋ Yeni Ekle</button>`;
+10:     }
+11:   }, 0);
+12: 
+13:   if (rs.length === 0) {
+14:     return `
+15:     <div class="empty-state">
+16:       <div class="empty-ico">👥</div>
+17:       <div class="empty-title">Henüz rezervasyon yok</div>
+18:       <div class="empty-desc">Sisteme yeni bir grup ekleyerek başlayabilirsiniz.</div>
+19:       ${Auth.canEdit() ? `<button class="btn btn-primary" style="margin-top:16px" onclick="Router.navigate('/reservation/new')">＋ Yeni Rezervasyon</button>` : ''}
+20:     </div>`;
+21:   }
+22: 
+23:   const sorted = [...rs].sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+24: 
+25:   let html = `<div class="tourists-grid">`;
+26: 
+27:   sorted.forEach((r, i) => {
+28:     const fn  = r.personal.firstName;
+29:     const ln  = r.personal.lastName;
+30:     const nm  = `${fn} ${ln}`;
+31:     const ini = getInitials(fn, ln);
+32:     const col = avatarColor(nm);
+33: 
+34:     // Başlangıç tarihi parçaları
+35:     const sd    = r.startDate ? new Date(r.startDate + 'T00:00:00') : null;
+36:     const day   = sd ? sd.getDate() : '—';
+37:     const mon   = sd ? MONTHS_TR[sd.getMonth()].substring(0, 3) : '';
+38: 
+39:  
+<truncated 2396 bytes>
+l}">${ini}</div>
+84:           <div style="flex:1;min-width:0">
+85:             <div class="res-card-name">${nm}</div>
+86:             <div class="res-card-meta">👥 ${guestText} &nbsp;·&nbsp; 📅 ${dayText}</div>
+87:           </div>
+88:           <div class="res-card-date">
+89:             <div class="res-card-date-day">${day}</div>
+90:             <div class="res-card-date-mon">${mon}</div>
+91:           </div>
+92:         </div>
+93: 
+94:         <!-- Orta: Etkinlik ikonları -->
+95:         ${icons.length ? `<div class="res-card-icons">${icons.join('')}</div>` : '<div style="margin-bottom:13px"></div>'}
+96: 
+97:         <!-- Alt: Tutar + Hızlı Ödeme Değiştir -->
+98:         <div class="res-card-footer" onclick="event.stopPropagation()">
+99:           <div>
+100:             <div class="res-card-amount">${total}</div>
+101:             <div class="res-card-amount-sub">${paid} ödendi</div>
+102:           </div>
+103:           ${Auth.canEdit() ? `
+104:           <button class="quick-pay-btn ${stripeClass}" onclick="cyclePayStatus(event,'${r.id}')">
+105:             ${payLabel.text}
+106:           </button>` : `<span class="quick-pay-btn ${stripeClass}">${payLabel.text}</span>`}
+107:         </div>
+108: 
+109:       </div>
+110:     </div>`;
+111:   });
+112: 
+113:   html += `</div>`;
+114:   return html;
+115: }
+116: 
+117: /* Ödeme durumunu listeden tıkla değiştir */
+118: function cyclePayStatus(event, resId) {
+119:   event.stopPropagation();
+120:   const cycle = { 'bekliyor': 'kısmi', 'kısmi': 'ödendi', 'ödendi': 'bekliyor' };
+121:   const res   = DB.getReservation(resId);
+122:   if (!res) return;
+123:   const next  = cycle[res.payment?.status] || 'bekliyor';
+124:   DB.updateReservation(resId, { payment: { ...res.payment, status: next } });
+125:   // Sayfayı yeniden çiz
+126:   document.getElementById('pageContent').innerHTML = renderReservationsList();
+127:   showNotif(`Ödeme durumu: ${next}`, 'success');
+128: }
+129: 
+The above content shows the entire, complete file contents of the requested file.
+
+---
+Created At: 2026-06-30T12:54:34Z
+Completed At: 2026-06-30T12:54:34Z
+File Path: `file:///C:/Users/yusuf/.gemini/antigravity/scratch/turizm-takip/js/views/reservations-list.js`
+Total Lines: 137
+Total Bytes: 6447
+Showing lines 60 to 137
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+60:       if (r.transfers?.length) icons.push(`<span class="res-card-icon-badge badge-green">🚌 ${r.transfers.length} Transfer</span>`);
+61:       if (r.hotels?.length) {
+62:         const h = DB.hotelOptions.find(o => o.id === r.hotels[0].hotelId);
+63:         if (h) icons.push(`<span class="res-card-icon-badge badge-purple">🏨 ${h.name.split(' ')[0]}</span>`);
+64:       }
+65: 
+66:       const guestText = `${r.guestCount || 1} Kişi`;
+67:       const dayText   = `${r.days || 1} Gün`;
+68:       const staggerCls = i < 10 ? `stagger-${(i%5)+1}` : '';
+69: 
+70:       gHtml += `
+71:       <div class="res-card ${staggerCls}" onclick="Router.navigate('/reservation/${r.id}')">
+72:         <div class="res-card-stripe ${stripeClass}"></div>
+73:         <div class="res-card-body">
+74:           <div class="res-card-top">
+75:             <div class="res-card-avatar" style="background:${col}">${ini}</div>
+76:             <div style="flex:1;min-width:0">
+77:               <div class="res-card-name">${nm}</div>
+78:               <div class="res-card-meta">👥 ${guestText} &nbsp;·&nbsp; 📅 ${dayText}</div>
+79:             </div>
+80:             <div class="res-card-date">
+81:               <div class="res-card-date-day">${day}</div>
+82:               <div class="res-card-date-mon">${mon}</div>
+83:             </div>
+84:           </div>
+85:           ${icons.length ? `<div class="res-card-icons">${icons.join('')}</div>` : '<div style="margin-bottom:13px"></div>'}
+86:           <div class="res-card-footer" onclick="event.stopPropagation()">
+87:          
+<truncated 329 bytes>
+ayLabel.text}
+94:             </button>` : `<span class="quick-pay-btn ${stripeClass}">${payLabel.text}</span>`}
+95:           </div>
+96:         </div>
+97:       </div>`;
+98:     });
+99:     gHtml += `</div>`;
+100:     return gHtml;
+101:   };
+102: 
+103:   return `
+104:   <div style="max-width:1200px;margin:0 auto">
+105:     <div class="tabs" id="listTabs">
+106:       <button class="tab-btn active" data-tab="list-aktif" onclick="switchListTab(this,'list-aktif')">🟢 Aktif Dosyalar (${activeRs.length})</button>
+107:       <button class="tab-btn" data-tab="list-arsiv" onclick="switchListTab(this,'list-arsiv')">📦 Arşiv / Kapananlar (${closedRs.length})</button>
+108:     </div>
+109:     
+110:     <div class="tab-content active" id="tc-list-aktif">
+111:       ${buildGrid(activeRs)}
+112:     </div>
+113:     
+114:     <div class="tab-content" id="tc-list-arsiv">
+115:       ${buildGrid(closedRs)}
+116:     </div>
+117:   </div>`;
+118: }
+119: 
+120: function switchListTab(btn, tabId) {
+121:   document.querySelectorAll('#listTabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+122:   document.querySelectorAll('[id^="tc-list-"]').forEach(c => c.classList.toggle('active', c.id === 'tc-' + tabId));
+123: }
+124: 
+125: /* Ödeme durumunu listeden tıkla değiştir */
+126: function cyclePayStatus(event, resId) {
+127:   event.stopPropagation();
+128:   const cycle = { 'bekliyor': 'kısmi', 'kısmi': 'ödendi', 'ödendi': 'bekliyor' };
+129:   const res   = DB.getReservation(resId);
+130:   if (!res) return;
+131:   const next  = cycle[res.payment?.status] || 'bekliyor';
+132:   DB.updateReservation(resId, { payment: { ...res.payment, status: next } });
+133:   // Sayfayı yeniden çiz
+134:   document.getElementById('pageContent').innerHTML = renderReservationsList();
+135:   showNotif(`Ödeme durumu: ${next}`, 'success');
+136: }
+137: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-07-01T14:23:17Z
+Completed At: 2026-07-01T14:23:17Z
+File Path: `file:///C:/Users/yusuf/.gemini/antigravity/scratch/turizm-takip/js/views/reservations-list.js`
+Total Lines: 190
+Total Bytes: 9194
+Showing lines 1 to 100
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: /* views/reservations-list.js — Rezervasyon listesi (v3 Premium Kart) */
+2: 
+3: function renderReservationsList() {
+4:   const rs = DB.reservations || [];
+5:   const prefView = localStorage.getItem('turTakipResView') || 'grid';
+6: 
+7:   setTimeout(() => {
+8:     const actions = document.getElementById('headerActions');
+9:     if (actions) {
+10:       let html = `<button class="btn btn-ghost btn-sm" onclick="toggleResView()" style="margin-right:8px">${prefView === 'list' ? '∷ Grid' : '☰ Liste'}</button>`;
+11:       if (Auth.canEdit()) {
+12:         html += `<button class="btn btn-primary" onclick="Router.navigate('/reservation/new')">＋ Yeni Ekle</button>`;
+13:       }
+14:       actions.innerHTML = html;
+15:     }
+16:   }, 0);
+17: 
+18:   if (rs.length === 0) {
+19:     return `
+20:     <div class="empty-state">
+21:       <div class="empty-ico">👥</div>
+22:       <div class="empty-title">Henüz rezervasyon yok</div>
+23:       <div class="empty-desc">Sisteme yeni bir grup ekleyerek başlayabilirsiniz.</div>
+24:       ${Auth.canEdit() ? `<button class="btn btn-primary" style="margin-top:16px" onclick="Router.navigate('/reservation/new')">＋ Yeni Rezervasyon</button>` : ''}
+25:     </div>`;
+26:   }
+27: 
+28:   const activeRs = rs.filter(r => r.status !== 'kapandi').sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+29:   const closedRs = rs.filter(r => r.status === 'kapandi').sort((a, b) => new Date(b.startDate) - new Date(a.startDate)); // newest first
+30: 
+31:   const buildGrid = (list) => {
+32:     if (list.length === 0) retur
+<truncated 2112 bytes>
+n">🚌 ${r.transfers.length} Transfer</span>`);
+67:       if (r.hotels?.length) {
+68:         const h = DB.hotelOptions.find(o => o.id === r.hotels[0].hotelId);
+69:         if (h) icons.push(`<span class="res-card-icon-badge badge-purple">🏨 ${h.name.split(' ')[0]}</span>`);
+70:       }
+71: 
+72:       const guestText = `${r.guestCount || 1} Kişi`;
+73:       const dayText   = `${r.days || 1} Gün`;
+74:       const staggerCls = i < 10 ? `stagger-${(i%5)+1}` : '';
+75:       
+76:       const searchData = [
+77:         nm,
+78:         r.personal.phone || '',
+79:         r.personal.email || '',
+80:         ...(r.guests || []).map(g => (g.firstName||'') + ' ' + (g.lastName||'') + ' ' + (g.passport||''))
+81:       ].join(' ').toLowerCase();
+82: 
+83:       if (prefView === 'grid') {
+84:         gHtml += `
+85:         <div class="res-card ${staggerCls} searchable-item" data-search="${searchData}" onclick="Router.navigate('/reservation/${r.id}')">
+86:           <div class="res-card-stripe ${stripeClass}"></div>
+87:           <div class="res-card-body">
+88:             <div class="res-card-top">
+89:               <div class="res-card-avatar" style="background:${col}">${ini}</div>
+90:               <div style="flex:1;min-width:0">
+91:                 <div class="res-card-name">${nm}</div>
+92:                 <div class="res-card-meta">👥 ${guestText} &nbsp;·&nbsp; 📅 ${dayText}</div>
+93:               </div>
+94:               <div class="res-card-date">
+95:                 <div class="res-card-date-day">${day}</div>
+96:                 <div class="res-card-date-mon">${mon}</div>
+97:               </div>
+98:             </div>
+99:             ${icons.length ? `<div class="res-card-icons">${icons.join('')}</div>` : '<div style="margin-bottom:13px"></div>'}
+100:             <div class="res-card-footer" onclick="event.stopPropagation()">
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-07-01T14:23:23Z
+Completed At: 2026-07-01T14:23:23Z
+File Path: `file:///C:/Users/yusuf/.gemini/antigravity/scratch/turizm-takip/js/views/reservations-list.js`
+Total Lines: 190
+Total Bytes: 9194
+Showing lines 100 to 190
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+100:             <div class="res-card-footer" onclick="event.stopPropagation()">
+101:               <div>
+102:                 <div class="res-card-amount">${total}</div>
+103:                 <div class="res-card-amount-sub">${paid} ödendi</div>
+104:               </div>
+105:               ${Auth.canEdit() ? `
+106:               <button class="quick-pay-btn ${stripeClass}" onclick="cyclePayStatus(event,'${r.id}')">
+107:                 ${payLabel.text}
+108:               </button>` : `<span class="quick-pay-btn ${stripeClass}">${payLabel.text}</span>`}
+109:             </div>
+110:           </div>
+111:         </div>`;
+112:       } else {
+113:         gHtml += `
+114:         <div class="res-list-row ${staggerCls} searchable-item" data-search="${searchData}" onclick="Router.navigate('/reservation/${r.id}')">
+115:           <div class="rlr-avatar" style="background:${col}">${ini}</div>
+116:           <div class="rlr-name">${nm} <span class="rlr-sub">• ${guestText} • ${dayText}</span></div>
+117:           <div class="rlr-date">${formatDate(r.startDate)}</div>
+118:           <div class="rlr-badges">${icons.join('')}</div>
+119:           <div class="rlr-pay">
+120:             <span class="badge badge-${stripeClass === 'paid' ? 'green' : stripeClass === 'partial' ? 'orange' : 'gray'}" style="margin-right:8px;cursor:pointer" ${Auth.canEdit() ? `onclick="cyclePayStatus(event,'${r.id}')"` : ''}>${payLabel.text}</span>
+121:             <span style="font-weight:600">${total}</span>
+122:           </div>
+123:           <div class="rlr-arrow">›</div>
+
+<truncated 1138 bytes>
+:     
+144:     <div class="tab-content active" id="tc-list-aktif">
+145:       ${buildGrid(activeRs)}
+146:     </div>
+147:     
+148:     <div class="tab-content" id="tc-list-arsiv">
+149:       ${buildGrid(closedRs)}
+150:     </div>
+151:   </div>`;
+152: }
+153: 
+154: function filterReservations(q) {
+155:   const query = (q || '').toLowerCase().trim();
+156:   const items = document.querySelectorAll('.searchable-item');
+157:   items.forEach(el => {
+158:     const text = el.getAttribute('data-search') || '';
+159:     if (text.includes(query)) {
+160:       el.style.display = '';
+161:     } else {
+162:       el.style.display = 'none';
+163:     }
+164:   });
+165: }
+166: 
+167: function toggleResView() {
+168:   const cur = localStorage.getItem('turTakipResView') || 'grid';
+169:   localStorage.setItem('turTakipResView', cur === 'grid' ? 'list' : 'grid');
+170:   document.getElementById('pageContent').innerHTML = renderReservationsList();
+171: }
+172: 
+173: function switchListTab(btn, tabId) {
+174:   document.querySelectorAll('#listTabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+175:   document.querySelectorAll('[id^="tc-list-"]').forEach(c => c.classList.toggle('active', c.id === 'tc-' + tabId));
+176: }
+177: 
+178: /* Ödeme durumunu listeden tıkla değiştir */
+179: function cyclePayStatus(event, resId) {
+180:   event.stopPropagation();
+181:   const cycle = { 'bekliyor': 'kısmi', 'kısmi': 'ödendi', 'ödendi': 'bekliyor' };
+182:   const res   = DB.getReservation(resId);
+183:   if (!res) return;
+184:   const next  = cycle[res.payment?.status] || 'bekliyor';
+185:   DB.updateReservation(resId, { payment: { ...res.payment, status: next } });
+186:   // Sayfayı yeniden çiz
+187:   document.getElementById('pageContent').innerHTML = renderReservationsList();
+188:   showNotif(`Ödeme durumu: ${next}`, 'success');
+189: }
+190: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-07-09T19:24:27Z
+Completed At: 2026-07-09T19:24:27Z
+File Path: `file:///C:/Users/yusuf/.gemini/antigravity/scratch/turizm-takip/js/views/reservations-list.js`
+Total Lines: 209
+Total Bytes: 11140
+Showing lines 80 to 150
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+80:         ...(r.guests || []).map(g => (g.firstName||'') + ' ' + (g.lastName||'') + ' ' + (g.passport||''))
+81:       ].join(' ').toLowerCase();
+82: 
+83:       if (prefView === 'grid') {
+84:         gHtml += `
+85:         <div class="res-card ${staggerCls} searchable-item" data-search="${searchData}" onclick="Router.navigate('/reservation/${r.id}')">
+86:           <div class="res-card-stripe ${stripeClass}"></div>
+87:           <div class="res-card-body">
+88:             <div class="res-card-top">
+89:               <div class="res-card-avatar" style="background:${col}">${ini}</div>
+90:               <div style="flex:1;min-width:0">
+91:                 <div class="res-card-name">${nm}</div>
+92:                 <div class="res-card-meta">👥 ${guestText} &nbsp;·&nbsp; 📅 ${dayText}</div>
+93:               </div>
+94:               <div class="res-card-date">
+95:                 <div class="res-card-date-day">${day}</div>
+96:                 <div class="res-card-date-mon">${mon}</div>
+97:               </div>
+98:             </div>
+99:             ${icons.length ? `<div class="res-card-icons">${icons.join('')}</div>` : '<div style="margin-bottom:13px"></div>'}
+100:             <div class="res-card-footer" onclick="event.stopPropagation()">
+101:               <div>
+102:         <div class="tourist-card searchable-item card-clickable" data-search="${searchStr}" onclick="Router.navigate('/reservation/${r.id}')">
+103:           <div class="tc-stripe ${stripeClass}"></div>
+104:           <div class="tc-header">
+105:             <div class="tc-avata
+<truncated 1228 bytes>
+6:           <div class="rlr-badges">${badges}</div>
+127:           <div class="rlr-pay">
+128:             <span class="badge badge-${stripeClass === 'paid' ? 'green' : stripeClass === 'partial' ? 'orange' : 'gray'}" style="margin-right:8px;cursor:pointer" ${Auth.canEdit() ? `onclick="cyclePayStatus(event,'${r.id}')"` : ''}>${payLabel.text}</span>
+129:             <span style="font-weight:600">${total}</span>
+130:           </div>
+131:           <div class="rlr-arrow">›</div>
+132:         </div>`;
+133:       }
+134:     });
+135:     gHtml += `</div>`;
+136:     return gHtml;
+137:   };
+138: 
+139:   return `
+140:   <div style="max-width:1200px;margin:0 auto">
+141:     <div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap">
+142:       <div class="tabs" id="listTabs" style="margin-bottom:0; flex:1; min-width:300px">
+143:         <button class="tab-btn active" data-tab="list-aktif" onclick="switchListTab(this,'list-aktif')">🟢 Aktif Dosyalar (${activeRs.length})</button>
+144:         <button class="tab-btn" data-tab="list-arsiv" onclick="switchListTab(this,'list-arsiv')">📦 Arşiv / Kapananlar (${closedRs.length})</button>
+145:       </div>
+146:       <div style="flex-shrink:0; position:relative; display:flex; align-items:center; gap:8px;">
+147:         <select class="form-control" style="height:42px; border-radius:var(--radius-md); min-width:140px; cursor:pointer;" onchange="localStorage.setItem('turTakipResSort', this.value); document.getElementById('pageContent').innerHTML = renderReservationsList();">
+148:           <option value="date_asc" ${sortOpt==='date_asc'?'selected':''}>Tarih (Yakın-Uzak)</option>
+149:           <option value="date_desc" ${sortOpt==='date_desc'?'selected':''}>Tarih (Uzak-Yakın)</option>
+150:           <option value="name_asc" ${sortOpt==='name_asc'?'selected':''}>İsim (A-Z)</option>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---

@@ -358,7 +358,7 @@ const DB = {
     if (data.payment && !data.payment.history) data.payment.history = [];
     const r = { ...data, id: uuid(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     list.push(r); this.reservations = list; 
-    this._logAction('oluşturdu', r.id, `${r.personal.firstName} ${r.personal.lastName}`);
+    this._logAction('oluşturdu', r.id, `${r.personal?.firstName} ${r.personal?.lastName}`);
     return r;
   },
   updateReservation(id, data) {
@@ -374,7 +374,7 @@ const DB = {
   },
   deleteReservation(id) { 
     const r = this.getReservation(id);
-    const name = r ? `${r.personal.firstName} ${r.personal.lastName}` : '';
+    const name = r ? `${r.personal?.firstName} ${r.personal?.lastName}` : '';
     this.reservations = this.reservations.filter(x => x.id !== id); 
     this._logAction('sildi', id, name);
   },
@@ -382,7 +382,7 @@ const DB = {
   
   logView(id) {
     const r = this.getReservation(id);
-    const name = r ? `${r.personal.firstName} ${r.personal.lastName}` : '';
+    const name = r ? `${r.personal?.firstName} ${r.personal?.lastName}` : '';
     this._logAction('görüntüledi', id, name);
   },
 

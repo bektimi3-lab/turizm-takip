@@ -47,7 +47,7 @@ function renderActivitiesView() {
           const idx = days.findIndex(d => d.dateStr === r.balloon.date);
           if (idx !== -1) {
             days[idx].events.push({
-              type: 'balloon', title: `${r.personal.firstName} ${r.personal.lastName}`,
+              type: 'balloon', title: `${r.personal?.firstName} ${r.personal?.lastName}`,
               subtitle: `${activeGuests.length} Kişi Uçuş`, time: '05:00',
               ico: '🎈', color: 'var(--red)', resId: r.id
             });
@@ -64,7 +64,7 @@ function renderActivitiesView() {
           if (idx !== -1) {
             const opt = DB.tourOptions.find(o => o.id === t.tourId);
             days[idx].events.push({
-              type: 'tour', title: `${r.personal.firstName} ${r.personal.lastName}`,
+              type: 'tour', title: `${r.personal?.firstName} ${r.personal?.lastName}`,
               subtitle: `${opt ? opt.name : 'Tur'} · ${r.guestCount} Kişi`, time: '09:00',
               ico: opt ? opt.icon : '🏷️', color: 'var(--orange)', resId: r.id
             });
@@ -83,7 +83,7 @@ function renderActivitiesView() {
           const idx = days.findIndex(d => d.dateStr === tDate);
           if (idx !== -1) {
             days[idx].events.push({
-              type: 'flight', title: `${r.personal.firstName} ${r.personal.lastName}`,
+              type: 'flight', title: `${r.personal?.firstName} ${r.personal?.lastName}`,
               subtitle: `${f.flightNo||''} ${f.fromAirport||''}→${f.toAirport||''} (${f.direction === 'giriş' ? 'Varış' : 'Kalkış'})`,
               time: tTime.substring(0,5),
               ico: f.direction === 'giriş' ? '🛬' : '🛫', color: 'var(--blue)', resId: r.id
@@ -103,7 +103,7 @@ function renderActivitiesView() {
           const idx = days.findIndex(d => d.dateStr === h.checkin);
           if (idx !== -1) {
             days[idx].events.push({
-              type: 'hotel', title: `${r.personal.firstName} ${r.personal.lastName}`,
+              type: 'hotel', title: `${r.personal?.firstName} ${r.personal?.lastName}`,
               subtitle: `${hName} (Check-in)`, time: '14:00',
               ico: '🏨', color: 'var(--green)', resId: r.id
             });
@@ -113,7 +113,7 @@ function renderActivitiesView() {
           const idx = days.findIndex(d => d.dateStr === h.checkout);
           if (idx !== -1) {
             days[idx].events.push({
-              type: 'hotel', title: `${r.personal.firstName} ${r.personal.lastName}`,
+              type: 'hotel', title: `${r.personal?.firstName} ${r.personal?.lastName}`,
               subtitle: `${hName} (Check-out)`, time: '12:00',
               ico: '🏨', color: 'var(--red)', resId: r.id
             });
@@ -132,7 +132,7 @@ function renderActivitiesView() {
             const tfName = opt ? opt.name : 'Transfer';
             const subtitleText = (tf.from || tf.to) ? `${tf.from||'—'} → ${tf.to||'—'}` : tfName;
             days[idx].events.push({
-              type: 'transfer', title: `${r.personal.firstName} ${r.personal.lastName}`,
+              type: 'transfer', title: `${r.personal?.firstName} ${r.personal?.lastName}`,
               subtitle: subtitleText, time: tf.time || '10:00',
               ico: '🚌', color: 'var(--purple)', resId: r.id
             });

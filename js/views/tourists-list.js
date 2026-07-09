@@ -52,8 +52,8 @@ function renderTouristsList() {
 function _buildRows(list) {
   if (!list.length) return `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted)">Sonuç bulunamadı</td></tr>`;
   return list.map(t => {
-    const fn  = t.personal.firstName || '';
-    const ln  = t.personal.lastName  || '';
+    const fn  = r.personal?.firstName || '';
+    const ln  = r.personal?.lastName  || '';
     const nm  = `${fn} ${ln}`;
     const col = avatarColor(nm);
     const ini = getInitials(fn, ln);
@@ -82,7 +82,7 @@ function filterTbl() {
   const q   = (document.getElementById('tSearch')?.value||'').toLowerCase();
   const pay = document.getElementById('tPayFilter')?.value||'';
   const filtered = DB.tourists.filter(t => {
-    const nm = `${t.personal.firstName} ${t.personal.lastName}`.toLowerCase();
+    const nm = `${r.personal?.firstName} ${r.personal?.lastName}`.toLowerCase();
     const ok1 = !q || nm.includes(q)
       || (t.personal.passport||'').toLowerCase().includes(q)
       || (t.personal.nationality||'').toLowerCase().includes(q)

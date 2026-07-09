@@ -18,7 +18,7 @@ function renderDashboardView() {
     todayEventsHTML = `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">Bugün için planlanmış etkinlik yok.</div>`;
   } else {
     todayEventsHTML = evList.map(({reservation, events}) => {
-      const nm = `${reservation.personal.firstName} ${reservation.personal.lastName}`;
+      const nm = `${r.personal?.firstName} ${r.personal?.lastName}`;
       const badges = events.map(ev => {
         if (ev.type === 'tour') return `🏷️ Tur`;
         if (ev.type === 'balloon') return `🎈 Balon`;
@@ -89,7 +89,7 @@ function renderDashboardView() {
     const recent = [...rs].filter(r => r.status !== 'kapandi').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0,5);
     const recentHTML = recent.map(r => `
       <div class="dash-event-item" onclick="Router.navigate('/reservation/${r.id}')">
-        <div class="dei-name">${r.personal.firstName} ${r.personal.lastName}</div>
+        <div class="dei-name">${r.personal?.firstName} ${r.personal?.lastName}</div>
         <div class="dei-badges">${formatDate(r.startDate)} — ${r.days} Gün</div>
       </div>
     `).join('');
@@ -133,7 +133,7 @@ function renderDashboardView() {
             const remaining = (r.payment?.total||0) - (r.payment?.paid||0);
             const cur2 = r.payment?.currency || 'EUR';
             return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(239,68,68,.2);cursor:pointer" onclick="Router.navigate(\'/reservation/' + r.id + '\')">' +
-              '<div><div style="font-weight:600;font-size:14px">' + r.personal.firstName + ' ' + r.personal.lastName + '</div>' +
+              '<div><div style="font-weight:600;font-size:14px">' + r.personal?.firstName + ' ' + r.personal?.lastName + '</div>' +
               '<div style="font-size:12px;color:var(--text-sec)">Başlangıç: ' + formatDate(r.startDate) + ' · ' + r.guestCount + ' Kişi</div></div>' +
               '<div style="font-weight:700;color:var(--red);font-size:15px">' + formatCurrency(remaining, cur2) + '</div>' +
               '</div>';
@@ -168,14 +168,14 @@ function renderDashboardView() {
 
     const thisWeekHTML = thisWeekReservations.length === 0 ? `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">Bu hafta gelen yeni rezervasyon yok.</div>` : thisWeekReservations.map(r => `
       <div class="dash-event-item" onclick="Router.navigate('/reservation/${r.id}')">
-        <div class="dei-name">${r.personal.firstName} ${r.personal.lastName}</div>
+        <div class="dei-name">${r.personal?.firstName} ${r.personal?.lastName}</div>
         <div class="dei-badges">${formatDate(r.startDate)} (${r.guestCount} Kişi)</div>
       </div>
     `).join('');
 
     // Yaklaşan Transferler
     const upcomingTransfers = rs.filter(r => r.status !== 'kapandi')
-      .flatMap(r => (r.transfers||[]).map(tf => ({ ...tf, resId: r.id, resName: r.personal.firstName + ' ' + r.personal.lastName })))
+      .flatMap(r => (r.transfers||[]).map(tf => ({ ...tf, resId: r.id, resName: r.personal?.firstName + ' ' + r.personal?.lastName })))
       .filter(tf => {
         if (!tf.date) return false;
         const d = new Date(tf.date + 'T00:00:00');
