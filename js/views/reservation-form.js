@@ -18,6 +18,27 @@ function updatePerPerson(totalInputEl, perPersonId) {
   const pp = gc > 0 ? (total / gc).toFixed(2) : '0';
   const el = document.getElementById(perPersonId);
   if (el) el.textContent = pp + ' / kişi';
+  
+  // Eger bu input "Satis" fiyatiysa genel toplami da otomatik hesapla
+  if (totalInputEl.name.includes('TotalPrice')) {
+    autoCalcTotal();
+  }
+}
+
+function autoCalcTotal() {
+  const autoCb = document.getElementById('autoCalcCb');
+  if (autoCb && !autoCb.checked) return; // Kullanici manuel'e almissa hesaplama
+  
+  let sum = 0;
+  document.querySelectorAll('input[name$="TotalPrice"], input[name*="TotalPrice_"]').forEach(inp => {
+    const val = parseFloat(inp.value);
+    if (!isNaN(val) && val > 0) sum += val;
+  });
+  
+  const totalInp = document.querySelector('input[name="total"]');
+  if (totalInp) {
+    totalInp.value = sum.toFixed(2);
+  }
 }
 
 function calcFormDays() {
@@ -65,7 +86,14 @@ function renderReservationForm(res) {
         </div>
         <div class="form-row form-row-2">
           <div class="form-group"><label class="form-label">Telefon</label><input name="phone" type="tel" class="form-control" value="${gf('phone')}" placeholder="+90 555..."></div>
-          <div class="form-group"><label class="form-label">Satışçı İsim</label><input name="salesperson" type="text" class="form-control" value="${gf('salesperson')}" placeholder="Örn: Ahmet Bey"></div>
+          <div class="form-group" style="display:flex;gap:16px;">
+            <div style="flex:1"><label class="form-label">Satışçı İsim</label><input name="salesperson" type="text" class="form-control" value="${gf('salesperson')}" placeholder="Örn: Ahmet Bey"></div>
+            <div style="display:flex;align-items:flex-end;padding-bottom:10px;">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;color:var(--purple);background:var(--purple-dim);padding:8px 12px;border-radius:var(--radius-sm)">
+                <input type="checkbox" name="isPrivate" value="true" ${t.isPrivate?'checked':''}> 👑 VIP (Private)
+              </label>
+            </div>
+          </div>
         </div>
         <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:20px;">
           <div class="form-group"><label class="form-label">Kişi Sayısı</label><input id="guestCountInput" name="guestCount" type="number" min="1" class="form-control" value="${t.guestCount}" onchange="updateGuestRows()"></div>
@@ -157,7 +185,15 @@ function renderReservationForm(res) {
           <div class="sec-title" style="border:none;padding:0;margin-bottom:10px">&#x1F4B3; Ödeme</div>
         </div>
         <div class="form-row form-row-3">
-          <div class="form-group"><label class="form-label">Toplam Tutar</label><input name="total" type="number" class="form-control" value="${t.payment?.total||''}" placeholder="0" min="0" step="0.01"></div>
+          <div class="form-group">
+            <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">
+              Toplam Tutar 
+              <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-weight:500;text-transform:none;font-size:11px;color:var(--text-muted)">
+                <input type="checkbox" id="autoCalcCb" checked onchange="if(this.checked) autoCalcTotal()"> Oto
+              </label>
+            </label>
+            <input name="total" type="number" class="form-control" value="${t.payment?.total||''}" placeholder="0" min="0" step="0.01" oninput="document.getElementById('autoCalcCb').checked = false">
+          </div>
           <div class="form-group"><label class="form-label">Para Birimi</label>
             <select name="currency" class="form-control">
               <option value="EUR" ${(t.payment?.currency||'EUR')==='EUR'?'selected':''}>EUR</option>
@@ -536,7 +572,8 @@ function saveReservationForm(e, existingId) {
       paid: existingId ? (DB.getReservation(existingId)?.payment?.paid || 0) : 0
     },
     status: existingId ? (DB.getReservation(existingId)?.status || 'aktif') : 'aktif',
-    notes: g('notes')
+    notes: g('notes'),
+    isPrivate: fd.get('isPrivate') === 'true'
   };
 
   // Prevent negative inputs

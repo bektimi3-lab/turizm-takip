@@ -472,9 +472,9 @@ function exportSgk(id) {
     }
   }
   
-  let out = 'Adı\tSoyadı\tDoğum Tarihi\tPasaport No\tTur Başlangıç Tarihi\tTur Bitiş Tarihi\n';
+  let out = 'Adı\tSoyadı\tDoğum Tarihi\tPasaport No\n';
   r.guests.forEach(g => {
-    out += `${g.firstName||''}\t${g.lastName||''}\t${formatDate(g.dob)||''}\t${g.passport||''}\t${tStart||''}\t${tEnd||''}\n`;
+    out += `${g.firstName||''}\t${g.lastName||''}\t${formatDate(g.dob)||''}\t${g.passport||''}\n`;
   });
   showExportModal("SGK Çıktısı (Kopyalayıp Excel'e Yapıştırın)", out);
 }

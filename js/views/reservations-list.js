@@ -82,40 +82,31 @@ function renderReservationsList() {
 
       if (prefView === 'grid') {
         gHtml += `
-        <div class="res-card ${staggerCls} searchable-item" data-search="${searchData}" onclick="Router.navigate('/reservation/${r.id}')">
-          <div class="res-card-stripe ${stripeClass}"></div>
-          <div class="res-card-body">
-            <div class="res-card-top">
-              <div class="res-card-avatar" style="background:${col}">${ini}</div>
-              <div style="flex:1;min-width:0">
-                <div class="res-card-name">${nm}</div>
-                <div class="res-card-meta">👥 ${guestText} &nbsp;·&nbsp; 📅 ${dayText}</div>
-              </div>
-              <div class="res-card-date">
-                <div class="res-card-date-day">${day}</div>
-                <div class="res-card-date-mon">${mon}</div>
-              </div>
+        <div class="tourist-card searchable-item card-clickable" data-search="${searchStr}" onclick="Router.navigate('/reservation/${r.id}')">
+          <div class="tc-stripe ${stripeClass}"></div>
+          <div class="tc-header">
+            <div class="tc-avatar" style="background:${col}">${ini}</div>
+            <div class="tc-info">
+              <div class="tc-name" title="${nm}">${nm}</div>
+              <div class="tc-meta">${pax} Kişi • ${days} Gün</div>
             </div>
-            ${icons.length ? `<div class="res-card-icons">${icons.join('')}</div>` : '<div style="margin-bottom:13px"></div>'}
-            <div class="res-card-footer" onclick="event.stopPropagation()">
-              <div>
-                <div class="res-card-amount">${total}</div>
-                <div class="res-card-amount-sub">${paid} ödendi</div>
-              </div>
-              ${Auth.canEdit() ? `
-              <button class="quick-pay-btn ${stripeClass}" onclick="cyclePayStatus(event,'${r.id}')">
-                ${payLabel.text}
-              </button>` : `<span class="quick-pay-btn ${stripeClass}">${payLabel.text}</span>`}
+          </div>
+          <div class="tc-body">
+            <div class="tc-date">${sd}</div>
+            <div class="tc-badges">${badges}</div>
+            <div class="tc-price">
+              <span class="badge badge-${stripeClass === 'paid' ? 'green' : stripeClass === 'partial' ? 'orange' : 'gray'}" style="margin-right:6px;cursor:pointer" ${Auth.canEdit() ? `onclick="cyclePayStatus(event,'${r.id}')"` : ''}>${payLabel.text}</span>
+              ${total}
             </div>
           </div>
         </div>`;
       } else {
         gHtml += `
-        <div class="res-list-row ${staggerCls} searchable-item" data-search="${searchData}" onclick="Router.navigate('/reservation/${r.id}')">
+        <div class="res-list-row searchable-item" data-search="${searchStr}" onclick="Router.navigate('/reservation/${r.id}')">
           <div class="rlr-avatar" style="background:${col}">${ini}</div>
-          <div class="rlr-name">${nm} <span class="rlr-sub">• ${guestText} • ${dayText}</span></div>
-          <div class="rlr-date">${formatDate(r.startDate)}</div>
-          <div class="rlr-badges">${icons.join('')}</div>
+          <div class="rlr-name">${nm} <span class="rlr-sub">• ${pax} kişi • ${days} gün</span></div>
+          <div class="rlr-date">${sd}</div>
+          <div class="rlr-badges">${badges}</div>
           <div class="rlr-pay">
             <span class="badge badge-${stripeClass === 'paid' ? 'green' : stripeClass === 'partial' ? 'orange' : 'gray'}" style="margin-right:8px;cursor:pointer" ${Auth.canEdit() ? `onclick="cyclePayStatus(event,'${r.id}')"` : ''}>${payLabel.text}</span>
             <span style="font-weight:600">${total}</span>
@@ -135,10 +126,20 @@ function renderReservationsList() {
         <button class="tab-btn active" data-tab="list-aktif" onclick="switchListTab(this,'list-aktif')">🟢 Aktif Dosyalar (${activeRs.length})</button>
         <button class="tab-btn" data-tab="list-arsiv" onclick="switchListTab(this,'list-arsiv')">📦 Arşiv / Kapananlar (${closedRs.length})</button>
       </div>
-      <div style="flex-shrink:0; position:relative; display:flex; align-items:center;">
-        <span style="position:absolute; left:12px; font-size:14px; pointer-events:none;">🔍</span>
-        <input type="text" id="searchInput" class="form-control" placeholder="İsim, telefon, pasaport ara..." oninput="filterReservations(this.value); document.getElementById('clearSearchBtn').style.display=this.value?'block':'none'" style="padding-left:36px; padding-right:30px; min-width:280px; height:42px; border-radius:var(--radius-md)">
-        <button id="clearSearchBtn" onclick="document.getElementById('searchInput').value=''; filterReservations(''); this.style.display='none'" style="display:none; position:absolute; right:12px; background:none; border:none; font-size:12px; color:var(--text-sec); cursor:pointer; padding:4px;">✖</button>
+      <div style="flex-shrink:0; position:relative; display:flex; align-items:center; gap:8px;">
+        <select class="form-control" style="height:42px; border-radius:var(--radius-md); min-width:140px; cursor:pointer;" onchange="localStorage.setItem('turTakipResSort', this.value); document.getElementById('pageContent').innerHTML = renderReservationsList();">
+          <option value="date_asc" ${sortOpt==='date_asc'?'selected':''}>Tarih (Yakın-Uzak)</option>
+          <option value="date_desc" ${sortOpt==='date_desc'?'selected':''}>Tarih (Uzak-Yakın)</option>
+          <option value="name_asc" ${sortOpt==='name_asc'?'selected':''}>İsim (A-Z)</option>
+          <option value="name_desc" ${sortOpt==='name_desc'?'selected':''}>İsim (Z-A)</option>
+          <option value="amount_desc" ${sortOpt==='amount_desc'?'selected':''}>Tutar (Yüksek-Düşük)</option>
+          <option value="amount_asc" ${sortOpt==='amount_asc'?'selected':''}>Tutar (Düşük-Yüksek)</option>
+        </select>
+        <div style="position:relative; display:flex; align-items:center;">
+          <span style="position:absolute; left:12px; font-size:14px; pointer-events:none;">🔍</span>
+          <input type="text" id="searchInput" class="form-control" placeholder="İsim, telefon, pasaport ara..." oninput="filterReservations(this.value); document.getElementById('clearSearchBtn').style.display=this.value?'block':'none'" style="padding-left:36px; padding-right:30px; min-width:240px; height:42px; border-radius:var(--radius-md)">
+          <button id="clearSearchBtn" onclick="document.getElementById('searchInput').value=''; filterReservations(''); this.style.display='none'" style="display:none; position:absolute; right:12px; background:none; border:none; font-size:12px; color:var(--text-sec); cursor:pointer; padding:4px;">✖</button>
+        </div>
       </div>
     </div>
     
