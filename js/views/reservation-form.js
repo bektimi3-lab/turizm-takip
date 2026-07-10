@@ -17,10 +17,17 @@ function updatePerPerson(totalInputEl, perPersonId) {
   const total = parseFloat(totalInputEl.value) || 0;
   const pp = gc > 0 ? (total / gc).toFixed(2) : '0';
   const el = document.getElementById(perPersonId);
-  if (el) el.textContent = pp + ' / kişi';
+  
+  if (el) {
+    if (isNaN(total) || total <= 0) {
+      el.textContent = '';
+    } else {
+      el.textContent = pp + ' / kişi';
+    }
+  }
   
   // Eger bu input "Satis" fiyatiysa genel toplami da otomatik hesapla
-  if (totalInputEl.name.includes('TotalPrice')) {
+  if (totalInputEl && totalInputEl.name && totalInputEl.name.includes('TotalPrice')) {
     autoCalcTotal();
   }
 }
