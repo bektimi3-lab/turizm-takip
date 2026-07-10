@@ -44,7 +44,8 @@ function autoCalcTotal() {
   
   const totalInp = document.querySelector('input[name="total"]');
   if (totalInp) {
-    totalInp.value = sum.toFixed(2);
+    const basePrice = parseFloat(totalInp.getAttribute('data-base-price')) || 0;
+    totalInp.value = (basePrice + sum).toFixed(2);
   }
 }
 
@@ -69,6 +70,14 @@ function renderReservationForm(res) {
     payment: { total:0, paid:0, currency: DB.settings.currency||'EUR', status:'bekliyor' },
     notes: '', days: 1, startDate: todayStr(), guestCount: 1
   };
+
+  let initialActSum = 0;
+  initialActSum += (parseFloat(t.balloon?.totalPrice) || 0);
+  (t.hotels || []).forEach(h => initialActSum += (parseFloat(h.totalPrice) || 0));
+  (t.tours || []).forEach(tr => initialActSum += (parseFloat(tr.totalPrice) || 0));
+  (t.flights || []).forEach(f => initialActSum += (parseFloat(f.totalPrice) || 0));
+  (t.transfers || []).forEach(tf => initialActSum += (parseFloat(tf.totalPrice) || 0));
+  const basePrice = (parseFloat(t.payment?.total) || 0) - initialActSum;
 
   const gf = (n) => t.personal[n] || '';
 
@@ -196,10 +205,10 @@ function renderReservationForm(res) {
             <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">
               Toplam Tutar 
               <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-weight:500;text-transform:none;font-size:11px;color:var(--text-muted)">
-                <input type="checkbox" id="autoCalcCb" checked onchange="if(this.checked) autoCalcTotal()"> Oto
+                <input type="checkbox" id="autoCalcCb" checked onchange="if(this.checked){ let tot = parseFloat(document.querySelector('input[name=total]').value)||0; let aSum=0; document.querySelectorAll('input[name$=TotalPrice], input[name*=TotalPrice_]').forEach(inp=>{let v=parseFloat(inp.value); if(!isNaN(v)&&v>0) aSum+=v;}); document.querySelector('input[name=total]').setAttribute('data-base-price', tot - aSum); autoCalcTotal(); }"> Oto
               </label>
             </label>
-            <input name="total" type="number" class="form-control" value="${t.payment?.total||''}" placeholder="0" min="0" step="0.01" oninput="document.getElementById('autoCalcCb').checked = false">
+            <input name="total" type="number" class="form-control" data-base-price="${basePrice}" value="${t.payment?.total||''}" placeholder="0" min="0" step="0.01" oninput="document.getElementById('autoCalcCb').checked = false">
           </div>
           <div class="form-group"><label class="form-label">Para Birimi</label>
             <select name="currency" class="form-control">
