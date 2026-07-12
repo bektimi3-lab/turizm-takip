@@ -45,11 +45,13 @@ const ReportEngine = {
       
       columns.push(addCol('Toplam Maliyet', r => {
         let cost = 0;
-        if(r.balloon?.active && r.balloon?.totalCost!=null) cost += r.balloon.totalCost;
-        (r.tours||[]).forEach(x => cost += (x.totalCost||0));
-        (r.hotels||[]).forEach(x => cost += (x.totalCost||0));
-        (r.flights||[]).forEach(x => cost += (x.totalCost||0));
-        (r.transfers||[]).forEach(x => cost += (x.totalCost||0));
+        if(r.balloon?.active) {
+          cost += (r.balloon.totalCost != null ? r.balloon.totalCost : (r.balloon.cost||0) * (r.balloon.count||1));
+        }
+        (r.tours||[]).forEach(x => cost += (x.totalCost != null ? x.totalCost : (x.cost||0) * (x.count||1)));
+        (r.hotels||[]).forEach(x => cost += (x.totalCost != null ? x.totalCost : (x.cost||0) * (x.count||1)));
+        (r.flights||[]).forEach(x => cost += (x.totalCost != null ? x.totalCost : (x.cost||0) * (x.count||1)));
+        (r.transfers||[]).forEach(x => cost += (x.totalCost != null ? x.totalCost : (x.cost||0) * (x.count||1)));
         return cost;
       }));
     }

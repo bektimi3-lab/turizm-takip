@@ -373,10 +373,12 @@ function generateReport(format) {
 
   // Verileri Filtrele
   const filtered = DB.reservations.filter(r => {
-    if (!r.startDate) return false;
-    const d = new Date(r.startDate + 'T00:00:00');
-    if (start && d < start) return false;
-    if (end && d > end) return false;
+    if (start || end) {
+      if (!r.startDate) return false;
+      const d = new Date(r.startDate + 'T00:00:00');
+      if (start && d < start) return false;
+      if (end && d > end) return false;
+    }
     return true;
   });
 

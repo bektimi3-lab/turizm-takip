@@ -1143,6 +1143,8 @@ textarea.form-control { resize: vertical; min-height: 84px; }
 }
 
 /* --- PRINT MEDIA QUERIES FOR REPORTS --- */
+#print-report-container { display: none; }
+
 @media print {
   body * {
     visibility: hidden;
@@ -1151,6 +1153,7 @@ textarea.form-control { resize: vertical; min-height: 84px; }
     visibility: visible;
   }
   #print-report-container {
+    display: block;
     position: absolute;
     left: 0;
     top: 0;
