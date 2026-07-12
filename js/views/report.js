@@ -71,9 +71,25 @@ const ReportEngine = {
         }).join(', ');
       }));
     }
-    
     if (options.balloon) {
       columns.push(addCol('Balon', r => r.balloon?.active ? 'Var' : 'Yok'));
+    }
+
+    if (options.flights) {
+      columns.push(addCol('Uçuşlar', r => {
+        return (r.flights||[]).map(f => {
+          return f.flightNo ? f.flightNo + ' (' + f.direction + ')' : '';
+        }).filter(Boolean).join(', ');
+      }));
+    }
+
+    if (options.transfers) {
+      columns.push(addCol('Transferler', r => {
+        return (r.transfers||[]).map(t => {
+          const to = DB.transferOptions.find(o => o.id === t.transferId);
+          return to ? to.name : t.transferId;
+        }).join(', ');
+      }));
     }
 
     // Satırları doldur

@@ -284,10 +284,14 @@ function renderStatsView() {
   
   ${Auth.isOwner() ? `
   <!-- Rapor Modal -->
-  <div id="reportModal" class="modal" style="display:none">
-    <div class="modal-content" style="max-width:500px">
-      <div class="sec-title" style="margin-bottom:16px">📄 Detaylı Rapor Oluştur</div>
+  <div id="reportModalOverlay" class="modal-overlay" style="display:none" onclick="if(event.target===this) closeReportModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">📄 Detaylı Rapor Oluştur</div>
+        <button type="button" class="modal-close" onclick="closeReportModal()">&times;</button>
+      </div>
       
+      <div style="padding: 0 20px 20px 20px">
       <div class="form-group">
         <label class="form-label">Tarih Aralığı (Rezervasyon Başlangıcına Göre)</label>
         <select id="repDateFilter" class="form-control" onchange="document.getElementById('repCustomDates').style.display = this.value==='custom' ? 'block' : 'none'">
@@ -314,6 +318,8 @@ function renderStatsView() {
           <label style="display:flex; align-items:center; gap:6px; cursor:pointer"><input type="checkbox" id="repColHotels" checked> Otel Dağılımı</label>
           <label style="display:flex; align-items:center; gap:6px; cursor:pointer"><input type="checkbox" id="repColBalloon" checked> Balon Durumu</label>
           <label style="display:flex; align-items:center; gap:6px; cursor:pointer"><input type="checkbox" id="repColDemo" checked> Cinsiyet/Uyruk</label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer"><input type="checkbox" id="repColFlights" checked> Uçuşlar</label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer"><input type="checkbox" id="repColTransfers" checked> Transferler</label>
         </div>
       </div>
 
@@ -321,6 +327,7 @@ function renderStatsView() {
         <button type="button" class="btn btn-ghost" onclick="closeReportModal()">İptal</button>
         <button type="button" class="btn btn-secondary" onclick="generateReport('csv')" style="display:flex;align-items:center;gap:6px">📊 Excel (CSV) İndir</button>
         <button type="button" class="btn btn-primary" onclick="generateReport('print')" style="display:flex;align-items:center;gap:6px">🖨️ PDF / Yazdır</button>
+      </div>
       </div>
     </div>
   </div>
@@ -333,11 +340,15 @@ function switchStatsTab(btn, tabId) {
 }
 
 function openReportModal() {
-  document.getElementById('reportModal').style.display = 'flex';
+  const el = document.getElementById('reportModalOverlay');
+  el.style.display = 'flex';
+  setTimeout(() => el.classList.add('open'), 10);
 }
 
 function closeReportModal() {
-  document.getElementById('reportModal').style.display = 'none';
+  const el = document.getElementById('reportModalOverlay');
+  el.classList.remove('open');
+  setTimeout(() => el.style.display = 'none', 300);
 }
 
 function generateReport(format) {
@@ -375,7 +386,9 @@ function generateReport(format) {
     tours: document.getElementById('repColTours').checked,
     hotels: document.getElementById('repColHotels').checked,
     balloon: document.getElementById('repColBalloon').checked,
-    demographics: document.getElementById('repColDemo').checked
+    demographics: document.getElementById('repColDemo').checked,
+    flights: document.getElementById('repColFlights').checked,
+    transfers: document.getElementById('repColTransfers').checked
   };
 
   const data = ReportEngine.buildData(filtered, options);
