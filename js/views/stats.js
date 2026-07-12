@@ -182,10 +182,13 @@ function renderStatsView() {
   return `
   <div style="max-width:960px;margin:0 auto;padding-bottom:50px">
 
-    <div class="tabs" id="statsTabs">
-      ${Auth.isOwner() ? `<button class="tab-btn active" data-tab="st-genel" onclick="switchStatsTab(this,'st-genel')">📊 Genel</button>` : ''}
-      <button class="tab-btn ${!Auth.isOwner() ? 'active' : ''}" data-tab="st-demografi" onclick="switchStatsTab(this,'st-demografi')">👥 Demografi</button>
-      <button class="tab-btn" data-tab="st-denetim" onclick="switchStatsTab(this,'st-denetim')">🔍 Denetim</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px">
+      <div class="tabs" id="statsTabs" style="margin:0; border-bottom:none">
+        ${Auth.isOwner() ? `<button class="tab-btn active" data-tab="st-genel" onclick="switchStatsTab(this,'st-genel')">📊 Genel</button>` : ''}
+        <button class="tab-btn ${!Auth.isOwner() ? 'active' : ''}" data-tab="st-demografi" onclick="switchStatsTab(this,'st-demografi')">👥 Demografi</button>
+        <button class="tab-btn" data-tab="st-denetim" onclick="switchStatsTab(this,'st-denetim')">🔍 Denetim</button>
+      </div>
+      ${Auth.isOwner() ? `<button type="button" class="btn btn-primary" onclick="openReportModal()">📄 Rapor / Çıktı Al</button>` : ''}
     </div>
 
     ${Auth.isOwner() ? `
@@ -277,10 +280,117 @@ function renderStatsView() {
       </div>
     </div>
 
-  </div>`;
+  </div>
+  
+  ${Auth.isOwner() ? `
+  <!-- Rapor Modal -->
+  <div id="reportModal" class="modal" style="display:none">
+    <div class="modal-content" style="max-width:500px">
+      <div class="sec-title" style="margin-bottom:16px">📄 Detaylı Rapor Oluştur</div>
+      
+      <div class="form-group">
+        <label class="form-label">Tarih Aralığı (Rezervasyon Başlangıcına Göre)</label>
+        <select id="repDateFilter" class="form-control" onchange="document.getElementById('repCustomDates').style.display = this.value==='custom' ? 'block' : 'none'">
+          <option value="all">Tüm Zamanlar</option>
+          <option value="this_month">Bu Ay</option>
+          <option value="last_month">Geçen Ay</option>
+          <option value="custom">Özel Tarih Seçimi...</option>
+        </select>
+      </div>
+      
+      <div id="repCustomDates" style="display:none; background:var(--card-hover); padding:10px; border-radius:var(--radius-sm); margin-bottom:16px">
+        <div style="display:flex; gap:10px">
+          <div style="flex:1"><label class="form-label">Başlangıç</label><input type="date" id="repStartDate" class="form-control"></div>
+          <div style="flex:1"><label class="form-label">Bitiş</label><input type="date" id="repEndDate" class="form-control"></div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:20px">
+        <label class="form-label">Eklenecek Veri Sütunları</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer"><input type="checkbox" id="repColBasic" checked> Temel Bilgiler</label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer"><input type="checkbox" id="repColFinance" checked> Finans / Ciro Özeti</label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer"><input type="checkbox" id="repColTours" checked> Tur Dağılımı</label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer"><input type="checkbox" id="repColHotels" checked> Otel Dağılımı</label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer"><input type="checkbox" id="repColBalloon" checked> Balon Durumu</label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer"><input type="checkbox" id="repColDemo" checked> Cinsiyet/Uyruk</label>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border); padding-top:16px">
+        <button type="button" class="btn btn-ghost" onclick="closeReportModal()">İptal</button>
+        <button type="button" class="btn btn-secondary" onclick="generateReport('csv')" style="display:flex;align-items:center;gap:6px">📊 Excel (CSV) İndir</button>
+        <button type="button" class="btn btn-primary" onclick="generateReport('print')" style="display:flex;align-items:center;gap:6px">🖨️ PDF / Yazdır</button>
+      </div>
+    </div>
+  </div>
+  ` : ''}`;
 }
 
 function switchStatsTab(btn, tabId) {
   document.querySelectorAll('#statsTabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
   document.querySelectorAll('#tc-st-genel, #tc-st-denetim, #tc-st-demografi').forEach(c => c.classList.toggle('active', c.id === 'tc-' + tabId));
+}
+
+function openReportModal() {
+  document.getElementById('reportModal').style.display = 'flex';
+}
+
+function closeReportModal() {
+  document.getElementById('reportModal').style.display = 'none';
+}
+
+function generateReport(format) {
+  if (!Auth.isOwner()) return;
+
+  const dateFilter = document.getElementById('repDateFilter').value;
+  let start = null, end = null;
+  const now = new Date();
+
+  if (dateFilter === 'this_month') {
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  } else if (dateFilter === 'last_month') {
+    start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+  } else if (dateFilter === 'custom') {
+    const s = document.getElementById('repStartDate').value;
+    const e = document.getElementById('repEndDate').value;
+    if (s) start = new Date(s + 'T00:00:00');
+    if (e) end = new Date(e + 'T23:59:59');
+  }
+
+  // Verileri Filtrele
+  const filtered = DB.reservations.filter(r => {
+    if (!r.startDate) return false;
+    const d = new Date(r.startDate + 'T00:00:00');
+    if (start && d < start) return false;
+    if (end && d > end) return false;
+    return true;
+  });
+
+  const options = {
+    basic: document.getElementById('repColBasic').checked,
+    finance: document.getElementById('repColFinance').checked,
+    tours: document.getElementById('repColTours').checked,
+    hotels: document.getElementById('repColHotels').checked,
+    balloon: document.getElementById('repColBalloon').checked,
+    demographics: document.getElementById('repColDemo').checked
+  };
+
+  const data = ReportEngine.buildData(filtered, options);
+
+  if (format === 'csv') {
+    ReportEngine.downloadCSV(data, 'rezervasyon_raporu');
+  } else if (format === 'print') {
+    let title = 'Rezervasyon Raporu';
+    if (dateFilter === 'this_month') title += ' (Bu Ay)';
+    else if (dateFilter === 'last_month') title += ' (Geçen Ay)';
+    else if (dateFilter === 'custom') title += ' (Özel Tarih)';
+    else title += ' (Tüm Zamanlar)';
+    
+    ReportEngine.printReport(data, title);
+  }
+
+  closeReportModal();
 }
