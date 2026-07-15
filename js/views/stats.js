@@ -285,7 +285,7 @@ function renderStatsView() {
   
   ${Auth.isOwner() ? `
   <!-- Rapor Modal -->
-  <div id="reportModalOverlay" class="modal-overlay" style="display:none" onclick="if(event.target===this) closeReportModal()">
+  <div id="reportModalOverlay" class="modal-overlay" onclick="if(event.target===this) closeReportModal()">
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">📄 Detaylı Rapor Oluştur</div>
@@ -342,14 +342,14 @@ function switchStatsTab(btn, tabId) {
 
 function openReportModal() {
   const el = document.getElementById('reportModalOverlay');
-  el.style.display = 'flex';
-  setTimeout(() => el.classList.add('open'), 10);
+  if (!el) { console.warn('Rapor modal DOM\'da bulunamadı'); return; }
+  el.classList.add('open');
 }
 
 function closeReportModal() {
   const el = document.getElementById('reportModalOverlay');
+  if (!el) return;
   el.classList.remove('open');
-  setTimeout(() => el.style.display = 'none', 300);
 }
 
 function generateReport(format) {

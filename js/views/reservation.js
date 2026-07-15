@@ -56,9 +56,9 @@ function renderReservationProfile(res) {
   const flightsHTML = !(flights?.length)
     ? '<div style="color:var(--text-muted);font-size:13px">Uçuş eklenmemiş.</div>'
     : flights.map(f => `<div class="tl-item">
-        <div class="tl-ico flight">${f.direction==='giris'?'🛬':'🛫'}</div>
+        <div class="tl-ico flight">${f.direction==='giriş'?'🛬':'🛫'}</div>
         <div class="tl-content">
-          <div class="tl-title">${f.flightNo||'—'} — ${f.direction==='giris'?'Giriş':'Çıkış'}</div>
+          <div class="tl-title">${f.flightNo||'—'} — ${f.direction==='giriş'?'Giriş':'Çıkış'}</div>
           <div class="tl-meta">
             ${f.fromAirport||'—'} → ${f.toAirport||'—'}<br>
             Kalkış: ${formatDateTime(f.departureTime)} &nbsp;·&nbsp; Varış: ${formatDateTime(f.arrivalTime)}
@@ -304,47 +304,64 @@ function renderReservationProfile(res) {
       <div style="text-align:right;font-size:11px;color:var(--text-muted);margin-top:4px">${pct.toFixed(0)}% tahsil edildi</div>
       
       <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px">
-        <div style="font-weight:600;margin-bottom:12px;font-size:14px">Tahsilat / Ödeme Geçmişi</div>
+        <div style="font-weight:700;margin-bottom:14px;font-size:15px;display:flex;align-items:center;gap:8px">
+          💳 Tahsilat / Ödeme Geçmişi
+          ${payment?.history?.length ? `<span style="background:var(--green-dim);color:var(--green);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600">${payment.history.length} kayıt</span>` : ''}
+        </div>
         ${payment?.history?.length ? `
-          <div style="overflow-x:auto">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Tarih</th>
-                  <th>Tutar</th>
-                  <th>Yöntem</th>
-                  <th>Alan Kişi</th>
-                  ${can ? '<th>İşlem</th>' : ''}
-                </tr>
-              </thead>
-              <tbody>
-                ${payment.history.map(h => `
-                  <tr>
-                    <td>${formatDate(h.date)}</td>
-                    <td style="color:var(--green);font-weight:600">${h.amount} ${cur}</td>
-                    <td>${h.method}</td>
-                    <td>${h.receiver || '—'}</td>
-                    ${can ? `<td><button class="btn btn-danger btn-sm" style="padding:2px 6px;font-size:11px" onclick="removePayment('${res.id}', '${h.id}')">Sil</button></td>` : ''}
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+            ${payment.history.map((h, idx) => `
+              <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;transition:all var(--ease)" 
+                   onmouseover="this.style.borderColor='var(--green)';this.style.background='var(--green-dim)'" 
+                   onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg)'">
+                <div style="width:38px;height:38px;border-radius:50%;background:var(--green-dim);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">
+                  ${h.method==='nakit'?'💵':h.method==='kredi kartı'?'💳':'🏦'}
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:700;font-size:15px;color:var(--green)">+${h.amount.toLocaleString('tr-TR')} ${cur}</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
+                    📅 ${formatDate(h.date)} &nbsp;·&nbsp; 
+                    ${h.method.charAt(0).toUpperCase()+h.method.slice(1)}
+                    ${h.receiver ? `&nbsp;·&nbsp; 👤 ${h.receiver}` : ''}
+                  </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-muted);flex-shrink:0">#${idx+1}</div>
+                ${can ? `
+                  <button class="btn btn-danger btn-sm" style="flex-shrink:0;padding:5px 12px;font-size:12px" 
+                          onclick="removePayment('${res.id}', '${h.id}')">🗑 Sil</button>
+                ` : ''}
+              </div>
+            `).join('')}
           </div>
-        ` : '<div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Henüz tahsilat girilmemiş.</div>'}
+        ` : '<div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;padding:16px;text-align:center;background:var(--bg);border-radius:var(--radius)">Henüz tahsilat girilmemiş.</div>'}
 
         ${can ? `
-          <form onsubmit="handleAddPayment(event, '${res.id}')" style="display:flex;gap:8px;margin-top:14px;background:var(--bg);padding:12px;border-radius:var(--radius-sm);align-items:center;flex-wrap:wrap">
-            <div style="font-size:12px;font-weight:600;width:100%;margin-bottom:4px">Yeni Tahsilat Ekle</div>
-            <input type="date" id="p_date" class="form-control" style="flex:1;min-width:110px" required value="${new Date().toISOString().split('T')[0]}">
-            <input type="number" id="p_amt" class="form-control" style="flex:1;min-width:90px" placeholder="Tutar" min="0.01" step="0.01" required>
-            <select id="p_method" class="form-control" style="flex:1;min-width:110px">
-              <option value="nakit">💵 Nakit</option>
-              <option value="kredi kartı">💳 Kredi Kartı</option>
-              <option value="transfer">🏦 Transfer</option>
-            </select>
-            <input type="text" id="p_rec" class="form-control" style="flex:1;min-width:100px" placeholder="Alan Kişi (Opsiyonel)">
-            <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap">＋ Ekle</button>
-          </form>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:4px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text-sec)">+ Yeni Tahsilat Ekle</div>
+            <form onsubmit="handleAddPayment(event, '${res.id}')" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Tarih</label>
+                <input type="date" id="p_date" class="form-control" required value="${new Date().toISOString().split('T')[0]}">
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Tutar (${cur})</label>
+                <input type="number" id="p_amt" class="form-control" placeholder="0.00" min="0.01" step="0.01" required>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Yöntem</label>
+                <select id="p_method" class="form-control">
+                  <option value="nakit">💵 Nakit</option>
+                  <option value="kredi kartı">💳 Kredi Kartı</option>
+                  <option value="transfer">🏦 Transfer</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Alan Kişi</label>
+                <input type="text" id="p_rec" class="form-control" placeholder="Opsiyonel">
+              </div>
+              <button type="submit" class="btn btn-primary" style="white-space:nowrap;height:42px">＋ Ekle</button>
+            </form>
+          </div>
         ` : ''}
       </div>
     </div>
@@ -483,7 +500,7 @@ function exportTour(id) {
   const r = DB.getReservation(id);
   if (!r) return;
   
-  let out = `Satış Temsilcisi: ${res.personal?.salesperson || 'Belirtilmemiş'}\n\n`;
+  let out = `Satış Temsilcisi: ${r.personal?.salesperson || 'Belirtilmemiş'}\n\n`;
   
   const evs = [];
   (r.flights||[]).forEach(f => {

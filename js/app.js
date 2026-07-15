@@ -146,9 +146,12 @@ window.addEventListener('beforeunload', (e) => {
    ============================================================ */
 function showTodayBriefing() {
   if (!Auth.isLoggedIn()) return;
+  if (window._briefingShown) return;
 
   const today = todayStr();
-  const suppressedKey = 'turTakipBriefingSuppressed';
+  // Kullanıcı bazlı baskılama: farklı kullanıcılar ayrı ayrı "bugün gösterme" seçebilir
+  const user = Auth.currentUser;
+  const suppressedKey = 'turTakipBriefingSuppressed_' + (user?.id || 'default');
 
   // "Bugün tekrar gösterme" seçildiyse çık
   if (localStorage.getItem(suppressedKey) === today) return;
@@ -213,6 +216,7 @@ function showTodayBriefing() {
   setTimeout(() => {
     if (!document.getElementById('todayBriefingOverlay')) {
       document.body.insertAdjacentHTML('beforeend', html);
+      window._briefingShown = true;
     }
   }, 600);
 }
@@ -223,7 +227,9 @@ function closeTodayBriefing() {
 }
 
 function suppressTodayBriefing() {
-  localStorage.setItem('turTakipBriefingSuppressed', todayStr());
+  const user = Auth.currentUser;
+  const suppressedKey = 'turTakipBriefingSuppressed_' + (user?.id || 'default');
+  localStorage.setItem(suppressedKey, todayStr());
   closeTodayBriefing();
 }
 
@@ -234,17 +240,22 @@ function initApp() {
   initTheme();
   showTodayBriefing();
   
-  // Eksik demo rezervasyonları (yeni eklenenleri) localStorage'a dahil et
-  const demos = _buildDemoReservations();
-  const currentRes = DB.reservations;
-  let changed = false;
-  demos.forEach(d => {
-    if (!currentRes.find(r => r.id === d.id)) {
-      currentRes.push(d);
-      changed = true;
-    }
-  });
-  if (changed) DB.reservations = currentRes;
+  // Demo rezervasyonları yalnızca ilk açılışta (localStorage tamamen boşsa) ekle.
+  // Kullanıcı demo veriyi silerse bir daha geri GELMESİN.
+  const demoInitKey = 'turTakipDemoInit_v2';
+  if (!localStorage.getItem(demoInitKey)) {
+    const demos = _buildDemoReservations();
+    const currentRes = DB.reservations;
+    let changed = false;
+    demos.forEach(d => {
+      if (!currentRes.find(r => r.id === d.id)) {
+        currentRes.push(d);
+        changed = true;
+      }
+    });
+    if (changed) DB.reservations = currentRes;
+    localStorage.setItem(demoInitKey, '1');
+  }
 
   const y = new Date().getFullYear();
 

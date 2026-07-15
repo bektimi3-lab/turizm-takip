@@ -342,12 +342,13 @@ textarea.form-control { resize: vertical; min-height: 84px; }
 /* ---- MODALS ---- */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.72);
-  backdrop-filter: blur(5px); z-index: 200;
+  backdrop-filter: blur(5px); z-index: 9000;
   display: flex; align-items: center; justify-content: center;
   padding: 20px; opacity: 0; pointer-events: none;
-  transition: opacity var(--ease);
+  transition: opacity .25s ease, visibility .25s ease;
+  visibility: hidden;
 }
-.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-overlay.open { opacity: 1; pointer-events: all; visibility: visible; }
 .modal {
   background: var(--surface); border: 1px solid var(--border-light);
   border-radius: var(--radius-lg); padding: 24px;

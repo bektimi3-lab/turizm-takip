@@ -425,6 +425,9 @@ function _tourRow(idx, tr={}, gc) {
     +'<div class="form-group" style="margin:0"><label class="form-label">Tarih</label>'
     +'<input type="date" name="tourDate_'+idx+'" class="form-control" value="'+(tr.date||'')+'"></div>'
     +'</div>'
+    +'<div style="margin-bottom:8px"><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;color:var(--purple);background:var(--purple-dim);padding:6px 12px;border-radius:var(--radius-sm)">'
+    +'<input type="checkbox" name="tourVip_'+idx+'" value="true" '+(tr.isPrivate?'checked':'')+'>'
+    +' 👑 VIP (Private Tur)</label></div>'
     +_priceFields('t', idx, tr, gc)
     +'</div></div>';
 }
@@ -544,6 +547,7 @@ function saveReservationForm(e, existingId) {
   const tours = Array.from(form.querySelectorAll('.t-row')).map(row => {
     const i = row.id.split('-')[1];
     return { tourId: g('tourId_'+i), date: g('tourDate_'+i),
+      isPrivate: fd.get('tourVip_'+i) === 'true',
       totalCost: gn('tTotalCost_'+i), totalPrice: gn('tTotalPrice_'+i) };
   }).filter(x => x.tourId);
 
@@ -556,7 +560,11 @@ function saveReservationForm(e, existingId) {
 
   const balTotalCost  = gn('balTotalCost');
   const balTotalPrice = gn('balTotalPrice');
-  const balCount = guests.filter(x => x.balloon).length;
+  const balActive = g('balActive') === 'true';
+  // Kaç kişi balon binecek: misafir satırından işaretlenenler öncelikli.
+  // Eğer misafir satırı doldurulmamışsa otomatik olarak guestCount kullan.
+  let balCount = guests.filter(x => x.balloon).length;
+  if (balActive && balCount === 0) balCount = guestCount; // fallback: tüm grup
 
   const res = {
     id: existingId || uuid(),
@@ -571,7 +579,7 @@ function saveReservationForm(e, existingId) {
     endDate: g('endDate'),
     days: parseInt(g('days')) || ((new Date(g('endDate')) - new Date(g('startDate'))) / (1000 * 60 * 60 * 24)) || 1,
     balloon: { 
-      active: g('balActive')==='true', 
+      active: balActive, 
       count: balCount, 
       date: g('balDate'),
       totalCost:  balTotalCost,
