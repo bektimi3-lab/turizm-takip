@@ -75,9 +75,12 @@ function renderReservationsList() {
       const sd = formatDate(r.startDate);
       
       const cur = r.payment?.currency || DB.settings?.currency || 'EUR';
-      const total = r.payment?.total > 0 ? formatCurrency(r.payment.total, cur) : '—';
-      const paid = r.payment?.paid > 0 ? formatCurrency(r.payment.paid, cur) : '0';
+      const rawTotal = r.payment?.total || 0;
+      const total = rawTotal > 0 ? formatCurrency(rawTotal, cur) : '—';
       const rawPaid = r.payment?.paid || 0;
+      const paid = rawPaid > 0 ? formatCurrency(rawPaid, cur) : '0';
+      const rawRemain = rawTotal - rawPaid;
+      const remain = rawRemain > 0 ? formatCurrency(rawRemain, cur) : null;
       
       let stripeClass = 'gray';
       let payLabel = { text:'Bekliyor', c:'var(--text-muted)' };
@@ -138,7 +141,8 @@ function renderReservationsList() {
             <div class="res-card-footer" onclick="event.stopPropagation()">
               <div>
                 <div class="res-card-amount">${total}</div>
-                <div class="res-card-amount-sub">${paid} ödendi</div>
+                <div class="res-card-amount-sub" style="color:var(--green)">${paid} ödendi</div>
+                ${remain ? `<div class="res-card-amount-sub" style="color:var(--red);font-weight:600">${remain} kalan</div>` : ''}
               </div>
               ${Auth.canEdit() ? `
               <button class="quick-pay-btn ${stripeClass}" onclick="cyclePayStatus(event,'${r.id}')">
@@ -157,6 +161,7 @@ function renderReservationsList() {
           <div class="rlr-pay">
             <span class="badge badge-${stripeClass === 'paid' ? 'green' : stripeClass === 'partial' ? 'orange' : 'gray'}" style="margin-right:8px;cursor:pointer" ${Auth.canEdit() ? `onclick="cyclePayStatus(event,'${r.id}')"` : ''}>${payLabel.text}</span>
             <span style="font-weight:600">${total}</span>
+            ${remain ? `<span style="font-size:11px;color:var(--red);font-weight:600;display:block;margin-top:1px">${remain} kalan</span>` : ''}
           </div>
           <div class="rlr-arrow">›</div>
         </div>`;
