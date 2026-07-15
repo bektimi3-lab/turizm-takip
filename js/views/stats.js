@@ -83,7 +83,8 @@ function renderStatsView() {
   rs.forEach(r => {
     (r.tours||[]).forEach(t => {
       const opt = DB.tourOptions.find(o => o.id === t.tourId);
-      const name = opt ? opt.name : 'Diğer';
+      let name = opt ? opt.name : 'Diğer';
+      if (t.isPrivate) name += ' (VIP)';
       tourCounts[name] = (tourCounts[name] || 0) + 1;
     });
   });

@@ -60,7 +60,9 @@ const ReportEngine = {
       columns.push(addCol('Turlar', r => {
         return (r.tours||[]).map(t => {
           const to = DB.tourOptions.find(o => o.id === t.tourId);
-          return to ? to.name : t.tourId;
+          let tName = to ? to.name : t.tourId;
+          if (t.isPrivate) tName += ' (VIP)';
+          return tName;
         }).join(', ');
       }));
     }
