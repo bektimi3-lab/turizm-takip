@@ -247,10 +247,10 @@ function renderReservationProfile(res) {
       <button class="tab-btn ${isActive('timeline')}" data-tab="timeline"    onclick="switchProfileTab(this,'timeline')">📅 Zaman Cetveli</button>
       <button class="tab-btn ${isActive('yolcular')}"        data-tab="yolcular"   onclick="switchProfileTab(this,'yolcular')">👥 Yolcular</button>
       <button class="tab-btn ${isActive('konaklama')}"        data-tab="konaklama"  onclick="switchProfileTab(this,'konaklama')">🏨 Konaklama</button>
-      <button class="tab-btn ${isActive('turlar')}"        data-tab="turlar"     onclick="switchProfileTab(this,'turlar')">🏷️ Turlar</button>
+      ${(res.tours&&res.tours.length)||res.balloon?.active ? `<button class="tab-btn ${isActive('turlar')}" data-tab="turlar" onclick="switchProfileTab(this,'turlar')">🗺️ Turlar & Aktiviteler</button>` : ''}
       <button class="tab-btn ${isActive('ucuslar')}"        data-tab="ucuslar"    onclick="switchProfileTab(this,'ucuslar')">✈️ Uçuşlar</button>
       <button class="tab-btn ${isActive('transferler')}"        data-tab="transferler" onclick="switchProfileTab(this,'transferler')">🚌 Transferler</button>
-      <button class="tab-btn ${isActive('odeme')}"        data-tab="odeme"      onclick="switchProfileTab(this,'odeme')">💳 Ödeme</button>
+      <button class="tab-btn ${isActive('odeme')}" data-tab="odeme" onclick="switchProfileTab(this,'odeme')">💳 Ödeme & Cari</button>
       ${notes ? `<button class="tab-btn ${isActive('notlar')}" data-tab="notlar" onclick="switchProfileTab(this,'notlar')">📝 Notlar</button>` : ''}
     </div>
 
@@ -321,7 +321,7 @@ function renderReservationProfile(res) {
                   <div style="font-weight:700;font-size:15px;color:var(--green)">+${h.amount.toLocaleString('tr-TR')} ${cur}</div>
                   <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
                     📅 ${formatDate(h.date)} &nbsp;·&nbsp; 
-                    ${h.method.charAt(0).toUpperCase()+h.method.slice(1)}
+                    ${h.method ? (h.method.charAt(0).toUpperCase()+(h.method||'').slice(1)) : 'Diğer'}
                     ${h.receiver ? `&nbsp;·&nbsp; 👤 ${h.receiver}` : ''}
                   </div>
                 </div>
@@ -393,13 +393,15 @@ function renderReservationProfile(res) {
     </div>
 
     <!-- Tab: Notlar -->
+    ${notes ? `
     <div class="tab-content ${isActive('notlar')} card" id="tc-notlar">
-      <div style="font-size:14px;line-height:1.8;white-space:pre-wrap;color:var(--text-sec)">${notes||'—'}</div>
-    </div>
+      <div style="font-size:14px;line-height:1.8;white-space:pre-wrap;color:var(--text-sec)">${notes}</div>
+    </div>` : ''}
   </div>`;
 }
 
 function switchProfileTab(btn, tabId) {
+  if (!btn) return;
   document.querySelectorAll('#pTabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tc-' + tabId));
   localStorage.setItem('turTakipActiveTab', tabId);
@@ -447,7 +449,10 @@ function handleAddPayment(e, id) {
   
   showNotif('Tahsilat eklendi', 'success');
   Router.navigate('/reservation/' + id);
-  setTimeout(() => document.querySelector('[data-tab="odeme"]').click(), 50);
+  setTimeout(() => {
+    const el = document.querySelector('[data-tab="odeme"]');
+    if(el) el.click();
+  }, 50);
 }
 
 function handleAddExtra(e, id) {
@@ -518,7 +523,10 @@ function handleAddExtra(e, id) {
   DB.updateReservation(id, updatedRes);
   showNotif('Ekstra hizmet eklendi ve bakiye güncellendi', 'success');
   Router.navigate('/reservation/' + id);
-  setTimeout(() => document.querySelector('[data-tab="odeme"]').click(), 50);
+  setTimeout(() => {
+    const el = document.querySelector('[data-tab="odeme"]');
+    if(el) el.click();
+  }, 50);
 }
 
 function removePayment(resId, paymentId) {
@@ -545,7 +553,10 @@ function removePayment(resId, paymentId) {
   });
   showNotif('Tahsilat silindi', 'success');
   Router.navigate('/reservation/' + resId);
-  setTimeout(() => document.querySelector('[data-tab="odeme"]').click(), 50);
+  setTimeout(() => {
+    const el = document.querySelector('[data-tab="odeme"]');
+    if(el) el.click();
+  }, 50);
 }
 
 /* ============================================================
@@ -587,7 +598,7 @@ function exportSgk(id) {
   }
   
   let out = 'Adı\tSoyadı\tDoğum Tarihi\tPasaport No\n';
-  r.guests.forEach(g => {
+  (r.guests || []).forEach(g => {
     out += `${g.firstName||''}\t${g.lastName||''}\t${formatDate(g.dob)||''}\t${g.passport||''}\n`;
   });
   showExportModal("SGK Çıktısı (Kopyalayıp Excel'e Yapıştırın)", out);

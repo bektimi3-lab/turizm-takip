@@ -60,13 +60,12 @@ function renderSettingsView() {
       ` : ''}
     </div>
 
-    <!-- Akıllı Listeler -->
     <div class="tabs" id="listTabs">
-      <button class="tab-btn active" data-tab="list-turlar" onclick="switchListTab(this,'list-turlar')">🏷️ Turlar</button>
-      <button class="tab-btn" data-tab="list-ucuslar" onclick="switchListTab(this,'list-ucuslar')">✈️ Uçuşlar</button>
-      <button class="tab-btn" data-tab="list-transferler" onclick="switchListTab(this,'list-transferler')">🚌 Transferler</button>
-      <button class="tab-btn" data-tab="list-oteller" onclick="switchListTab(this,'list-oteller')">🏨 Oteller</button>
-      <button class="tab-btn" data-tab="list-ekstralar" onclick="switchListTab(this,'list-ekstralar')">🌟 Ekstralar</button>
+      <button class="tab-btn active" data-tab="list-turlar" onclick="switchSettingsListTab(this,'list-turlar')">🏷️ Turlar</button>
+      <button class="tab-btn" data-tab="list-ucuslar" onclick="switchSettingsListTab(this,'list-ucuslar')">✈️ Uçuşlar</button>
+      <button class="tab-btn" data-tab="list-transferler" onclick="switchSettingsListTab(this,'list-transferler')">🚌 Transferler</button>
+      <button class="tab-btn" data-tab="list-oteller" onclick="switchSettingsListTab(this,'list-oteller')">🏨 Oteller</button>
+      <button class="tab-btn" data-tab="list-ekstralar" onclick="switchSettingsListTab(this,'list-ekstralar')">🌟 Ekstralar</button>
     </div>
 
     <!-- Turlar -->
@@ -122,7 +121,7 @@ function renderSettingsView() {
   </div>`;
 }
 
-function switchListTab(btn, tabId) {
+function switchSettingsListTab(btn, tabId) {
   document.querySelectorAll('#listTabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tc-' + tabId));
 }
@@ -307,10 +306,10 @@ function changeUsername() {
     DB.users = users; // Trigger setter
     
     // Update active user in localStorage
-    const active = JSON.parse(localStorage.getItem('turTakipUser'));
+    const active = JSON.parse(localStorage.getItem('tts_session'));
     active.name = newName;
     active.usernameChanged = true;
-    localStorage.setItem('turTakipUser', JSON.stringify(active));
+    localStorage.setItem('tts_session', JSON.stringify(active));
     
     showNotif('Kullanıcı adınız başarıyla güncellendi.', 'success');
     
@@ -338,9 +337,11 @@ function changePassword() {
   }
 
   /* Update password in DB.users */
-  const idx = DB.users.findIndex(u => u.email === user.email);
+  const users = DB.users;
+  const idx = users.findIndex(u => u.email === user.email);
   if (idx === -1) { showNotif('Kullanıcı bulunamadı.', 'error'); return; }
-  DB.users[idx].password = newPw;
+  users[idx].password = newPw;
+  DB.users = users;
 
   /* Update cached session */
   Auth._user = { ...user, password: newPw };

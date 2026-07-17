@@ -378,11 +378,11 @@ function initApp() {
       document.getElementById('app').innerHTML = renderLayout('Ayarlar', renderSettingsView(), 'settings');
     });
 
-  // Default redirect
-  if (window.location.hash === '' || window.location.hash === '#/') {
-    Router.navigate(Auth.isLoggedIn() ? '/dashboard' : '/login');
-  } else {
-    Router.init();
+  Router.init();
+
+  // If no hash or root hash, redirect
+  if (!window.location.hash || window.location.hash === '#' || window.location.hash === '#/') {
+    Router.navigate(Auth.isLoggedIn() ? '/dashboard' : '/login', true);
   }
 
   // Set correct theme icon on load

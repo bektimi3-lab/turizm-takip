@@ -326,6 +326,8 @@ const DB = {
   set hotelOptions(v)  { this._w('tts_hotel_options', v);    },
   get flightOptions()  { return this._r('tts_flight_options',   DEFAULT_FLIGHT_OPTIONS);   },
   set flightOptions(v) { this._w('tts_flight_options', v);   },
+  get extraOptions()   { return this._r('tts_extra_options',    DEFAULT_EXTRA_OPTIONS);    },
+  set extraOptions(v)  { this._w('tts_extra_options', v);    },
 
   /* Ayarlar & Kullanıcılar & Denetim */
   get settings()   { return this._r('tts_settings', { currency: 'EUR' }); },
