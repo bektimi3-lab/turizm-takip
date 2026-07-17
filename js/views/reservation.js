@@ -352,7 +352,6 @@ function renderReservationProfile(res) {
                 <select id="p_method" class="form-control">
                   <option value="nakit">💵 Nakit</option>
                   <option value="kredi kartı">💳 Kredi Kartı</option>
-                  <option value="transfer">🏦 Transfer</option>
                 </select>
               </div>
               <div>
@@ -360,6 +359,28 @@ function renderReservationProfile(res) {
                 <input type="text" id="p_rec" class="form-control" placeholder="Opsiyonel">
               </div>
               <button type="submit" class="btn btn-primary" style="white-space:nowrap;height:42px">＋ Ekle</button>
+            </form>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:14px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text-sec)">➕ Ekstra Hizmet Satışı</div>
+            <form onsubmit="handleAddExtra(event, '${res.id}')" style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end">
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Satılan Hizmet</label>
+                <select id="ex_type" class="form-control" required>
+                  <option value="">Seçiniz...</option>
+                  <option value="balloon">🎈 Balon Turu</option>
+                  ${DB.tourOptions.map(t => `<option value="tour_${t.id}">${t.icon} ${t.name}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Tarih</label>
+                <input type="date" id="ex_date" class="form-control" required value="${new Date().toISOString().split('T')[0]}">
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Satış Fiyatı (${cur})</label>
+                <input type="number" id="ex_amt" class="form-control" placeholder="0.00" min="0.01" step="0.01" required>
+              </div>
+              <button type="submit" class="btn btn-primary" style="white-space:nowrap;height:42px;background:var(--purple);border-color:var(--purple)">Sepete Ekle</button>
             </form>
           </div>
         ` : ''}
@@ -420,6 +441,66 @@ function handleAddPayment(e, id) {
   });
   
   showNotif('Tahsilat eklendi', 'success');
+  Router.navigate('/reservation/' + id);
+  setTimeout(() => document.querySelector('[data-tab="odeme"]').click(), 50);
+}
+
+function handleAddExtra(e, id) {
+  e.preventDefault();
+  const amt = parseFloat(document.getElementById('ex_amt').value) || 0;
+  if (amt <= 0) return;
+  
+  const typeVal = document.getElementById('ex_type').value;
+  if (!typeVal) return;
+  
+  const dateVal = document.getElementById('ex_date').value;
+  const res = DB.getReservation(id);
+  if (!res) return;
+  
+  let updatedRes = { ...res };
+  
+  if (typeVal === 'balloon') {
+    updatedRes.balloon = {
+      ...(res.balloon || {}),
+      active: true,
+      date: dateVal,
+      count: res.balloon?.count || res.guestCount || 1, // preserve or fallback
+      totalPrice: (res.balloon?.totalPrice || 0) + amt,
+      totalCost: res.balloon?.totalCost || 0,
+      isExtra: true
+    };
+  } else if (typeVal.startsWith('tour_')) {
+    const tId = typeVal.replace('tour_', '');
+    const newTours = [...(res.tours || [])];
+    newTours.push({
+      tourId: tId,
+      date: dateVal,
+      totalPrice: amt,
+      totalCost: 0,
+      isExtra: true
+    });
+    updatedRes.tours = newTours;
+  }
+  
+  // Borcu (Bakiyeyi) artır
+  const oldTotal = res.payment?.total || 0;
+  updatedRes.payment = {
+    ...res.payment,
+    total: oldTotal + amt
+  };
+  
+  // Update status again since total increased
+  const totalPaid = updatedRes.payment.paid || 0;
+  const newTotal = updatedRes.payment.total;
+  let payStatus = updatedRes.payment.status || 'bekliyor';
+  if (totalPaid >= newTotal && newTotal > 0) payStatus = 'ödendi';
+  else if (totalPaid > 0) payStatus = 'kısmi';
+  else payStatus = 'bekliyor';
+  
+  updatedRes.payment.status = payStatus;
+
+  DB.updateReservation(id, updatedRes);
+  showNotif('Ekstra hizmet eklendi ve bakiye güncellendi', 'success');
   Router.navigate('/reservation/' + id);
   setTimeout(() => document.querySelector('[data-tab="odeme"]').click(), 50);
 }

@@ -91,6 +91,8 @@ function renderReservationsList() {
 
       // Icon badges for grid
       let icons = [];
+      const hasExtra = r.balloon?.isExtra || r.tours?.some(t => t.isExtra);
+      if (hasExtra) icons.push(`<span class="res-card-icon-badge badge-orange" style="border:1px solid var(--orange)">🌟 Ekstra Satış</span>`);
       if (r.isPrivate) icons.push(`<span class="res-card-icon-badge badge-purple">👑 VIP Tur</span>`);
       if (r.tours?.length) {
         const t = DB.tourOptions.find(o => o.id === r.tours[0].tourId);
@@ -107,6 +109,7 @@ function renderReservationsList() {
 
       // Simple emojis for list view
       let badges = '';
+      if (hasExtra) badges += `<span class="badge badge-orange" title="Ekstra Satış" style="margin-right:4px;border:1px solid var(--orange)">🌟 Ek Satış</span>`;
       if (r.isPrivate) badges += `<span class="badge badge-purple" title="Private Tur" style="margin-right:4px">👑 VIP</span>`;
       if (r.tours?.length) badges += `<span title="${r.tours.length} Tur" style="margin-right:4px">🚩</span>`;
       if (r.balloon?.active) badges += `<span title="Balon" style="margin-right:4px">🎈</span>`;

@@ -173,14 +173,41 @@ function showTodayBriefing() {
       if (ev.type === 'checkout') return `<span style="background:var(--red-dim);color:var(--red);border-radius:4px;padding:2px 6px;font-size:11px">🏨 Check-out</span>`;
       return '';
     }).join(' ');
-    return `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer"
-           onclick="closeTodayBriefing(); Router.navigate('/reservation/${reservation.id}')">
-        <div>
-          <div style="font-weight:600;font-size:14px;margin-bottom:4px">${nm}</div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap">${badges}</div>
+    
+    // İlk tur uyarısı (Bakiye varsa)
+    let warningHtml = '';
+    const firstTourDate = [...(reservation.tours||[])].sort((a,b)=>new Date(a.date)-new Date(b.date))[0]?.date;
+    const firstBalloonDate = reservation.balloon?.active ? reservation.balloon.date : null;
+    
+    const isFirstTourDay = (firstTourDate === today) || (firstBalloonDate === today && !firstTourDate);
+    
+    const total = reservation.payment?.total || 0;
+    const paid = reservation.payment?.paid || 0;
+    const remain = total - paid;
+    
+    if (isFirstTourDay && remain > 0) {
+      warningHtml = `
+        <div style="margin-top:8px;background:var(--red-dim);border:1px solid var(--red);border-radius:var(--radius-sm);padding:8px 12px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">⚠️</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--red)">DİKKAT: İlk Gün Etkinliği!</div>
+            <div style="font-size:11px;color:var(--red)">İçeride ödenmemiş <strong>${remain.toLocaleString('tr-TR')} ${reservation.payment?.currency||'EUR'}</strong> bakiye bekliyor.</div>
+          </div>
         </div>
-        <div style="font-size:12px;color:var(--text-muted);margin-left:12px;flex-shrink:0">${reservation.guestCount||1} Kişi</div>
+      `;
+    }
+
+    return `
+      <div style="display:flex;flex-direction:column;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer"
+           onclick="closeTodayBriefing(); Router.navigate('/reservation/${reservation.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:600;font-size:14px;margin-bottom:4px">${nm}</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">${badges}</div>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-left:12px;flex-shrink:0">${reservation.guestCount||1} Kişi</div>
+        </div>
+        ${warningHtml}
       </div>`;
   }).join('');
 

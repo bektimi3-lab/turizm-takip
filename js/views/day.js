@@ -53,8 +53,8 @@ function renderDayView(dateStr) {
     </div>`;
   } else {
     for (const { reservation, events } of evList) {
-      const fn  = r.personal?.firstName;
-      const ln  = r.personal?.lastName;
+      const fn  = reservation.personal?.firstName;
+      const ln  = reservation.personal?.lastName;
       const nm  = `${fn} ${ln}`;
       const col = avatarColor(nm);
       const ini = getInitials(fn, ln);

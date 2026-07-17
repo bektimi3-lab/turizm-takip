@@ -16,6 +16,10 @@ function renderStatsView() {
   let hotelSales = 0, hotelCost = 0;
   let flightSales = 0, flightCost = 0;
   let transferSales = 0, transferCost = 0;
+  
+  let extraSalesAmount = 0;
+  let extraSalesCount = 0;
+  let extraSalesDetails = [];
 
   rs.forEach(r => { 
     total += (r.payment?.total||0); 
@@ -46,6 +50,29 @@ function renderStatsView() {
       if (tf.totalPrice != null) transferSales += tf.totalPrice;
       if (tf.totalCost  != null) transferCost  += tf.totalCost;
     });
+    
+    // Ekstra Satışlar
+    let hasExtra = false;
+    let extraRevenue = 0;
+    if (r.balloon?.isExtra) {
+      hasExtra = true;
+      const bPrice = r.balloon.totalPrice != null ? r.balloon.totalPrice : (r.balloon.price||0) * (r.balloon.count||1);
+      extraRevenue += bPrice;
+      extraSalesDetails.push({ name: `${r.personal?.firstName} ${r.personal?.lastName}`, item: 'Balon', amount: bPrice, resId: r.id });
+    }
+    (r.tours||[]).forEach(t => {
+      if (t.isExtra) {
+        hasExtra = true;
+        const tPrice = t.totalPrice || 0;
+        extraRevenue += tPrice;
+        const opt = DB.tourOptions.find(o => o.id === t.tourId);
+        extraSalesDetails.push({ name: `${r.personal?.firstName} ${r.personal?.lastName}`, item: opt?.name || 'Tur', amount: tPrice, resId: r.id });
+      }
+    });
+    if (hasExtra) {
+      extraSalesCount++;
+      extraSalesAmount += extraRevenue;
+    }
   });
   const remain = total - paid;
   const balloonProfit  = balloonSales  - balloonCost;
@@ -223,6 +250,37 @@ function renderStatsView() {
           <div style="font-size:11px;color:var(--text-muted);margin-top:8px">* Yalnızca fiyat girilen aktiviteler dahildir.</div>
         </div>
       </div>
+      
+      <div class="card" style="margin-bottom:20px;border-color:var(--orange)">
+        <div class="sec-title" style="color:var(--orange)">🌟 Ekstra (Sonradan) Satışlar</div>
+        <div style="display:flex;gap:30px;align-items:center;margin-bottom:16px">
+          <div>
+            <div style="font-size:12px;color:var(--text-muted)">Ek Satış Yapılan Rezervasyon</div>
+            <div style="font-size:24px;font-weight:700">${extraSalesCount}</div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-muted)">Toplam Ek Satış Cirosu</div>
+            <div style="font-size:24px;font-weight:700;color:var(--green)">${formatCurrency(extraSalesAmount, cur)}</div>
+          </div>
+        </div>
+        ${extraSalesDetails.length ? `
+          <div style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm)">
+            <table class="table" style="margin:0">
+              <thead style="position:sticky;top:0;background:var(--surface)"><tr><th>Misafir</th><th>Hizmet</th><th style="text-align:right">Tutar</th></tr></thead>
+              <tbody>
+                ${extraSalesDetails.map(ex => `
+                  <tr style="cursor:pointer" onclick="Router.navigate('/reservation/${ex.resId}')">
+                    <td style="font-weight:600">${ex.name}</td>
+                    <td>${ex.item}</td>
+                    <td style="text-align:right;color:var(--green);font-weight:600">${formatCurrency(ex.amount, cur)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : '<div style="font-size:13px;color:var(--text-muted)">Henüz ekstra satış bulunmamaktadır.</div>'}
+      </div>
+
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px,1fr));gap:20px;margin-top:20px">
         <div class="card">
           <div class="sec-title">🌍 En Çok Gelen Uyruklar</div>

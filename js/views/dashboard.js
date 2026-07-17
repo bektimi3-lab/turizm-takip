@@ -28,10 +28,34 @@ function renderDashboardView() {
         if (ev.type === 'checkout') return `🏨 Çıkış`;
         return '';
       }).join(' ');
+      let warningHtml = '';
+      const firstTourDate = [...(reservation.tours||[])].sort((a,b)=>new Date(a.date)-new Date(b.date))[0]?.date;
+      const firstBalloonDate = reservation.balloon?.active ? reservation.balloon.date : null;
+      const isFirstTourDay = (firstTourDate === today) || (firstBalloonDate === today && !firstTourDate);
+      
+      const total = reservation.payment?.total || 0;
+      const paid = reservation.payment?.paid || 0;
+      const remain = total - paid;
+      
+      if (isFirstTourDay && remain > 0) {
+        warningHtml = `
+          <div style="margin-top:6px;background:var(--red-dim);border:1px solid var(--red);border-radius:var(--radius-sm);padding:6px 10px;display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px">⚠️</span>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--red)">İlk Gün Etkinliği!</div>
+              <div style="font-size:11px;color:var(--red)">Ödenmemiş bakiye: <strong>${remain.toLocaleString('tr-TR')} ${reservation.payment?.currency||'EUR'}</strong></div>
+            </div>
+          </div>
+        `;
+      }
+
       return `
-      <div class="dash-event-item" onclick="Router.navigate('/reservation/${reservation.id}')">
-        <div class="dei-name">${nm} <span style="color:var(--text-muted);font-size:11px;margin-left:6px">${reservation.guestCount||1} Kişi</span></div>
-        <div class="dei-badges">${badges}</div>
+      <div class="dash-event-item" style="flex-direction:column;align-items:stretch" onclick="Router.navigate('/reservation/${reservation.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="dei-name">${nm} <span style="color:var(--text-muted);font-size:11px;margin-left:6px">${reservation.guestCount||1} Kişi</span></div>
+          <div class="dei-badges">${badges}</div>
+        </div>
+        ${warningHtml}
       </div>`;
     }).join('');
   }
