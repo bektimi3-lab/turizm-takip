@@ -91,7 +91,7 @@ function renderReservationsList() {
 
       // Icon badges for grid
       let icons = [];
-      const hasExtra = r.balloon?.isExtra || r.tours?.some(t => t.isExtra);
+      const hasExtra = r.balloon?.isExtra || r.tours?.some(t => t.isExtra) || r.extras?.some(e => e.isExtra);
       if (hasExtra) icons.push(`<span class="res-card-icon-badge badge-orange" style="border:1px solid var(--orange)">🌟 Ekstra Satış</span>`);
       if (r.isPrivate) icons.push(`<span class="res-card-icon-badge badge-purple">👑 VIP Tur</span>`);
       if (r.tours?.length) {

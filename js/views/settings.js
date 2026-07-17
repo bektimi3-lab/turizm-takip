@@ -44,6 +44,20 @@ function renderSettingsView() {
       <div style="margin-top:12px">
         <button class="btn btn-primary" onclick="changePassword()">🔒 Şifreyi Güncelle</button>
       </div>
+
+      ${!Auth.currentUser.usernameChanged ? `
+      <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--border)">
+        <div class="sec-title" style="margin-bottom:12px;font-size:14px">👤 Kullanıcı Adı Değiştir (Tek Seferlik)</div>
+        <div class="form-row form-row-2">
+          <div class="form-group">
+            <input type="text" id="newName" class="form-control" placeholder="Yeni İsim Soyisim" value="${Auth.currentUser.name}">
+          </div>
+          <div class="form-group">
+            <button class="btn btn-primary" onclick="changeUsername()">Değiştir</button>
+          </div>
+        </div>
+      </div>
+      ` : ''}
     </div>
 
     <!-- Akıllı Listeler -->
@@ -52,6 +66,7 @@ function renderSettingsView() {
       <button class="tab-btn" data-tab="list-ucuslar" onclick="switchListTab(this,'list-ucuslar')">✈️ Uçuşlar</button>
       <button class="tab-btn" data-tab="list-transferler" onclick="switchListTab(this,'list-transferler')">🚌 Transferler</button>
       <button class="tab-btn" data-tab="list-oteller" onclick="switchListTab(this,'list-oteller')">🏨 Oteller</button>
+      <button class="tab-btn" data-tab="list-ekstralar" onclick="switchListTab(this,'list-ekstralar')">🌟 Ekstralar</button>
     </div>
 
     <!-- Turlar -->
@@ -92,6 +107,16 @@ function renderSettingsView() {
       </div>
       <div id="hotelRows">${renderHotelList()}</div>
       ${can ? `<button class="btn btn-secondary" style="margin-top:15px;width:100%" onclick="saveList('hotel')">Otelleri Kaydet</button>` : ''}
+    </div>
+
+    <!-- Ekstralar -->
+    <div class="tab-content card" id="tc-list-ekstralar">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+        <div class="sec-title" style="margin:0;border:none;padding:0">Ekstra Satış Seçenekleri</div>
+        ${can ? `<button class="btn btn-primary btn-sm" onclick="addListRow('extraRows', 'extra')">＋ Ekle</button>` : ''}
+      </div>
+      <div id="extraRows">${renderExtraList()}</div>
+      ${can ? `<button class="btn btn-secondary" style="margin-top:15px;width:100%" onclick="saveList('extra')">Ekstraları Kaydet</button>` : ''}
     </div>
 
   </div>`;
@@ -163,6 +188,17 @@ function renderHotelList() {
   `).join('');
 }
 
+function renderExtraList() {
+  return DB.extraOptions.map(ex => `
+    <div class="list-row list-row-extra" style="display:flex;gap:10px;margin-bottom:10px">
+      <input type="hidden" class="l-id" value="${ex.id}">
+      <input type="text" class="form-control l-icon" value="${ex.icon}" style="width:60px" placeholder="İkon">
+      <input type="text" class="form-control l-name" value="${ex.name}" style="flex:1" placeholder="Ekstra Adı (Örn: Müze Girişi)">
+      <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">🗑️</button>
+    </div>
+  `).join('');
+}
+
 function addListRow(containerId, type) {
   let html = '';
   if (type === 'tour') {
@@ -192,6 +228,13 @@ function addListRow(containerId, type) {
     html = `<div class="list-row list-row-hotel" style="display:flex;gap:10px;margin-bottom:10px">
       <input type="hidden" class="l-id" value="${uuid()}">
       <input type="text" class="form-control l-name" value="" style="flex:1" placeholder="Otel Adı">
+      <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">🗑️</button>
+    </div>`;
+  } else if (type === 'extra') {
+    html = `<div class="list-row list-row-extra" style="display:flex;gap:10px;margin-bottom:10px">
+      <input type="hidden" class="l-id" value="${uuid()}">
+      <input type="text" class="form-control l-icon" value="🎟️" style="width:60px" placeholder="İkon">
+      <input type="text" class="form-control l-name" value="" style="flex:1" placeholder="Ekstra Adı">
       <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">🗑️</button>
     </div>`;
   }
@@ -235,6 +278,44 @@ function saveList(type) {
     })).filter(x => x.name.trim());
     DB.hotelOptions = list;
     showNotif('Oteller kaydedildi', 'success');
+  }
+  else if (type === 'extra') {
+    const list = Array.from(document.querySelectorAll('.list-row-extra')).map(row => ({
+      id: row.querySelector('.l-id').value,
+      icon: row.querySelector('.l-icon').value,
+      name: row.querySelector('.l-name').value,
+    })).filter(x => x.name.trim());
+    DB.extraOptions = list;
+    showNotif('Ekstralar kaydedildi', 'success');
+  }
+}
+
+function changeUsername() {
+  const newName = document.getElementById('newName').value.trim();
+  if (!newName) { showNotif('Lütfen geçerli bir isim girin.', 'error'); return; }
+  
+  const user = Auth.currentUser;
+  if (!user) return;
+  
+  if (user.usernameChanged) { showNotif('Kullanıcı adı değiştirme hakkınızı zaten kullandınız.', 'error'); return; }
+  
+  const users = DB.users;
+  const idx = users.findIndex(u => u.id === user.id);
+  if (idx !== -1) {
+    users[idx].name = newName;
+    users[idx].usernameChanged = true;
+    DB.users = users; // Trigger setter
+    
+    // Update active user in localStorage
+    const active = JSON.parse(localStorage.getItem('turTakipUser'));
+    active.name = newName;
+    active.usernameChanged = true;
+    localStorage.setItem('turTakipUser', JSON.stringify(active));
+    
+    showNotif('Kullanıcı adınız başarıyla güncellendi.', 'success');
+    
+    // Refresh page or layout to show new name in sidebar
+    setTimeout(() => { location.reload(); }, 1500);
   }
 }
 

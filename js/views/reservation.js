@@ -369,7 +369,12 @@ function renderReservationProfile(res) {
                 <select id="ex_type" class="form-control" required>
                   <option value="">Seçiniz...</option>
                   <option value="balloon">🎈 Balon Turu</option>
-                  ${DB.tourOptions.map(t => `<option value="tour_${t.id}">${t.icon} ${t.name}</option>`).join('')}
+                  <optgroup label="Turlar">
+                    ${DB.tourOptions.map(t => `<option value="tour_${t.id}">${t.icon} ${t.name}</option>`).join('')}
+                  </optgroup>
+                  <optgroup label="Diğer Ekstralar">
+                    ${DB.extraOptions.map(ex => `<option value="extra_${ex.id}">${ex.icon} ${ex.name}</option>`).join('')}
+                  </optgroup>
                 </select>
               </div>
               <div>
@@ -480,6 +485,17 @@ function handleAddExtra(e, id) {
       isExtra: true
     });
     updatedRes.tours = newTours;
+  } else if (typeVal.startsWith('extra_')) {
+    const eId = typeVal.replace('extra_', '');
+    const newExtras = [...(res.extras || [])];
+    newExtras.push({
+      extraId: eId,
+      date: dateVal,
+      totalPrice: amt,
+      totalCost: 0,
+      isExtra: true
+    });
+    updatedRes.extras = newExtras;
   }
   
   // Borcu (Bakiyeyi) artır

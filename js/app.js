@@ -265,6 +265,21 @@ function suppressTodayBriefing() {
    ============================================================ */
 function initApp() {
   initTheme();
+  
+  // Migrate new users from DEFAULT_USERS into existing local DB
+  const currentUsers = DB.users || [];
+  let usersChanged = false;
+  // Use a global from data.js if available, or fetch
+  if (typeof DEFAULT_USERS !== 'undefined') {
+    DEFAULT_USERS.forEach(du => {
+      if (!currentUsers.find(cu => cu.id === du.id)) {
+        currentUsers.push(du);
+        usersChanged = true;
+      }
+    });
+    if (usersChanged) DB.users = currentUsers;
+  }
+  
   showTodayBriefing();
   
   // Demo rezervasyonları yalnızca ilk açılışta (localStorage tamamen boşsa) ekle.

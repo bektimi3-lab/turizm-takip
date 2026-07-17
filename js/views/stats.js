@@ -69,8 +69,18 @@ function renderStatsView() {
         extraSalesDetails.push({ name: `${r.personal?.firstName} ${r.personal?.lastName}`, item: opt?.name || 'Tur', amount: tPrice, resId: r.id });
       }
     });
+    (r.extras||[]).forEach(ex => {
+      if (ex.isExtra) {
+        hasExtra = true;
+        const ePrice = ex.totalPrice || 0;
+        extraRevenue += ePrice;
+        const opt = DB.extraOptions.find(o => o.id === ex.extraId);
+        extraSalesDetails.push({ name: `${r.personal?.firstName} ${r.personal?.lastName}`, item: opt?.name || 'Ekstra', amount: ePrice, resId: r.id });
+      }
+    });
     if (hasExtra) {
       extraSalesCount++;
+
       extraSalesAmount += extraRevenue;
     }
   });

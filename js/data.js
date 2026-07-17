@@ -35,12 +35,30 @@ const DEFAULT_FLIGHT_OPTIONS = [
   { id: 'fo_4', flightNo: 'PC281',  fromAirport: 'FRA', toAirport: 'SAW', direction: 'giriş' },
 ];
 
-/* ---- Demo Kullanıcılar ---- */
-const DEFAULT_USERS = [
-  { id: 'u_owner', email: 'patron@turizm.com',     password: 'patron123',     name: 'Patron',        role: 'owner' },
-  { id: 'u_edit',  email: 'editor@turizm.com',     password: 'editor123',     name: 'Düzenleyici',   role: 'editor' },
-  { id: 'u_view',  email: 'goruntule@turizm.com',  password: 'goruntule123',  name: 'Görüntüleyici', role: 'viewer' },
+const DEFAULT_EXTRA_OPTIONS = [
+  { id: 'ex_1', name: 'Fotoğraf / Video Çekimi', icon: '📸' },
+  { id: 'ex_2', name: 'Müze Giriş Bileti', icon: '🎟️' },
+  { id: 'ex_3', name: 'ATV Turu', icon: '🏍️' },
+  { id: 'ex_4', name: 'Türk Gecesi', icon: '💃' },
 ];
+
+/* ---- Otomatik Kullanıcı Oluşturma ---- */
+const DEFAULT_USERS = (function() {
+  const users = [];
+  // 3 Patron
+  for(let i=1; i<=3; i++) {
+    users.push({ id: 'u_owner'+i, email: 'patron'+i+'@turizm.com', password: 'patron123', name: 'Patron '+i, role: 'owner' });
+  }
+  // 5 Editör
+  for(let i=1; i<=5; i++) {
+    users.push({ id: 'u_edit'+i, email: 'editor'+i+'@turizm.com', password: 'editor123', name: 'Editör '+i, role: 'editor' });
+  }
+  // 30 Viewer
+  for(let i=1; i<=30; i++) {
+    users.push({ id: 'u_view'+i, email: 'viewer'+i+'@turizm.com', password: 'viewer123', name: 'Viewer '+i, role: 'viewer' });
+  }
+  return users;
+})();
 
 /* ---- Demo Rezervasyonlar ---- */
 function _buildDemoReservations() {
